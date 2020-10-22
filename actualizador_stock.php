@@ -65,10 +65,10 @@ foreach($linea as $indice=>$value)
 
 
 // Segunda consulta
-mysqli_query( $con, "UPDATE ps_product_attribute, importacion_stock SET  quantity= cantidad WHERE  `ps_product_attribute`.`reference` = `importacion_stock`.`referencia`");
+mysqli_query( $con, "UPDATE ps_product_attribute, importacion_stock SET  quantity = Cantidad WHERE  `ps_product_attribute`.`reference` = `importacion_stock`.`Referencia`");
 
 // Tercera constulta
-mysqli_query( $con, "UPDATE  ps_stock_available, ps_product_attribute  SET  `ps_stock_available`.`quantity` = `ps_product_attribute`.`quantity` WHERE  `ps_stock_available`.`id_product_attribute` = `ps_product_attribute`.`id_product_attribute`");
+mysqli_query( $con, "UPDATE  ps_stock_available, ps_product_attribute  SET  `ps_stock_available`.`quantity` = `ps_product_attribute`.`quantity` WHERE `ps_stock_available`.`id_product_attribute` = `ps_product_attribute`.`id_product_attribute`");
 
 // Control de salida
 echo "Registros insertados: " . number_format( $insertados, 2 ) . " <br/>";
