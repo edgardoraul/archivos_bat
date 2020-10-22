@@ -62,13 +62,25 @@ foreach($linea as $indice=>$value)
 	}
 	*/
 }
-
+/*
+	Esta dos consultas van a generar un error con stock de más o de menos en las publicaciones que tienen combinaciones. Pero en el resto se supone que no.
+*/
+// Primera consulta
+mysqli_query( $con, "UPDATE ps_product, importacion_stock SET quantity = `importacion_stock`.`Cantidad` WHERE `ps_product`.`reference` = `importacion_stock`.`Referencia`");
 
 // Segunda consulta
-mysqli_query( $con, "UPDATE ps_product_attribute, importacion_stock SET  quantity = Cantidad WHERE  `ps_product_attribute`.`reference` = `importacion_stock`.`Referencia`");
+mysqli_query( $con, "UPDATE ps_stock_available, ps_product SET `ps_stock_available`.`quantity` = `ps_product`.`quantity` WHERE `ps_stock_available`.`id_product` = `ps_product`.`id_product`");
 
-// Tercera constulta
-mysqli_query( $con, "UPDATE  ps_stock_available, ps_product_attribute  SET  `ps_stock_available`.`quantity` = `ps_product_attribute`.`quantity` WHERE `ps_stock_available`.`id_product_attribute` = `ps_product_attribute`.`id_product_attribute`");
+/* 
+	Estas consultas corrigen los errores arrastrados por las dos consultas anteriores,
+	en cuanto al stock de los productos que tienen combinaciones.
+*/
+
+// Tercera consulta
+mysqli_query( $con, "UPDATE ps_product_attribute, importacion_stock SET quantity = `importacion_stock`.`Cantidad` WHERE `ps_product_attribute`.`reference` = `importacion_stock`.`Referencia`");
+
+// Cuarta constulta
+mysqli_query( $con, "UPDATE ps_stock_available, ps_product_attribute SET `ps_stock_available`.`quantity` = `ps_product_attribute`.`quantity` WHERE `ps_stock_available`.`id_product_attribute` = `ps_product_attribute`.`id_product_attribute`");
 
 // Control de salida
 echo "Registros insertados: " . number_format( $insertados, 2 ) . " <br/>";
