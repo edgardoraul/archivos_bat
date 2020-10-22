@@ -6,7 +6,7 @@
 //Conexion con la base
 include "/home/rerda/public_html/config/settings.inc.php";
 
-$con = @mysqli_connect(_DB_SERVER_, _DB_USER_, _DB_PASSWD_, _DB_NAME_);
+$con = @mysqli_connect( _DB_SERVER_, _DB_USER_, _DB_PASSWD_, _DB_NAME_ );
 
 // Importando el archivos
 $info = fopen ("/home/rerda/public_html/upload/stock.csv" , "r" );
