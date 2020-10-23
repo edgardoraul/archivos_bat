@@ -5,20 +5,19 @@
 include "/home/rerda/public_html/config/settings.inc.php";
 
 //Conexion con la base
-$con = @mysqli_connect(_DB_SERVER_, _DB_USER_, _DB_PASSWD_, _DB_NAME_);
-
+$con = @mysqli_connect( _DB_SERVER_, _DB_USER_, _DB_PASSWD_, _DB_NAME_ );
 
 // Importando el archivos
-$info = fopen ("/home/rerda/public_html/upload/price.csv" , "r" );
+$info = fopen ( "/home/rerda/public_html/upload/price.csv" , "r" );
 while ( ( $datos = fgetcsv( $info, 10000, "," ) ) !== FALSE )
 {
 	$linea[] = array( 'Referencia' => $datos[0], 'Precio' => $datos[1] );
 }
 fclose ( $info );
 
-$insertados = 0;
-$errores = 0;
-$actualizados = 0;
+$insertados 	= 0;
+$errores 		= 0;
+$actualizados 	= 0;
 
 // Vaciamos la tabla antes que nada
 mysqli_query( $con, "TRUNCATE TABLE importacion_precios;" );
