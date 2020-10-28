@@ -1,14 +1,17 @@
 <?php 
-// El silencio es Adamantium o Vibranium (más valioso que el oro).
+/*
+	El silencio es Adamantium o Vibranium (más valioso que el oro).
+	
+	========= Actualización del stock =============
+*/
 
-/* Actualización de la parte del stock */
-include "/home/rerda/public_html/config/settings.inc.php";
+// Incorporamos la información de la conexión
+require_once "/home/rerda/public_html/config/settings.inc.php";
 
 //Conexion con la base
 $con = @mysqli_connect( _DB_SERVER_, _DB_USER_, _DB_PASSWD_, _DB_NAME_ );
 
-// Importando el archivos
-
+// Importamos el archivo
 $info = fopen ( "/home/rerda/public_html/upload/stock.csv" , "r" );
 while ( ( $datos = fgetcsv( $info, 10000, "," ) ) !== FALSE )
 {
@@ -16,11 +19,12 @@ while ( ( $datos = fgetcsv( $info, 10000, "," ) ) !== FALSE )
 }
 fclose ( $info );
 
+// Variables de control de salida posterior
 $insertados 	= 0;
 $errores 		= 0;
 $actualizados 	= 0;
 
-// Vaciamos la tabla antes que nada
+// Vaciamos la tabla antes que nada. Total sirve para borrar e insertar datos
 mysqli_query( $con, "TRUNCATE TABLE importacion_stock;" );
 
 // Ahora actualizaremos los campos
@@ -29,7 +33,7 @@ foreach( $linea as $indice => $value )
 	$codigo = $value["Referencia"];
 	$campo2 = $value["Cantidad"];
 
-	//Creamos la sentencia SQL y la ejecutamos
+	// Creamos la sentencia SQL y la ejecutamos
 	$sql = mysqli_query( $con, "SELECT * FROM importacion_stock WHERE Referencia = '$codigo'" );
 	$num = mysqli_num_rows( $sql );
 
@@ -40,31 +44,19 @@ foreach( $linea as $indice => $value )
 		if ( $insert = mysqli_query( $con, $sql ) )
 		{
 			$insertados += 1;
-		} else {
-			$errores += 1;
 		}
-	}
-	
-	/*
-	// Comento esto porque me interesa que la tabla esté vacía primero que nada. Es más rápido.
-	else
-	{
-		$sql = "UPDATE importacion_stock SET Cantidad = '$campo2' WHERE Referencia = '$codigo'";
-		
-		if ( $update = mysqli_query( $con, $sql ) )
+		else 
 		{
-			$actualizados += 1;
-		} else {
 			$errores += 1;
 		}
 	}
-	*/
 }
-/*
-	Esta dos consultas van a generar un error con stock de más o de menos en las publicaciones que tienen combinaciones. Pero en el resto se supone que no.
-*/
-// Primera consulta
 
+/*
+	Esta dos consultas generan un error con stock cero en las publicaciones que tienen combinaciones. Pero en el resto no.
+*/
+
+// Primera consulta
 // mysqli_query( $con, "UPDATE ps_product, importacion_stock SET `ps_product`.`quantity` = `importacion_stock`.`Cantidad` WHERE `ps_product`.`reference` = `importacion_stock`.`Referencia`" );
 
 // Segunda consulta
@@ -72,8 +64,7 @@ foreach( $linea as $indice => $value )
 
 
 /* 
-	Estas consultas corrigen los errores arrastrados por las dos consultas anteriores,
-	en cuanto al stock de los productos que tienen combinaciones.
+	Estas consultas actualizan el stock de los productos que tienen combinaciones.
 */
 
 // Tercera consulta
@@ -82,16 +73,6 @@ mysqli_query( $con, "UPDATE ps_product_attribute, importacion_stock SET quantity
 // Cuarta constulta
 mysqli_query( $con, "UPDATE ps_stock_available, ps_product_attribute SET `ps_stock_available`.`quantity` = `ps_product_attribute`.`quantity` WHERE `ps_stock_available`.`id_product_attribute` = `ps_product_attribute`.`id_product_attribute`" );
 
-//Actualiza stock total del producto
-/*
-$totales = mysqli_query( $con, "SELECT SUM( quantity ) AS total FROM ps_stock_available WHERE id_product = " . $codigo. " AND id_product_attribute <>0" ) or die ( mysql_error () );
-
-$row = mysql_fetch_assoc( $con, $totales );
-
-mysqli_query( $con, "UPDATE ps_stock_available SET quantity = " . $row['total'] . " WHERE id_product= " . $codigo . " AND id_product_attribute = 0 " );
-
-$resul = mysql_affected_rows( $con );
-*/
 // Control de salida
 echo "Registros insertados: " . number_format( $insertados, 2 ) . " <br/>";
 echo "Registros actualizados: "  .number_format( $actualizados, 2 ) . " <br/>";

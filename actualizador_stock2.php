@@ -1,4 +1,9 @@
 <?php
+/*
+	El silencio es Adamantium o Vibranium (más valioso que el oro).
+	
+	====== Actualización del stock tanto de productos simples y los que tienen combinaciones (se supone) =========
+*/
  
 // PRESTASHOP SETTINGS FILE
 require_once ('../config/settings.inc.php');
@@ -44,8 +49,7 @@ if ( ( $handle = fopen( $remote_csv_file, "r" ) ) !== false )
 			if ( $res4->rowCount() > 0 )
 			{
  
-				// IT'S A PRODUCT COMBINATION
-				
+				// IT'S A PRODUCT COMBINATION			
 				$row4 = $res4->fetch();
 		
 				$res = $db->prepare( "update " . _DB_PREFIX_ . "stock_available set quantity = :q where id_product_attribute = :id_product_attribute" );
@@ -64,8 +68,7 @@ if ( ( $handle = fopen( $remote_csv_file, "r" ) ) !== false )
 			else
 			{
  
-				// IT'S A SIMPLE PRODUCT
-				
+				// IT'S A SIMPLE PRODUCT			
 				$res4 = $db->prepare( "SELECT id_product from " . _DB_PREFIX_ . "product WHERE reference = :reference" );
 				$res4->execute( array( ':reference'=> $reference ) );
 				
