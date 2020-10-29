@@ -19,7 +19,7 @@ $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $row_num = 0;
 if ( ( $handle = fopen( $remote_csv_file, "r" ) ) !== false )
 {
-	while ( ( $data = fgetcsv( $handle, 10000, "," ) ) !== false )
+	while ( ( $data = fgetcsv( $handle, 10, "," ) ) !== false )
 	{
 		$row_num++;
 		
