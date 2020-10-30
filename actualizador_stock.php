@@ -128,6 +128,24 @@ mysqli_query( $con, "
 	"
 );
 
+/* LA VOLVEMOS A COLOCAR PARA CORREGIR EVENTUALES ERRORES DE LAS ANTERIORES CONSULTAS */
+
+// El stock de las combinaciones/variantes
+mysqli_query( $con, "
+	UPDATE ps_product_attribute, importacion_stock 
+	SET quantity = `importacion_stock`.`Cantidad` 
+	WHERE `ps_product_attribute`.`reference` = `importacion_stock`.`Referencia`;
+	"
+);
+
+// El stock disponible de las combinaciones/variantes. Se muestra en front y back.
+mysqli_query( $con, "
+	UPDATE ps_stock_available, ps_product_attribute 
+	SET `ps_stock_available`.`quantity` = `ps_product_attribute`.`quantity` 
+	WHERE `ps_stock_available`.`id_product_attribute` = `ps_product_attribute`.`id_product_attribute`;
+	"
+);
+
 
 // Control de salida
 echo "Registros insertados: " . number_format( $insertados, 2 ) . " <br/>";
