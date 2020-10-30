@@ -3,6 +3,7 @@
 	El silencio es Adamantium o Vibranium (más valioso que el oro).
 	
 	========= Actualización del stock =============
+	Versión 1.0
 */
 
 // Incorporamos la información de la conexión
@@ -58,22 +59,41 @@ foreach( $linea as $indice => $value )
 	Estas consultas actualizan el stock de los productos que tienen combinaciones.
 */
 
-// Tercera consulta
-mysqli_query( $con, "UPDATE ps_product_attribute, importacion_stock SET quantity = `importacion_stock`.`Cantidad` WHERE `ps_product_attribute`.`reference` = `importacion_stock`.`Referencia`" );
+// El stock de las combinaciones/variantes
+mysqli_query( $con, "
+	UPDATE ps_product_attribute, importacion_stock 
+	SET quantity = `importacion_stock`.`Cantidad` 
+	WHERE `ps_product_attribute`.`reference` = `importacion_stock`.`Referencia`;
+	"
+);
 
-// Cuarta constulta
-mysqli_query( $con, "UPDATE ps_stock_available, ps_product_attribute SET `ps_stock_available`.`quantity` = `ps_product_attribute`.`quantity` WHERE `ps_stock_available`.`id_product_attribute` = `ps_product_attribute`.`id_product_attribute`" );
+// El stock disponible de las combinaciones/variantes. Se muestra en front y back.
+mysqli_query( $con, "
+	UPDATE ps_stock_available, ps_product_attribute 
+	SET `ps_stock_available`.`quantity` = `ps_product_attribute`.`quantity` 
+	WHERE `ps_stock_available`.`id_product_attribute` = `ps_product_attribute`.`id_product_attribute`;
+	"
+);
 
 
 
-/*  ESTAS CONSULTAS VAN A VACIAR Y A RELLENAR CON INFORMACION TABLAS TEMPORALES  */
+/*  ESTAS CONSULTAS VAN A LLENAR Y A RELLENAR CON INFORMACION TABLAS TEMPORALES  */
 
-// Sólo se completa para intercambio de datos. Lo importante es la referencia y el id_product
-mysqli_query( $con, "INSERT INTO importacion_stock_acumulado (id_producto, Referencia, Acumulado)
-SELECT id_product, reference, 0 FROM ps_product;" );
+// Sólo se completa para intercambio de datos. Lo importante es la referencia y el id_product. 
+mysqli_query( $con, "
+	INSERT INTO importacion_stock_acumulado (id_producto, Referencia, Acumulado)
+	SELECT id_product, reference, 0 
+	FROM ps_product;
+	"
+);
 
-// Inserta las cantidades de todos los productos. Los individuales estarán bien. Los que tiene combinaciones tendrán cero. Pero es temporal.
-mysqli_query( $con, "UPDATE importacion_stock_acumulado, importacion_stock SET `Acumulado` = `importacion_stock`.`Cantidad` WHERE `importacion_stock_acumulado`.`Referencia` = `importacion_stock`.`Referencia`;" );
+// Inserta las cantidades de todos los productos. Los individuales estarán bien. Los que tienen combinaciones/variantes tendrán cero. Pero es temporal.
+mysqli_query( $con, "
+	UPDATE importacion_stock_acumulado, importacion_stock 
+	SET `Acumulado` = `importacion_stock`.`Cantidad` 
+	WHERE `importacion_stock_acumulado`.`Referencia` = `importacion_stock`.`Referencia`;
+	"
+);
 
 // Reemplaza las cantidades totales de los que tienen combinaciones. Va sumando en forma acumulativa.
 mysqli_query( $con,
@@ -88,16 +108,25 @@ mysqli_query( $con,
 
 		GROUP BY id_product
 		)
-	WHERE id_producto = id_product
-
-	;"
+	WHERE id_producto = id_product;
+	"
 );
 
 // Actualiza la tabla ps_product ya con los totales definitivos.
-mysqli_query( $con, "UPDATE ps_product, importacion_stock_acumulado SET `ps_product`.`quantity` = `importacion_stock_acumulado`.`Acumulado` WHERE `ps_product`.`reference` = `importacion_stock_acumulado`.`Referencia`" );
+mysqli_query( $con, "
+	UPDATE ps_product, importacion_stock_acumulado 
+	SET `ps_product`.`quantity` = `importacion_stock_acumulado`.`Acumulado` 
+	WHERE `ps_product`.`id_product` = `importacion_stock_acumulado`.`id_producto`;
+	"
+);
 
-// Ultima consulta. Coloca los totales de stock de todos los productos donde corresponde
-mysqli_query( $con, "UPDATE ps_stock_available, importacion_stock_acumulado SET `ps_stock_available`.`quantity` = `importacion_stock_acumulado`.`Acumulado` WHERE `ps_stock_available`.`id_product` = `importacion_stock_acumulado`.`Acumulado`" );
+// Ultima consulta. Coloca los totales de stock disponibles de todos los productos. Se muestra en el front y el back.
+mysqli_query( $con, "
+	UPDATE ps_stock_available, importacion_stock_acumulado 
+	SET `ps_stock_available`.`quantity` = `importacion_stock_acumulado`.`Acumulado` 
+	WHERE `ps_stock_available`.`id_product` = `importacion_stock_acumulado`.`id_producto`;
+	"
+);
 
 
 // Control de salida
