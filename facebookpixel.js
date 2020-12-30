@@ -17,7 +17,11 @@
 	s.parentNode.insertBefore(t,s)
 } (window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
 
-fbq('init', '1335485450135411');
+/*
+	Este no funciona, no se porqué.
+	fbq('init', '1335485450135411');
+*/
+fbq('init', '3681335751927871');
 fbq('track', 'PageView');
 
 
