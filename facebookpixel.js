@@ -40,11 +40,16 @@ function fesbukeador()
 	// Controla que sólo se active cuando agrega cosas al carrito
 	$("#add_to_cart button, .ajax_add_to_cart_button").on("click", function()
 	{
-		console.log("Agregado al Carrito");
-		fbq("track", "AddToCart");
+		const totalCarrito = $(".ajax_cart_total").html();
+		console.log(`Agregado al Carrito por ${totalCarrito}`);
+		fbq("track", "AddToCart",
+		{
+			value: totalCarrito,
+			currency: "ARS"
+		});
 	});
 
-	// Cuando alguien inicia el proceso del pago, o ir hacia la caja
+	// Cuando alguien inicia el proceso del pago, o ir hacia la caja.
 	if ( $("#order").length > 0 )
 	{
 		fbq('track', 'InitiateCheckout');
