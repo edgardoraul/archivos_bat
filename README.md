@@ -8,5 +8,4 @@
 <ul>
     <li>actualizador_precios.php) Actualiza los precios de los productos del Prestashop.</li>
     <li>actualizador_stock.php) Actualiza los stocks de las combinaciones/variantes.</li>
-    <li>actualizador_stock2.php) Debería actualizar el stock de todo, pero está fallando.</li>
 </ul>
