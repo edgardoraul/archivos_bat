@@ -1,0 +1,9 @@
+user web@rerda.com
+919q3Nnhremfrursmv
+bin
+cd upload/
+delete price.csv
+delete stock.csv
+put D:\Dropbox\Aplicaciones\Producteca\price.csv
+put D:\Dropbox\Aplicaciones\Producteca\stock.csv
+quit
