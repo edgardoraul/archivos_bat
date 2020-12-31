@@ -33,15 +33,48 @@ function fesbukeador()
 	// Para todas las páginas exepto la orden de compra y su terminación.
 	if ( $("#order").length > 0 )
 
-
-	// Controla que se haya cargado.
+	// Muestra que se haya cargado la web.
 	console.log("Sitio Cargado");
 
-	// Controla que sólo se active cuando agrega cosas al carrito
+	// Definciendo la variable
+	let totalCarrito = $(".ajax_cart_total").html().replace("$ ", "").replace(".", "").replace(",", ".").replace(" ", "");
+
+	// Validando sólo si hay 
+	if ( $(".ajax_cart_total").html() !== "" )
+	{
+		// Monto total anterior del carrito de compras. Convertido a número decimal
+		totalCarrito = parseFloat(totalCarrito).toFixed(2);
+		if( typeof(totalCarrito) === "string" )
+		{
+			totalCarrito = 0;
+		}
+		console.log( "totalCarrito es " + typeof(totalCarrito) + " = " + totalCarrito );
+	}
+
+
+	// Cuando se hace click a "Agregar al Carrito"
 	$("#add_to_cart button, .ajax_add_to_cart_button").on("click", function()
 	{
-		const totalCarrito = $(".ajax_cart_total").html();
-		console.log(`Agregado al Carrito por ${totalCarrito}`);
+		// Convierte los precios a decimal
+		let precio = $("#our_price_display").attr("content").replace("$ ", "");
+		precio = parseFloat(precio).toFixed(2);
+		console.log( "Precio es " + typeof(precio) + " = " + precio);
+
+		// Convierte las cantidades a enteros
+		let cantidad = $("#quantity_wanted").attr("value");
+		cantidad = parseInt(cantidad);
+		console.log( "cantidad es " + typeof(cantidad) + " = " + cantidad);
+		
+		// Obtiene el total del carrito agrendo lo actual
+
+		let productosAgregando = precio * cantidad;
+		totalCarrito = totalCarrito + productosAgregando;
+		console.log("productosAgregando es " + typeof(productosAgregando));
+
+		// Para monitorear que sea correcto.
+		console.log(`Agregado al Carrito por ${ totalCarrito }`);
+		
+		// Activa el evento del píxel féisbuc
 		fbq("track", "AddToCart",
 		{
 			value: totalCarrito,
