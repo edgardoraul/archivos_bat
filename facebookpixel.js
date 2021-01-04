@@ -139,12 +139,13 @@ function fesbukeador()
 	if ( $("#order-confirmation").length > 0 )
 	{
 		// Extrae la información de un script al final de la página.
-		const TotalCompra = window.dataLayer[0].transactionTotal;
-		console.log(`La compra ya está hecha por $ ${ TotalCompra }`);
+		const TotalCompra = window.dataLayer.find(monto => monto.transactionTotal);
+		TotalCompra2 = TotalCompra.transactionTotal;
+		console.log(`La compra ya está hecha por $ ${ TotalCompra2 }`);
 		
 		fbq("track", "Purchase",
 		{
-			value: TotalCompra,
+			value: TotalCompra2,
 			currency: "ARS"
 		});
 	}
