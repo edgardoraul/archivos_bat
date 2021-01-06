@@ -101,8 +101,8 @@ function fesbukeador()
 	}
 
 
-	// En la página del producto
-	if ( $("#product").length > 0 )
+	// En la página del producto o en la home
+	if ( $("#product").length > 0 || $("#index").length > 0 )
 	{
 		// Cuando se hace click a "Agregar al Carrito"
 		$("#add_to_cart button, .ajax_add_to_cart_button").on("click", function()
