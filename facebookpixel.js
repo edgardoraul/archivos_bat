@@ -1,3 +1,4 @@
+/* El Facebook Pixel */
 !function(f,b,e,v,n,t,s)
 {
 	if( f.fbq ) return;
@@ -26,6 +27,7 @@ fbq('track', 'PageView');
 
 
 // Espera que se cargue el DOM para ejecutar la función
+window.addEventListener("loaded", (ev)=>{console.log("ev")});
 window.addEventListener("DOMContentLoaded", fesbukeador);
 function fesbukeador()
 {
@@ -48,7 +50,7 @@ function fesbukeador()
 		console.log( `totalCarrito es ${ typeof(totalCarrito) } = ${totalCarrito} `);
 		
 		// Comprobando si hubo algún cambio o actualización de los valores
-		totalCarrito.on("change", function()
+		$(".price.cart_block_total.ajax_block_cart_total").on("change", function()
 		{
 			totalCarrito = $(".price.cart_block_total.ajax_block_cart_total").html().replace("$ ", "").replace(".", "").replace(",", ".").replace(" ", "");
 			totalCarrito = parseFloat(totalCarrito).toFixed(2) * 1;
