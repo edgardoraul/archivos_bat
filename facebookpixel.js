@@ -1,4 +1,4 @@
-/* El Facebook Pixel */
+/************* El Facebook Pixel **************/
 !function(f,b,e,v,n,t,s)
 {
 	if( f.fbq ) return;
@@ -18,27 +18,25 @@
 	s.parentNode.insertBefore(t,s)
 } (window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
 
-/*
-	Este no funciona, no se porqué.
-	fbq('init', '1335485450135411');
-*/
 fbq('init', '3681335751927871');
 fbq('track', 'PageView');
 
 
 // Espera que se cargue el DOM para ejecutar la función
-window.addEventListener("loaded", (ev)=>{console.log("ev")});
 window.addEventListener("DOMContentLoaded", fesbukeador);
 function fesbukeador()
 {
 
 	// Para todas las páginas exepto la orden de compra y su terminación.
-	if ( $("#order").length > 0 )
+	const order = document.querySelector("#order");
+	if ( order != null )
+	{
+		// Muestra que se haya cargado la web.
+		console.log("Sitio Cargado");
+	}
 
-	// Muestra que se haya cargado la web.
-	console.log("Sitio Cargado");
 
-	// Definciendo la variable
+	// Definiendo la variable
 	let totalCarrito = $(".price.cart_block_total.ajax_block_cart_total").html().replace("$ ", "").replace(".", "").replace(",", ".").replace(" ", "");
 	totalCarrito = parseFloat(totalCarrito).toFixed(2) * 1;
 
@@ -78,7 +76,8 @@ function fesbukeador()
 	}
 
 	// Cuando se está en la página de categorías
-	if ( $("#category").length > 0 )
+	const categoria = document.querySelector("#category");
+	if ( categoria != null )
 	{
 		// Cuando se hace click a "Agregar al Carrito"
 		$(".button.ajax_add_to_cart_button.btn.btn-default").on("click", categoria);
