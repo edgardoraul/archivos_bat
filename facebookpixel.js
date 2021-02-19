@@ -1,40 +1,31 @@
-/************* El Facebook Pixel **************/
-!function(f,b,e,v,n,t,s)
-{
-	if( f.fbq ) return;
-	n = f.fbq = function()
+// Comprueba que se haya cargado JQuery y la carga total de la web
+jQuery(document).ready( function() {
+
+	/************* El Facebook Pixel **************/
+	!function(f,b,e,v,n,t,s)
 	{
-		n.callMethod ? n.callMethod.apply(n,arguments) : n.queue.push(arguments)
-	};
-	if(!f._fbq)f._fbq = n;
-	n.push = n;
-	n.loaded = !0;
-	n.version = '2.0';
-	n.queue = [];
-	t = b.createElement(e);
-	t.async = !0;
-	t.src = v;
-	s = b.getElementsByTagName(e)[0];
-	s.parentNode.insertBefore(t,s)
-} (window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+		if( f.fbq ) return;
+		n = f.fbq = function()
+		{
+			n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+		};
+		if(!f._fbq)f._fbq = n;
+		n.push = n;
+		n.loaded = !0;
+		n.version = '2.0';
+		n.queue = [];
+		t = b.createElement(e);
+		t.async = !0;
+		t.src = v;
+		s = b.getElementsByTagName(e)[0];
+		s.parentNode.insertBefore(t,s)
+	} (window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
 
-fbq('init', '3681335751927871');
-fbq('track', 'PageView');
+	fbq('init', '3681335751927871');
+	fbq('track', 'PageView');
 
-
-// Espera que se cargue el DOM para ejecutar la función
-window.addEventListener("DOMContentLoaded", fesbukeador);
-function fesbukeador()
-{
-
-	// Para todas las páginas exepto la orden de compra y su terminación.
-	const order = document.querySelector("#order");
-	if ( order != null )
-	{
-		// Muestra que se haya cargado la web.
-		console.log("Sitio Cargado");
-	}
-
+	// Control de la carga de la web
+	console.log("La página cargó.");
 
 	// Definiendo la variable
 	let totalCarrito = $(".price.cart_block_total.ajax_block_cart_total").html().replace("$ ", "").replace(".", "").replace(",", ".").replace(" ", "");
@@ -48,12 +39,12 @@ function fesbukeador()
 		console.log( `totalCarrito es ${ typeof(totalCarrito) } = ${totalCarrito} `);
 		
 		// Comprobando si hubo algún cambio o actualización de los valores
-		$(".price.cart_block_total.ajax_block_cart_total").on("change", function()
+		$(".price.cart_block_total.ajax_block_cart_total").on("change", () =>
 		{
 			totalCarrito = $(".price.cart_block_total.ajax_block_cart_total").html().replace("$ ", "").replace(".", "").replace(",", ".").replace(" ", "");
 			totalCarrito = parseFloat(totalCarrito).toFixed(2) * 1;
 			categoria();
-		})
+		});
 	}
 
 	// Muestra en consola
@@ -76,12 +67,10 @@ function fesbukeador()
 	}
 
 	// Cuando se está en la página de categorías
-	const categoria = document.querySelector("#category");
-	if ( categoria != null )
+	if ( $("#category").length > 0 )
 	{
 		// Cuando se hace click a "Agregar al Carrito"
-		$(".button.ajax_add_to_cart_button.btn.btn-default").on("click", categoria);
-		function categoria()
+		$(".button.ajax_add_to_cart_button.btn.btn-default").on("click", () =>
 		{
 			let precio = $(this).parent().prev().find(".price.product-price").html().replace("$ ", "").replace(".", "").replace(",", ".");
 			precio = parseFloat(precio).toFixed(2) * 1;
@@ -98,7 +87,7 @@ function fesbukeador()
 			
 			// Activa el evento del píxel féisbuc
 			husmeador(totalCarrito, "ARS");
-		}
+		});
 	}
 
 
@@ -106,7 +95,7 @@ function fesbukeador()
 	if ( $("#product").length > 0 || $("#index").length > 0 )
 	{
 		// Cuando se hace click a "Agregar al Carrito"
-		$("#add_to_cart button, .ajax_add_to_cart_button").on("click", function()
+		$("#add_to_cart button, .ajax_add_to_cart_button").on("click", () =>
 		{
 			// Convierte los precios a decimal
 			let precio = $("#our_price_display").attr("content").replace("$ ", "");
@@ -150,4 +139,4 @@ function fesbukeador()
 			currency: "ARS"
 		});
 	}
-}
+});
