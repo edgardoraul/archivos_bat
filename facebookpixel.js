@@ -1,5 +1,9 @@
 // Comprueba que se haya cargado JQuery y la carga total de la web
-jQuery(document).ready( function() {
+jQuery(document).ready( function()
+{
+	/******* Corrige el error del flete gratis ***********+*/
+	const varA = $(".ajax_cart_shipping_cost .unvisible");
+	varA.html("A determinar");
 
 	/************* El Facebook Pixel **************/
 	!function(f,b,e,v,n,t,s)
@@ -140,3 +144,23 @@ jQuery(document).ready( function() {
 		});
 	}
 });
+
+
+
+function validador()
+{
+	const miCbu = document.querySelector("#up_CBU");
+	miCbu.addEventListener("blur", validando);
+	miCbu.addEventListener("change", validando);
+	function validando()
+	{
+		if( miCbu.value.length === 22)
+		{
+			console.log("Todo correcto");
+		}
+		else
+		{
+			alert("El CBU debe tener 22 dígitos numéricos");
+		}
+	}
+}
