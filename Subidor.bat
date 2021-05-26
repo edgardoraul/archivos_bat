@@ -1,6 +1,6 @@
 @echo off
-echo user web@rerda.com>> ftpcmd.dat
-echo ZUAMhExThmowcvS9v8>> ftpcmd.dat
+echo user quecarajoteimporta@notengoidea.com.ar>> ftpcmd.dat
+echo suckmydick.please>> ftpcmd.dat
 echo bin>> ftpcmd.dat
 echo cd upload/>> ftpcmd.dat
 echo delete price.csv>> ftpcmd.dat

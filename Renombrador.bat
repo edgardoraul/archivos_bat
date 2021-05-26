@@ -1,21 +1,11 @@
 @echo off
 rem "Renombra los archivos para que tengan siempre el mismo nombre."
 
-rename D:\Dropbox\Aplicaciones\Producteca\price*.* price.*
-rename D:\Dropbox\Aplicaciones\Producteca\stock*.* stock.*
+rename D:\Producteca\Archivos\price*.* price.*
+rename D:\Producteca\Archivos\stock*.* stock.*
 
-rename D:\Dropbox\TUCUMAN\stock*.* stock_tucuman.*
-del /S /F /Q D:\Dropbox\TUCUMAN\price*.*
-copy D:\Dropbox\TUCUMAN\stock_tucuman.* D:\Dropbox\Aplicaciones\Producteca\stock_tucuman.*
+copy D:\Producteca\Aplicaciones\stock_movil2.* D:\Producteca\Archivos\stock_movil2.*
 
-rename D:\Dropbox\MOVIL5\stock*.* stock_movil5.*
-del /S /F /Q D:\Dropbox\MOVIL5\price*.*
-copy D:\Dropbox\MOVIL5\stock_movil5.* D:\Dropbox\Aplicaciones\Producteca\stock_movil5.*
+copy D:\Producteca\Aplicaciones\stock_movil5.* D:\Producteca\Archivos\stock_movil5.*
 
-rename D:\Dropbox\MOVIL2\stock*.* stock_movil2.*
-del /S /F /Q D:\Dropbox\MOVIL2\price*.*
-copy D:\Dropbox\MOVIL2\stock_movil2.* D:\Dropbox\Aplicaciones\Producteca\stock_movil2.*
-
-rename D:\Dropbox\NEUQUEN\stock*.* stock_neuquen.*
-del /S /F /Q D:\Dropbox\NEUQUEN\price*.*
-copy D:\Dropbox\NEUQUEN\stock_neuquen.* D:\Dropbox\Aplicaciones\Producteca\stock_neuquen.*
+copy D:\Producteca\Aplicaciones\stock_neuquen.* D:\Producteca\Archivos\stock_neuquen.*
