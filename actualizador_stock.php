@@ -9,7 +9,7 @@
 // Incorporamos la información de la conexión
 require_once "/home/rerda/public_html/config/settings.inc.php";
 
-//Conexion con la base
+// Conexion con la base
 $con = @mysqli_connect( _DB_SERVER_, _DB_USER_, _DB_PASSWD_, _DB_NAME_ );
 
 // Importamos el archivo
@@ -34,7 +34,7 @@ mysqli_query( $con, "TRUNCATE TABLE importacion_stock_acumulado" );
 foreach( $linea as $indice => $value )
 {
 	$codigo = $value["Referencia"];
-	$campo2 = $value["Cantidad"];
+	$campo2 = $value["Cantidad"] < 2 ? 0 : $value["Cantidad"];
 
 	// Creamos la sentencia SQL y la ejecutamos
 	$sql = mysqli_query( $con, "SELECT * FROM importacion_stock WHERE Referencia = '$codigo'" );
