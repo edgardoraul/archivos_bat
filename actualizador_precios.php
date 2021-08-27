@@ -67,6 +67,18 @@ mysqli_query( $con, "UPDATE ps_product, importacion_precios SET `ps_product`.`pr
 mysqli_query( $con, "UPDATE ps_product_shop, ps_product SET `ps_product_shop`.`price` = `ps_product`.`price` WHERE `ps_product_shop`.`id_product` = `ps_product`.`id_product`");
 
 
+// Desactiva los productos con precio cero.
+mysqli_query( $con, "UPDATE ps_product, importacion_precios SET `ps_product`.`active` = 0 WHERE  `ps_product`.`price` = 0 ");
+mysqli_query( $con, "UPDATE ps_product_shop, ps_product SET `ps_product_shop`.`active` = 0 WHERE `ps_product_shop`.`price` = 0 ");
+
+
+
+// Activa los productos con precio superior a cero.
+mysqli_query( $con, "UPDATE ps_product, importacion_precios SET `ps_product`.`active` = 1 WHERE  `ps_product`.`price` > 0 ");
+mysqli_query( $con, "UPDATE ps_product_shop, ps_product SET `ps_product_shop`.`active` = 1 WHERE `ps_product_shop`.`price` > 0 ");
+
+
+
 // Control de salida
 echo "Registros insertados: " . number_format( $insertados, 2 ) . " <br/>";
 echo "Registros actualizados: " . number_format( $actualizados, 2 ) . " <br/>";
