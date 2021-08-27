@@ -34,7 +34,8 @@ mysqli_query( $con, "TRUNCATE TABLE importacion_stock_acumulado" );
 foreach( $linea as $indice => $value )
 {
 	$codigo = $value["Referencia"];
-	$campo2 = $value["Cantidad"] < 2 ? 0 : $value["Cantidad"];
+	// $campo2 = $value["Cantidad"] < 2 ? 0 : $value["Cantidad"];
+	$campo2 = $value["Cantidad"];
 
 	// Creamos la sentencia SQL y la ejecutamos
 	$sql = mysqli_query( $con, "SELECT * FROM importacion_stock WHERE Referencia = '$codigo'" );
