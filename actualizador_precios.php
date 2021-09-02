@@ -22,6 +22,33 @@ $actualizados 	= 0;
 // Vaciamos la tabla antes que nada
 mysqli_query( $con, "TRUNCATE TABLE importacion_precios;" );
 
+
+// Apertura de Tabla.
+echo '<!DOCTYPE HTML>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="es-es"><![endif]-->
+<!--[if IE 7]><html class="no-js lt-ie9 lt-ie8 ie7" lang="es-es"><![endif]-->
+<!--[if IE 8]><html class="no-js lt-ie9 ie8" lang="es-es"><![endif]-->
+<!--[if gt IE 8]> <html class="no-js ie9" lang="es-es"><![endif]-->
+<html lang="es-es">
+	<head>
+		<meta charset="utf-8" />
+		<title>Listado de Precios - Rerda</title>
+		<meta name="viewport" content="width=device-width, minimum-scale=0.25, maximum-scale=1.6, initial-scale=1.0" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<link rel="icon" type="image/vnd.microsoft.icon" href="/img/favicon.ico?1606832549" />
+		<link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico?1606832549" />
+	</head>
+	<body>
+		';
+echo "<table>
+		<thead>
+			<tr>
+				<th>Código</th>
+				<th>Precio</th>
+			</tr>
+		</thead>
+	<tbody>";
+
 // Ahora actualizaremos los campos
 foreach( $linea as $indice => $value )
 {
@@ -43,21 +70,9 @@ foreach( $linea as $indice => $value )
 			$errores += 1;
 		}
 
+		// Generación de una tabla de stock
+		echo '<tr><td>' . $codigo . '</td><td>' . number_format($campo2, 2, ",", ".") . '</td></tr>';
 	}
-	/*
-		LO COMENTO PORQUE ME QUIERO ASEGURAR DE QUE LA TABLA ESTE PRIMERO VACIA. ES MAS RAPIDO.
-	else
-	{
-		$sql = "UPDATE importacion_precios SET Precio = '$campo2' WHERE Referencia = SUBSTRING( '$codigo', 1,";
-		
-		if ( $update = mysqli_query( $con, $sql ) )
-		{
-			$actualizados += 1;
-		} else {
-			$errores += 1;
-		}
-	}
-	*/
 }
 
 // Actualiza el precio de la tabla
@@ -80,8 +95,16 @@ mysqli_query( $con, "UPDATE ps_product_shop, ps_product SET `ps_product_shop`.`a
 
 
 // Control de salida
-echo "Registros insertados: " . number_format( $insertados, 2 ) . " <br/>";
-echo "Registros actualizados: " . number_format( $actualizados, 2 ) . " <br/>";
-echo "Errores: " . number_format( $errores, 2 ) . " <br/>";
+echo "<tr><td>Registros insertados: </td><td>" . number_format( $insertados, 2 ) . "</td></tr>";
+echo "<tr><td>Registros actualizados: </td><td>"  .number_format( $actualizados, 2 ) . " </td></tr>";
+echo "<tr><td>Errores: </td><td>" . number_format( $errores, 2 ) . "</td></tr>";
+
+// Cierre de tabla
+echo "
+		</tbody>
+	</table>
+	</body>
+</html>
+";
 
 ?>

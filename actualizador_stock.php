@@ -30,6 +30,32 @@ mysqli_query( $con, "TRUNCATE TABLE importacion_stock;" );
 mysqli_query( $con, "TRUNCATE TABLE importacion_stock_acumulado" );
 
 
+// Apertura de Tabla.
+echo '<!DOCTYPE HTML>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="es-es"><![endif]-->
+<!--[if IE 7]><html class="no-js lt-ie9 lt-ie8 ie7" lang="es-es"><![endif]-->
+<!--[if IE 8]><html class="no-js lt-ie9 ie8" lang="es-es"><![endif]-->
+<!--[if gt IE 8]> <html class="no-js ie9" lang="es-es"><![endif]-->
+<html lang="es-es">
+	<head>
+		<meta charset="utf-8" />
+		<title>Listado de Stock - Rerda</title>
+		<meta name="viewport" content="width=device-width, minimum-scale=0.25, maximum-scale=1.6, initial-scale=1.0" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<link rel="icon" type="image/vnd.microsoft.icon" href="/img/favicon.ico?1606832549" />
+		<link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico?1606832549" />
+	</head>
+	<body>
+		';
+echo "<table>
+		<thead>
+			<tr>
+				<th>Código</th>
+				<th>Stock</th>
+			</tr>
+		</thead>
+	<tbody>";
+
 // Ahora actualizaremos los campos
 foreach( $linea as $indice => $value )
 {
@@ -53,8 +79,13 @@ foreach( $linea as $indice => $value )
 		{
 			$errores += 1;
 		}
+
+
+		// Generación de una tabla de stock
+		echo "<tr><td>".$codigo."</td><td>".$campo2."</td></tr>";
 	}
 }
+
 
 /* 
 	Estas consultas actualizan el stock de los productos que tienen combinaciones.
@@ -149,8 +180,16 @@ mysqli_query( $con, "
 
 
 // Control de salida
-echo "Registros insertados: " . number_format( $insertados, 2 ) . " <br/>";
-echo "Registros actualizados: "  .number_format( $actualizados, 2 ) . " <br/>";
-echo "Errores: " . number_format( $errores, 2 ) . " <br/>";
+echo "<tr><td>Registros insertados: </td><td>" . number_format( $insertados, 2 ) . "</td></tr>";
+echo "<tr><td>Registros actualizados: </td><td>"  .number_format( $actualizados, 2 ) . " </td></tr>";
+echo "<tr><td>Errores: </td><td>" . number_format( $errores, 2 ) . "</td></tr>";
+
+// Cierre de tabla
+echo "
+		</tbody>
+	</table>
+	</body>
+</html>
+";
 
 ?>
