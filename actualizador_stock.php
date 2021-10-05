@@ -82,7 +82,7 @@ foreach( $linea as $indice => $value )
 
 
 		// Generación de una tabla de stock
-		echo "<tr><td>".$codigo."</td><td>".$campo2."</td></tr>";
+		/*echo "<tr><td>".$codigo."</td><td>".$campo2."</td></tr>";*/
 	}
 }
 
@@ -180,6 +180,7 @@ mysqli_query( $con, "
 
 
 // Control de salida
+echo "";
 echo "<tr><td>Registros insertados: </td><td>" . number_format( $insertados, 2 ) . "</td></tr>";
 echo "<tr><td>Registros actualizados: </td><td>"  .number_format( $actualizados, 2 ) . " </td></tr>";
 echo "<tr><td>Errores: </td><td>" . number_format( $errores, 2 ) . "</td></tr>";

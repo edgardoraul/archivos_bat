@@ -71,7 +71,7 @@ foreach( $linea as $indice => $value )
 		}
 
 		// Generación de una tabla de stock
-		echo '<tr><td>' . $codigo . '</td><td>' . number_format($campo2, 2, ",", ".") . '</td></tr>';
+		/*echo '<tr><td>' . $codigo . '</td><td>' . number_format($campo2, 2, ",", ".") . '</td></tr>';*/
 	}
 }
 
