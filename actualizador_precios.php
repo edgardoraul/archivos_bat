@@ -22,6 +22,9 @@ $actualizados 	= 0;
 // Vaciamos la tabla antes que nada
 mysqli_query( $con, "TRUNCATE TABLE importacion_precios;" );
 
+// Vaciamos los carritos abandonados de los invitados
+mysqli_query( $con, "DELETE FROM ps_cart WHERE id_customer = 0;" );
+
 
 // Apertura de Tabla.
 echo '<!DOCTYPE HTML>

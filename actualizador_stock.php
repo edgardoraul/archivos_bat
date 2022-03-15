@@ -60,6 +60,8 @@ echo "<table>
 foreach( $linea as $indice => $value )
 {
 	$codigo = $value["Referencia"];
+
+	// Operación ternaria. Si es menor a 2, coloca 0
 	$campo2 = $value["Cantidad"] < 2 ? 0 : $value["Cantidad"];
 	// $campo2 = $value["Cantidad"];
 
