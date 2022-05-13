@@ -31,7 +31,7 @@ mysqli_query( $con, "TRUNCATE TABLE importacion_stock_acumulado" );
 
 
 // Apertura de Tabla.
-echo '<!DOCTYPE HTML>
+/* echo '<!DOCTYPE HTML>
 <!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="es-es"><![endif]-->
 <!--[if IE 7]><html class="no-js lt-ie9 lt-ie8 ie7" lang="es-es"><![endif]-->
 <!--[if IE 8]><html class="no-js lt-ie9 ie8" lang="es-es"><![endif]-->
@@ -54,7 +54,7 @@ echo "<table>
 				<th>Stock</th>
 			</tr>
 		</thead>
-	<tbody>";
+	<tbody>"; */
 
 // Ahora actualizaremos los campos
 foreach( $linea as $indice => $value )
@@ -180,6 +180,16 @@ mysqli_query( $con, "
 	"
 );
 
+/* // Desactiva los productos con stock cero.
+mysqli_query( $con, "UPDATE ps_product SET `ps_product`.`active` = 0 WHERE `ps_product`.`quantity` = 0 ");
+mysqli_query( $con, "UPDATE ps_product_shop, ps_product SET `ps_product_shop`.`active` = 0 WHERE `ps_product_attribute`.`quantity` = 0 ")
+
+
+
+// Activa los productos con stock superior a cero.
+mysqli_query( $con, "UPDATE ps_product, ps_product SET `ps_product`.`active` = 1 WHERE `ps_product`.`quantity` > 0 ");
+mysqli_query( $con, "UPDATE ps_product_shop, ps_product SET `ps_product_shop`.`active` = 1 WHERE `ps_product_attribute`.`quantity` > 0 ")
+ */
 
 // Control de salida
 echo "";
@@ -188,11 +198,11 @@ echo "<tr><td>Registros actualizados: </td><td>"  .number_format( $actualizados,
 echo "<tr><td>Errores: </td><td>" . number_format( $errores, 2 ) . "</td></tr>";
 
 // Cierre de tabla
-echo "
+/* echo "
 		</tbody>
 	</table>
 	</body>
 </html>
-";
+"; */
 
 ?>

@@ -27,7 +27,7 @@ mysqli_query( $con, "DELETE FROM ps_cart WHERE id_customer = 0;" );
 
 
 // Apertura de Tabla.
-echo '<!DOCTYPE HTML>
+/* echo '<!DOCTYPE HTML>
 <!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="es-es"><![endif]-->
 <!--[if IE 7]><html class="no-js lt-ie9 lt-ie8 ie7" lang="es-es"><![endif]-->
 <!--[if IE 8]><html class="no-js lt-ie9 ie8" lang="es-es"><![endif]-->
@@ -50,7 +50,7 @@ echo "<table>
 				<th>Precio</th>
 			</tr>
 		</thead>
-	<tbody>";
+	<tbody>"; */
 
 // Ahora actualizaremos los campos
 foreach( $linea as $indice => $value )
@@ -103,11 +103,11 @@ echo "<tr><td>Registros actualizados: </td><td>"  .number_format( $actualizados,
 echo "<tr><td>Errores: </td><td>" . number_format( $errores, 2 ) . "</td></tr>";
 
 // Cierre de tabla
-echo "
+/* echo "
 		</tbody>
 	</table>
 	</body>
 </html>
-";
+"; */
 
 ?>
