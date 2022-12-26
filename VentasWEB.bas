@@ -1,5 +1,8 @@
 Attribute VB_Name = "VentasWEB"
 Option Explicit
+Function generarRotuloRetiro()
+
+End Function
 Sub GuardarArchivo()
 ' VALIDANDO NOMBRE DE ARCHIVO A GENERAR
 ' Variables a utilizar
@@ -83,14 +86,16 @@ Range("D:K").Columns.AutoFit
 
 ' Centrando el contenido
 Range("E:E").HorizontalAlignment = xlCenter
+Cells(ultimaFila + 1, 5).HorizontalAlignment = xlRight
 
 ' Acomoda el texto de las celdas con datos
 Range("B:B").ColumnWidth = 40
 Range("C:C").ColumnWidth = 50
+Range("A:A").ColumnWidth = 7
 Range(Cells(2, 1), Cells(ultimaFila, 11)).WrapText = True
 
 ' Ajusta automáticamente la altura de las filas
-Range(Cells(2, 1), Cells(ultimaFila, 10)).Rows.AutoFit
+Range(Cells(2, 1), Cells(ultimaFila, 11)).Rows.AutoFit
 
 ' Formato de impresión
 With ActiveSheet.PageSetup
@@ -104,7 +109,7 @@ With ActiveSheet.PageSetup
     .FooterMargin = Application.CentimetersToPoints(0.76)
     .CenterHorizontally = True
     .CenterVertically = False
-    .PrintArea = ActiveSheet.Range("A1:H" & filasTotales).Address
+    .PrintArea = ActiveSheet.Range("A1:I" & filasTotales).Address
     .Zoom = False
     .FitToPagesTall = 1
     .FitToPagesWide = 1
@@ -144,11 +149,11 @@ Selection.Borders(xlDiagonalUp).LineStyle = xlNone
     End With
 
 ' Agregando bordes HORIZONTALES en titular
-Range("A1:K1").Select
+Range("A1:M1").Select
 Selection.Borders.LineStyle = xlContinuous
 
 ' Se cuentan cuantas celdas ocupadas hasta el final
-Range(Cells(ultimaFila, 1), Cells(ultimaFila, 11)).Select
+Range(Cells(ultimaFila, 1), Cells(ultimaFila, 13)).Select
     With Selection
         .Borders(xlEdgeBottom).LineStyle = xlContinuous
     End With
@@ -167,20 +172,26 @@ Range(Cells(ultimaFila + 1, 5), Cells(ultimaFila + 1, 6)).Select
 Cells(ultimaFila + 1, 6).Borders.LineStyle = xlContinuous
 
 ' Colocando el total de rótulos a imprimir
-Cells(ultimaFila + 1, 2).Value = "ROTULOS:"
-Cells(ultimaFila + 1, 3).Value = "=COUNTA(A2:A" & ultimaFila & ")"
-Range(Cells(ultimaFila + 1, 2), Cells(ultimaFila + 1, 3)).Select
+Cells(ultimaFila + 1, 3).Value = "ROTULOS:"
+Cells(ultimaFila + 1, 4).Value = "=COUNTA(A2:A" & ultimaFila & ")"
+Range(Cells(ultimaFila + 1, 3), Cells(ultimaFila + 1, 4)).Select
 With Selection
     .Font.Bold = True
     .Font.Size = 15
     .VerticalAlignment = xlBottom
     .HorizontalAlignment = xlRight
 End With
-Cells(ultimaFila + 1, 3).HorizontalAlignment = xlLeft
+Cells(ultimaFila + 1, 3).HorizontalAlignment = xlRight
+Cells(ultimaFila + 1, 4).Select
+With Selection
+    .HorizontalAlignment = xlLeft
+    .Borders.LineStyle = xlContinuous
+End With
+
 
 ' Colocando un borde superior
 For i = 3 To ultimaFila
-    Range(Cells(i, 1), Cells(i, 11)).Select
+    Range(Cells(i, 1), Cells(i, 13)).Select
     If Cells(i, 1).Value <> "" Then
         With Selection
             .Borders(xlEdgeTop).LineStyle = xlContinuous
@@ -188,22 +199,39 @@ For i = 3 To ultimaFila
     End If
 Next i
 
+' Autofit para la última columna
+Range("J:M").EntireColumn.AutoFit
 End Function
-Function guardando(savename)
-    ' Guarda y renombra el archivo con número y fecha
-    savename = Application.GetSaveAsFilename(fileFilter:="Exel Files (*.xlsx), *.xlsx")
-    ActiveWorkbook.SaveAs Filename:=savename, FileFormat:=51
+Function generarRoutuloRetiro(nombre, telefono)
+    ' Genera el respectivo rótulo para retirar del local
 End Function
+
 Sub ventasWeb()
+' Controlar que no se haya hecho formato antes
+If Range("I1").Value = "Detalle" Then
+    MsgBox ("Ya le diste formato a esta planilla. " & VBA.vbNewLine & "Probá con otra.")
+    Range("A1").Select
+    Exit Sub
+End If
+
+' Declarando variables a utilizar
+Dim nombre As String
+Dim telefono As String
+Dim dni As String
 Dim savename As String
 Dim ultimaFila As Integer
 Dim i As Integer
-'Call guardando(savename)
+Dim rotulos As Interger
+rotulos = 0
+
+' Guardando el archivo con nombre específico
 Call GuardarArchivo
 Range("A1").Activate
 ultimaFila = ActiveSheet.Cells(Rows.count, 1).End(xlUp).Row
 
 ' Borrando información innecesaria
+Range("Y:Y").EntireColumn.Copy
+Range("AO:AO").EntireColumn.PasteSpecial
 Range("B:K, P:T, X:X, Z:AE, AG:AG, AI:AN").EntireColumn.Delete
 Range("C:E").EntireColumn.Insert
 Range("H:H").EntireColumn.Copy
@@ -245,10 +273,16 @@ Range("F1").Value = "Cantidad"
 'Eliminando columna innecesaria
 Range("L:L").EntireColumn.Delete
 
+
 'Purgando los teléfonos
 For i = 2 To ultimaFila
     Cells(i, 8).Value = Right(Cells(i, 8).Value, 10)
 Next i
+
+' Insertando columna para detalls
+Range("I:I").EntireColumn.Insert
+Range("I1:I1").Value = "Detalles"
+
 
 ' Generando las columnas de código/talle/color/cantidad
 Range("C:C").Select
@@ -267,6 +301,7 @@ Range("E1").Value = "Variante"
 Do While ActiveCell.Value <> ""
     If ActiveCell.Offset(0, 1) = "" Then
         ActiveCell.Value = ""
+        ActiveCell.Offset(0, 13) = ""
     End If
     ActiveCell.Offset(1, 0).Activate
 Loop
@@ -274,15 +309,42 @@ Loop
 ' DANDO FORMATO A TODA LA PLANILLA
 Call formato(ultimaFila, i)
 
-' DANDO FORMATO DE IMPRESION
-Call formatPrint(ultimaFila, i)
 
 ' GENERANDO LOS ROTULOS DE RETIRO
 For i = 2 To ultimaFila
-    If Cells(i, 10).Value = "Correo Argentino - Envio a domicilio" Then
-    ' Imprimir rótulo
+    If Sheets("ventas").Cells(i, 13).Value = "Retiras en Rerda Mendoza" Then
+        
+        ' Se coloca la leyenda en la celda
+        Debug.Print Cells(i, 9).Value
+        Cells(i, 9).Value = "Retira en Local"
+        
+        ' Variables a completar
+        nombre = Cells(i, 2).Value
+        telefono = Cells(i, 8).Value
+        dni = Cells(i, 7).Value
+        
+        ' Contador de rótulos a imprimir
+        rotulos = rotulos + 1
+        
+        ' Se agrega una pestaña para el respectivo rótulo
+        ActiveWorkbook.Sheets.Add(After:=ActiveWorkbook.Sheets("ventas")).Name = "Venta N° " & Cells(i, 1).Value
+        
+        ' Se genera el rótulo respectivo
+        Call generarRoutuloRetiro(nombre, telefono)
+        
     End If
+    Sheets("ventas").Activate
 Next i
+'Posicionando al principio
+Sheets("ventas").Range("A1").Activate
+
+' DANDO FORMATO DE IMPRESION
+Call formatPrint(ultimaFila, i)
+
+' Dando un aviso condicional sólo si hay rótulos, se lo contrario, no.
+If rotulos > 0 Then
+    MsgBox ("Tenés " & rotulos & " rótulos de retiro en local, para imprimir.")
+End If
 
 'Posicionando al principio
 Sheets("ventas").Range("A1").Activate
