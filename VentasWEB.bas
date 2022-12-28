@@ -1,18 +1,36 @@
 Attribute VB_Name = "VentasWEB"
 Option Explicit
-Function generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta)
-    'Dim nombre As String
-    'Dim telefono As String
-    'Dim dni As String
-    'Dim fecha As String
-    'Dim numVenta As String
+Function correo(numVenta, nombre, ruta, ultimaFila, i, packar, planilla)
+    ' GENERA UN LISTADO DE VENTAS Y N° GUIAS PARA EL CORREO
     
-    'fecha = "12/23/2034"
-    'nombre = "Fulando de no tan Tal"
-    'telefono = "32141234"
-    'dni = "33-45987123-5"
-    'numVenta = 325
+    ruta = ruta & "../"
+    ' Abrir el archivo
+    'Workbooks.Open ruta & "ENCOMIENDAS_WEB.xlsx"
     
+    ' Borrando el contenido viejo
+    packar.Sheets(1).Range("A9:C39").ClearContents
+    
+    ' Completando la información
+    For i = 2 To ultimaFila
+        ' Asignando el valor a cada N° vta.
+        numVenta = planilla.Sheets("ventas").Cells(i, 1).Value
+        nombre = planilla.Sheets("ventas").Cells(i, 2).Value
+        Debug.Print numVenta & "-" & nombre
+        
+        ' Recorremos la planilla del Correo
+        ' Controlamos que el número de venta esté completo
+        ' y además que NO SEA un retiro en Local
+        If numVenta <> "" And planilla.Sheets("ventas").Cells(i, 9).Value <> "Retira en Local" Then
+            packar.Sheets(1).Cells(i + 7, 1).Value = numVenta
+            packar.Sheets(1).Cells(i + 7, 2).Value = nombre
+        End If
+    Next i
+    
+    
+End Function
+
+Function generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
+    ' GENERA PESTAÑAS CON ROTULOS PARA RETIRO EN LOCAL
     ' Enmarcando
     ActiveSheet.Range("A1:H21").Select
     With Selection
@@ -41,15 +59,28 @@ Function generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta)
     End With
     
     ' Leyenda de Rerda
-    Range("a2:h2").Select
-    With Selection
-        .Merge
-        .Font.Size = 20
-        .Font.Bold = True
-        .HorizontalAlignment = xlCenter
-    End With
-    Range("a2").Value = "RERDA S.A. - Sastrería Militar"
+    'Range("a2:h2").Select
+    'With Selection
+     '   .Merge
+    '    .Font.Size = 20
+     '   .Font.Bold = True
+     '   .HorizontalAlignment = xlCenter
+    'End With
+    'Range("a2").Value = "RERDA S.A. - Sastrería Militar"
     
+    ' Dando un alto a la fila
+    ActiveSheet.Range("A2:A2").RowHeight = 30
+    
+     ' Insertando la imagen
+    ActiveSheet.Pictures.Insert(ruta & "..\logo.png").Select
+    
+    ' Centrando el logo
+    With Selection
+        .Top = 4
+        .Left = 155
+    End With
+    
+   
     ' Leyenda de retiro
     Range("A4:H6").Select
     With Selection
@@ -258,17 +289,15 @@ Next i
 Range("J:M").EntireColumn.AutoFit
 End Function
 
-Sub GuardarArchivo(fecha)
+Sub GuardarArchivo(fecha, ruta)
 ' VALIDANDO NOMBRE DE ARCHIVO A GENERAR Y GUARDAR
 
 ' Variables a utilizar
-Dim ruta As String
 Dim nombre As String
 Dim cuenta As String
 
 ' Asignando algunos valores
-'ruta = "\\EDGARD\Web\Listados de Ventas Online\WEB\"
-ruta = "D:\Web\Listados de Ventas Online\WEB\"
+ruta = ruta & "WEB\"
 
 
 'Controlando si la compu EDGARD está prendida y conectada a red.
@@ -291,6 +320,7 @@ archivos = Dir(ruta)
 ActiveWorkbook.Sheets.Add(After:=ActiveWorkbook _
     .ActiveSheet).Name = "Listado"
 Sheets("Listado").Visible = False
+Sheets(1).Name = "ventas"
 Sheets("ventas").Select
 
 Do While Len(archivos) > 0
@@ -331,11 +361,14 @@ End Sub
 
 
 Sub ventasWeb()
+'
+
+
 ' Controlar que no se haya hecho formato antes
 If Range("I1").Value = "Detalle" Then
     MsgBox ("Ya le diste formato a esta planilla. " & VBA.vbNewLine & "Probá con otra.")
     Range("A1").Select
-    Exit Sub
+    'Exit Sub
 End If
 
 ' Declarando variables a utilizar
@@ -343,17 +376,24 @@ Dim nombre As String
 Dim telefono As String
 Dim dni As String
 Dim numVenta As String
-Dim savename As String
+Dim planilla As Object
+Dim packar As Object
 Dim ultimaFila As Integer
 Dim fecha As String
 Dim i As Integer
 Dim rotulos As Integer
+Dim ruta As String
+Dim img As String
 
+' Asignando algunos valores
+'ruta = "\\EDGARD\Web\Listados de Ventas Online\"
+ruta = "D:\Web\Listados de Ventas Online\"
 rotulos = 0
 fecha = Day(Date) & "-" & Month(Date) & "-" & Year(Date)
 
+
 ' Guardando el archivo con nombre específico
-Call GuardarArchivo(fecha)
+Call GuardarArchivo(fecha, ruta)
 Range("A1").Activate
 ultimaFila = ActiveSheet.Cells(Rows.count, 1).End(xlUp).Row
 
@@ -459,22 +499,37 @@ For i = 2 To ultimaFila
         ActiveWorkbook.Sheets.Add(After:=ActiveWorkbook.Sheets("ventas")).Name = "Venta N° " & Cells(i, 1).Value
         
         ' Se genera el rótulo respectivo
-        Call generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta)
+        Call generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
         
     End If
     Sheets("ventas").Activate
 Next i
+
 'Posicionando al principio
 Sheets("ventas").Range("A1").Activate
 
+' Definiendo este archivo
+Set planilla = ActiveWorkbook
+Debug.Print planilla.Name
+
 ' DANDO FORMATO DE IMPRESION
 Call formatPrint(ultimaFila, i)
+
+
 
 ' Dando un aviso condicional sólo si hay rótulos, se lo contrario, no.
 If rotulos > 0 Then
     MsgBox ("Tenés " & rotulos & " rótulos de retiro en local, para imprimir." & VBA.vbNewLine & "Aquí abajo en las pestañas.")
 End If
 
+' Abrir el archivo
+ruta = ruta & "../"
+Workbooks.Open ruta & "ENCOMIENDAS_WEB.xlsx"
+Set packar = ActiveWorkbook
+Debug.Print packar.Name
+
+Call correo(numVenta, nombre, ruta, ultimaFila, i, packar, planilla)
+
 'Posicionando al principio
-Sheets("ventas").Range("A1").Activate
+planilla.Sheets("ventas").Activate
 End Sub
