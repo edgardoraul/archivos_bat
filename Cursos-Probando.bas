@@ -36,6 +36,7 @@ Public productoActual As String
 ' Textos
 Public TITULARES As Variant
 Public hojasTotalizadoras As Variant
+Public hojita As Variant
 
 
 
@@ -90,9 +91,8 @@ Sub constructorHoja()
 End Sub
 
 Function constructorTotalesSeparados()
-' CONSTUYE LAS HOJAS DE TOTALES, SEPARADOS Y FALTANTES
-Dim hojita As Variant
 
+' CONSTUYE LAS HOJAS DE TOTALES, SEPARADOS Y FALTANTES
 hojasTotalizadoras = Array("TOTALES", "SEPARADOS", "FALTANTES")
 
 For Each hojita In hojasTotalizadoras
@@ -293,6 +293,11 @@ For Each hojita In hojasTotalizadoras
         .Borders.LineStyle = xlContinuous
     End With
     
+    ' Fórmulas en la hoja FALTANTES
+    With Worksheets(4).Cells(filita, prodActual)
+        .Value = "=" & Worksheets(2).Name & "!R" & filita & "C" & prodActual & "-" & Worksheets(3).Name & "!R" & filita & "C" & prodActual & ""
+    End With
+    
     ' Autosuma, leyenda "total" y formato
     If filita - 3 = cantidadTalles Then
         Sheets(hojita).Cells(filita + 1, prodActual).FormulaR1C1 = "=SUM(R4C" & prodActual & ":R" & filita & "C" & prodActual & ")"
@@ -305,7 +310,7 @@ For Each hojita In hojasTotalizadoras
         With Sheets(hojita).Cells(filita + 1, prodActual - 1)
             .Borders.LineStyle = xlContinuous
             .Font.Bold = True
-            '.HorizontalAlignment = xlCenter
+            .HorizontalAlignment = xlCenter
         End With
     End If
     
@@ -554,8 +559,6 @@ Worksheets(tipoCuenta).Activate
         ' Se inserta el resultado de la suma de talles
         If contador > 0 Then
             Worksheets(tipoCuenta).Cells(g, columna + 1).Value = contador
-        Else
-            Worksheets(tipoCuenta).Cells(g, columna + 1).Value = ""
         End If
         
         ' Baja una fila y repite
