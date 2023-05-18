@@ -31,14 +31,43 @@ Public talleCinto As Variant
 Public talleSinTalle As Variant
 Public cantProd As Byte
 Public cantCols As Byte
+Public productoActual As String
+
+' Textos
+Public TITULARES As Variant
+Public hojasTotalizadoras As Variant
+Public hojita As Variant
+
+Function negritaCentrado(rango)
+' Da formato de centrado, en negrita y rodeado con líneas
+    With rango
+        .HorizontalAlignment = xlCenter
+        .Font.Bold = True
+        .Borders.LineStyle = xlContinuous
+    End With
+End Function
 
 
 Sub constructorHoja()
 ' CONSTRUYE LAS HOJAS NECESARIAS PARA TRABAJAR
-    Dim z As Integer
-    Dim x As Byte
-    Dim titular As String
-    Dim hojasTotales As Byte
+    'Elimina cualquier hipervícunlo que haya
+    Worksheets(1).Hyperlinks.Delete
+     
+    ' Formatea el titular de la planilla
+    With Worksheets(1).Range("A1:D1")
+        .Merge
+        .Font.Size = 16
+    End With
+    Call negritaCentrado(Worksheets(1).Range("A1:D1"))
+    
+    
+    Dim z As Integer 'Columna inicial: Es la del primer producto
+    Dim x As Byte 'Columnas totales en TOTALES Y SEPARADOS. El doble que "z"
+    Dim titular As String 'El nombre de c/producto en PLANILLA
+    Dim hojasTotales As Byte 'Cantidad de hojas del documento. Irá incrementando a medida que se vayan creando
+    
+    ' Textos a utilizar más adelante
+    TITULARES = Array("TALLES", "TOTALES", "SEPARADOS", "FALTANTES")
     
     ultimaColumna = Worksheets(1).Cells(2, Columns.Count).End(xlToLeft).Column
     ultimaFila = Worksheets(1).Cells(Rows.Count, 2).End(xlUp).Row
@@ -56,36 +85,38 @@ Sub constructorHoja()
     cantCols = cantProd * 2
     x = 2
 
-    Debug.Print "Cant Prod: " & cantProd, "Cant Cols: " & cantCols, "Col actual: " & x
     
     For z = DesdeAqui To ultimaColumna
         Worksheets(1).Activate
         Worksheets(1).Cells(2, z).Activate
         titular = Worksheets(1).Cells(2, z).Value
+        productoActual = Worksheets(1).Cells(2, z).Address
         
         ' Agrega siempre en desde la última hoja
-        If z > hojasTotales + 1 Then
-            Worksheets.Add(After:=Worksheets(hojasTotales)).Name = titular
+        If z > hojasTotales Then
+            Worksheets.Add(after:=Worksheets(hojasTotales)).Name = titular
             
             Call constructorProducto(hojasTotales + 1, titular, x)
             x = x + 2
             hojasTotales = ThisWorkbook.Worksheets.Count
-            Debug.Print "Cant Prod: " & cantProd, "Cant Cols: " & cantCols, "Col actual: " & x
-    
+            
         End If
     Next z
 End Sub
 
 Function constructorTotalesSeparados()
-' CONSTUYE LAS HOJAS DE TOTALES Y SEPARADOS
+
+' CONSTUYE LAS HOJAS DE TOTALES, SEPARADOS Y FALTANTES
+hojasTotalizadoras = Array("TOTALES", "SEPARADOS", "FALTANTES")
+
+For Each hojita In hojasTotalizadoras
+    ' Coloca el nombre correcto
+    Worksheets.Add(after:=Worksheets(ThisWorkbook.Worksheets.Count)).Name = hojita
     
-    ' Crear las hoja 1 Totales y su título
-    Worksheets.Add(After:=Worksheets(ThisWorkbook.Worksheets.Count)).Name = "TOTALES"
-    Worksheets(2).Range("A1").Value = "=" & Worksheets(1).Name & "!$A$1"
+    ' Copia el título de la hoja principal: PLANILLA
+    Sheets(hojita).Range("A1").Value = "=" & Worksheets(1).Name & "!$A$1"
     
-    ' Crea la hoja 3 y su título
-    Worksheets.Add(After:=Worksheets(ThisWorkbook.Worksheets.Count)).Name = "SEPARADOS"
-    Worksheets(3).Range("A1").Value = "=" & Worksheets(1).Name & "!$A$1"
+Next hojita
 
 End Function
 
@@ -136,8 +167,32 @@ talleSinTalle = Array(1)
         .Range("D3").Value = "FALTANTES"
     End With
     
+    ' Hipervínculos a las pestañas respectivas
+    With Worksheets(indice).Hyperlinks
+        '-> Planilla principal
+        .Add Anchor:=Worksheets(indice).Range("A1"), Address:="", SubAddress:="'" & Worksheets(1).Name & "'!A1", ScreenTip:="Ir a " & Sheets(1).Name & "."
+        
+        '-> A la columna correspondiente de la planilla principal
+        .Add Anchor:=Worksheets(indice).Range("A2"), Address:="", SubAddress:="'" & Worksheets(1).Name & "'!" & productoActual & "", ScreenTip:="Ir a " & titulo & " en " & Sheets(1).Name & "."
+        
+        '-> A los TOTALES
+        .Add Anchor:=Worksheets(indice).Range("B3"), Address:="", SubAddress:="'" & Worksheets(2).Name & "'!A1", ScreenTip:="Ir a " & Worksheets(2).Name & ".", TextToDisplay:=Range("B3").Value
+        
+        '-> A los SEPARADOS
+        .Add Anchor:=Worksheets(indice).Range("C3"), Address:="", SubAddress:="'" & Worksheets(3).Name & "'!A1", ScreenTip:="Ir a " & Worksheets(3).Name & ".", TextToDisplay:=Range("C3").Value
+        
+        '-> A los FALTANTES
+        .Add Anchor:=Worksheets(indice).Range("D3"), Address:="", SubAddress:="'" & Worksheets(4).Name & "'!A1", ScreenTip:="Ir a " & Worksheets(4).Name & ".", TextToDisplay:=Range("D3").Value
+    End With
     
-    eleccion = VBA.InputBox(Prompt:=leyenda, Title:="Grupo de Talles")
+    ' Hypervínculos desde la planilla principal al respectivo producto
+    With Worksheets(1).Range(productoActual).Hyperlinks
+        .Add Anchor:=Worksheets(1).Range(productoActual), Address:="", _
+            SubAddress:="'" & Worksheets(indice).Name & "'!A2", _
+            ScreenTip:="Ir a " & Worksheets(indice).Name & "."
+    End With
+    
+    eleccion = VBA.InputBox(Prompt:=leyenda, Title:="Grupo de Talles: " & titulo)
     
     MsgBox "Elegiste la opción: " & eleccion
 volver:
@@ -172,14 +227,12 @@ volver:
             ' Datos de cada opción de talle
             Worksheets(indice).Cells(fila, 1).Value = arreglo
             
-            ' Datos de TOTALES CORREGIR AQUÍ LA FORMULA
+            ' Datos de TOTALES
             direccion = Worksheets(2).Cells(fila, prodActual).Address
-            Debug.Print direccion
             Worksheets(indice).Cells(fila, 2).Formula = "=" & Worksheets(2).Name & "!" & direccion
             
-            ' Datos de SEPARADOS CORREGIR AQUÍ LA FORMULA
+            ' Datos de SEPARADOS
             direccion = Worksheets(3).Cells(fila, prodActual).Address
-            Debug.Print direccion
             Worksheets(indice).Cells(fila, 3).Formula = "=" & Worksheets(3).Name & "!" & direccion
             
             ' La resta de los talles que faltan
@@ -202,6 +255,7 @@ volver:
     End With
     
     ' Combinar celdas
+    Worksheets(indice).Range("A1:D1").Merge
     Worksheets(indice).Range("A2:D2").Merge
     
     ' Negrita y fuente más grande para las autosumas
@@ -210,8 +264,8 @@ volver:
         .Font.Size = 16
     End With
     
-    ' Negrita y centrado de subtítulos
-    With Worksheets(indice).Range("A2:D3")
+    ' Negrita y centrado de títulos y subtítulos
+    With Worksheets(indice).Range("A1:D3")
         .Font.Bold = True
         .HorizontalAlignment = xlCenter
     End With
@@ -228,28 +282,58 @@ End Sub
 Sub datosTotales(filita, datos, hojaOrigen, cantidadTalles, prodActual)
 ' Completa datos para llenar en la planilla TOTALES
 
+Dim hojita As Variant
+
+For Each hojita In hojasTotalizadoras
     ' Títulos del producto
-    Worksheets(2).Cells(2, prodActual - 1).Value = hojaOrigen
-    Worksheets(3).Cells(2, prodActual - 1).Value = hojaOrigen
-
+    Sheets(hojita).Cells(2, prodActual - 1).Value = hojaOrigen
+    
+    ' Combina el título del producto con la celda adyacente
+    'Worksheets(hojita).Range(Cells(2, prodActual - 1), Cells(2, prodActual)).Merge
+    'Call negritaCentrado(Sheets(hojita).Range(Cells(2, prodActual - 1), Cells(2, prodActual)))
+    
     ' Subtítulo del talle
-    Worksheets(2).Cells(3, prodActual - 1).Value = "TALLES"
-    Worksheets(3).Cells(3, prodActual - 1).Value = "TALLES"
-
-    ' Subtítulos de totales
-    Worksheets(2).Cells(3, prodActual).Value = "TOTALES"
-    Worksheets(3).Cells(3, prodActual).Value = "SEPARADOS"
-
+    Sheets(hojita).Cells(3, prodActual - 1).Value = "TALLES"
+    Call negritaCentrado(Sheets(hojita).Cells(3, prodActual - 1))
     
-    ' Datos de los talles
-    Worksheets(2).Cells(filita, prodActual - 1).Value = datos
-    Worksheets(3).Cells(filita, prodActual - 1).Value = datos
+    ' Subtítulos de totales, separados y faltantes
+    Sheets(hojita).Cells(3, prodActual).Value = hojita
+    Call negritaCentrado(Sheets(hojita).Cells(3, prodActual))
     
-    ' Autosuma
+    ' Datos de los talles y formato
+    Sheets(hojita).Cells(filita, prodActual - 1).Value = datos
+    With Sheets(hojita).Cells(filita, prodActual - 1)
+        .Value = datos
+        .Borders.LineStyle = xlContinuous
+    End With
+    
+    ' Formato a los datos
+    With Sheets(hojita).Cells(filita, prodActual)
+        .Borders.LineStyle = xlContinuous
+    End With
+    
+    ' Fórmulas en la hoja FALTANTES
+    With Worksheets(4).Cells(filita, prodActual)
+        .Value = "=" & Worksheets(2).Name & "!R" & filita & "C" & prodActual & "-" & Worksheets(3).Name & "!R" & filita & "C" & prodActual & ""
+    End With
+    
+    ' Autosuma, leyenda "total" y formato
     If filita - 3 = cantidadTalles Then
-        Worksheets(2).Cells(filita + 1, prodActual).FormulaR1C1 = "=SUM(R4C" & prodActual & ":R" & filita & "C" & prodActual & ")"
-        Worksheets(3).Cells(filita + 1, prodActual).FormulaR1C1 = "=SUM(R4C" & prodActual & ":R" & filita & "C" & prodActual & ")"
+        Sheets(hojita).Cells(filita + 1, prodActual).FormulaR1C1 = "=SUM(R4C" & prodActual & ":R" & filita & "C" & prodActual & ")"
+        With Sheets(hojita).Cells(filita + 1, prodActual)
+            .Borders.LineStyle = xlContinuous
+            .Font.Bold = True
+        End With
+        
+        Sheets(hojita).Cells(filita + 1, prodActual - 1).Value = "Total"
+        With Sheets(hojita).Cells(filita + 1, prodActual - 1)
+            .Borders.LineStyle = xlContinuous
+            .Font.Bold = True
+            .HorizontalAlignment = xlCenter
+        End With
     End If
+    
+Next hojita
 
 End Sub
 
@@ -335,7 +419,6 @@ For Each hojita In ActiveWorkbook.Worksheets
     If hojita.Visible = True Then
         With hojita
             'If hojita.Index = 1 Then
-                Debug.Print hojita.Index
              '   .Protect Password:="Rerda", AllowFormattingCells:=True, AllowFormattingRows:=True
             'ElseIf hojita.Index > 3 Then
                 ' Se desprotegen las hojas 2 y 3 ya que sirven para guardar datos dinámicos
@@ -350,12 +433,24 @@ Worksheets(1).Activate
 ThisWorkbook.Save
 Fin:
 End Sub
+
 Sub buscar_producto()
 Attribute buscar_producto.VB_Description = "Cuenta los talles de productos en cuestión."
 Attribute buscar_producto.VB_ProcData.VB_Invoke_Func = "J\n14"
 ' Hoja: TOTALES
 ' Recorre la fila de los títulos para coincidir con el texto "TALLES".
 
+' Primer hoja
+Worksheets(1).Activate
+Worksheets(1).Range("A1").Activate
+
+' Controla si están creadas las planillas
+If ThisWorkbook.Worksheets.Count = 1 Then
+    MsgBox ("Primero tenés que generar todas planillas")
+    Exit Sub
+End If
+
+' Variables para contar
 Dim e As Byte
 Dim f As Byte
 Dim cuentaProducto As Byte
@@ -366,7 +461,7 @@ separados = False
 ' Total de columnas incluídas las vacías
 Dim columnas As Byte
 
-' Cantida de productos en la hoja PLANILLA
+' Cantidad de productos en la hoja PLANILLA
 productos = Worksheets(1).Cells(2, Columns.Count).End(xlToLeft).Column - DesdeAqui + 1
 columnas = productos * 2
     
@@ -399,6 +494,18 @@ Attribute buscar_separados.VB_ProcData.VB_Invoke_Func = "I\n14"
 ' Hoja: SEPARADOS
 ' Recorre la fila de los títulos para coincidir con el texto "TALLES".
 
+' Primer hoja
+Worksheets(1).Activate
+Worksheets(1).Range("A1").Activate
+
+' Controla si están creadas las planillas
+If ThisWorkbook.Worksheets.Count = 1 Then
+    MsgBox ("Primero tenés que generar todas planillas")
+    Exit Sub
+End If
+
+
+' Variables para contar
 Dim e As Byte
 Dim f As Byte
 Dim cuentaProducto As Byte
@@ -409,7 +516,7 @@ separados = True
 ' Total de columnas incluídas las vacías
 Dim columnas As Byte
 
-' Cantida de productos en la hoja PLANILLA
+' Cantidad de productos en la hoja PLANILLA
 productos = Worksheets(1).Cells(2, Columns.Count).End(xlToLeft).Column - DesdeAqui + 1
 columnas = productos * 2
     
@@ -431,6 +538,7 @@ Worksheets(3).Activate
 
 ' Formato lindo
 Call formatear(3, columnas)
+Call formatear(4, columnas)
 
 ' Muestra el aviso de proceso terminado
 MsgBox "Productos marcados y separados -> contados todo OK :-)", vbOKOnly
@@ -470,8 +578,6 @@ Worksheets(tipoCuenta).Activate
         ' Se inserta el resultado de la suma de talles
         If contador > 0 Then
             Worksheets(tipoCuenta).Cells(g, columna + 1).Value = contador
-        Else
-            Worksheets(tipoCuenta).Cells(g, columna + 1).Value = ""
         End If
         
         ' Baja una fila y repite
@@ -483,7 +589,8 @@ Worksheets(tipoCuenta).Activate
 End Sub
 
 Function CuentaTalles(talleBuscar, cuentaProducto, condicion)
-' CUENTA LOS TALLES MARCADOS DEL PRODUCTO
+' CUENTA LOS TALLES MARCADOS DEL PRODUCTO.
+' TAMBIÉN COMPLETA POR DIFERENCIA UNA HOJA CON LOS FALTANTES.
 
 ' Todas las filas con datos de la Planilla
 Dim ultimaFila As Integer
@@ -519,20 +626,26 @@ End Function
 
 Function formatear(hoja, columnas)
 ' Formatea la hoja con algo lindo
+Worksheets(hoja).Activate
 
 Dim i As Byte
 
+' Fusiona las 4 celdas del título de la hoja y le agrega hiperlink a la principal
+With Worksheets(hoja).Range("A1:D1")
+    .Merge
+    .Hyperlinks.Add Anchor:=Worksheets(hoja).Range("A1"), Address:="", _
+        SubAddress:="'" & Worksheets(1).Name & "'!A1", _
+        ScreenTip:="Ir a " & Sheets(1).Name & "."
+    .Font.Bold = True
+    .Font.Size = 14
+End With
 
 With Worksheets(hoja).Range("A3").CurrentRegion
  ' Negrita y fuente más grande para las autosumas
     .EntireColumn.AutoFit
 End With
 
-With Worksheets(hoja).Range(Cells(3, 1), Cells(3, columnas))
-    .HorizontalAlignment = xlCenter
-    .Borders.LineStyle = xlContinuous
-    .Font.Bold = True
-End With
+Call negritaCentrado(Worksheets(hoja).Range(Cells(3, 1), Cells(3, columnas)))
 
 i = 2
 Do While i <= columnas
