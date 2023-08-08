@@ -34,8 +34,11 @@ Selection.Copy
 Sheets("Planilla").Paste
 Application.CutCopyMode = False
 
+
 ' Borrando la hoja innecesaria
+Application.DisplayAlerts = False
 Worksheets(1).Delete
+Application.DisplayAlerts = True
 
 ' Acomodando las columnas
 Columns(3).EntireColumn.Insert
@@ -64,7 +67,7 @@ Range("C1").Value = "Cliente"
 Range("D1").Value = "Descripción"
 Range("E1").Value = "Código"
 Range("I1").Value = "Detalles"
-Range("J1").Value = "Firma Control"
+Range("J1").Value = "Ubicación"
 
 
 ' ============================================================
@@ -74,7 +77,7 @@ Range("J1").Value = "Firma Control"
 Dim cadenaOriginal As Variant
 
 ' Listado de expresiones a borrar. Deber tener al último el "" para quelo tome el bucle.
-cadenaOriginal = Array("-CL-EG", "-PR-EG", "-PR", "-CL", " T:52-56", " T:2XS-XL", "T:34-44", "T:34-48", "T:36-48", "T:46-48", " T:46-50", "T:50-54", "T:56-60", "T:62-66", "T:34/44", "T:34/48", "T:36/48", "T:46/48", "T:38-48", "T:50/54", " 50-54", "T:56/60", "T:62/66", "T:XXS-XXL", "T:2XS-2XL", "2XS/2XL", "XXS/XXL", "T:3XL-5XL", "T:2XS/2XL", "3XL/5XL", " envío gratis", " envio gratis", " rerda", " envío gratis", " envio gratis", " en cuotas", "en cuotas", " premium", "premium", "Unico", "Único", "Regulable", " cuotas", " talles especiales", "talle especial", " - ", " . ", "   ", "...", "..", "")
+cadenaOriginal = Array("-CL-EG", "-PR-EG", "-PR", "-CL", " T:52-56", " T:2XS-XL", "T:34-44", "T:34-48", "T:36-48", "T:46-48", " T:46-50", "T:50-54", "T:56-60", "T:62-66", "T:34/44", "T:34/48", "T:36/48", "T:46/48", "T:38-48", "T:50/54", " 50-54", "T:56/60", "T:62/66", "T:XXS-XXL", "T:2XS-2XL", "2XS/2XL", "XXS/XXL", "T:3XL-5XL", "T:2XS/2XL", "3XL/5XL", " envío gratis", " envio gratis", " rerda", " envío gratis", " envio gratis", " en cuotas", "en cuotas", " premium", "premium", "Unico", "Único", "Regulable", " cuotas", " talles especiales", "talle especial", " - ", " . ", "   ", "...", "..", "Unico", "Único", "")
 
 ' Definiendo el largo del array con un bucle While
 Dim largo As Integer
@@ -120,7 +123,7 @@ Range(Selection, Selection.End(xlToRight)).Select
         .Interior.color = RGB(250, 250, 250)
         .WrapText = True
     End With
-    
+
 ' Formateando la columna de fechas
 Range("A1").Select
 Range(Selection, Selection.End(xlDown)).Select
@@ -145,13 +148,16 @@ Selection.Borders.LineStyle = xlContinuous
 
 ' Agregando bordes HORIZONTALES al final de tabla
 Range("K1").Select
+
 ' Se cuentan cuantas celdas ocupadas hasta el final
 Dim ultima As Integer
 ultima = Cells(Rows.count, 1).End(xlUp).Row
 Range(Cells(ultima, 1), Cells(ultima, 11)).Select
-    With Selection
-        .Borders(xlEdgeBottom).LineStyle = xlContinuous
-    End With
+With Selection
+    .Borders(xlEdgeBottom).LineStyle = xlContinuous
+End With
+
+
 
 ' Colocando totales de productos y dando formato
 Cells(ultima + 1, 7).Value = "TOTALES:"
@@ -217,12 +223,6 @@ Range(Cells(ultima + 1, 2), Cells(ultima + 1, 3)).Select
         .VerticalAlignment = xlBottom
     End With
 
-' Formato para acomodar el texto en toda la tabla imprimible
-Range(Cells(1, 1), Cells(ultima, "K")).Select
-    With Selection
-    End With
-
-
 ' ==========================================================
 ' FORMATO PARA IMPRIMIR UNA SOLA PÁGINA
 
@@ -235,6 +235,12 @@ Range("K:K").Columns.AutoFit
 
 ' Acomoda el texto de las celdas con datos
 Range(Cells(2, 1), Cells(ultima, 11)).WrapText = True
+
+' Formato a la ubiación de los productos.
+With Range(Cells(2, 9), Cells(ultima, 10))
+    .ShrinkToFit = True
+    .WrapText = False
+End With
 
 ' Ajusta automáticamente la altura de las filas
 Range(Cells(2, 1), Cells(ultima, 10)).Rows.AutoFit
