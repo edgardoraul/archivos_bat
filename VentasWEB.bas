@@ -1,6 +1,6 @@
 Attribute VB_Name = "VentasWEB"
 Option Explicit
-Function correo(numVenta, nombre, ultimaFila, i, packar, planilla)
+Function correo(numVenta, nombre, ultima, i, packar, planilla)
     ' GENERA UN LISTADO DE VENTAS Y N° GUIAS PARA EL CORREO
     ' Acumulador negativo para evitar filas en blanco
     
@@ -13,7 +13,7 @@ Function correo(numVenta, nombre, ultimaFila, i, packar, planilla)
     packar.Sheets(1).Range("A9:C39").ClearContents
     
     ' Completando la información
-    For i = 2 To ultimaFila
+    For i = 2 To ultima
         ' Asignando el valor a cada N° vta.
         numVenta = planilla.Sheets("ventas").Cells(i, 1).Value
         nombre = planilla.Sheets("ventas").Cells(i, 2).Value
@@ -160,29 +160,29 @@ Function generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
     
 End Function
 
-Function formatPrint(ultimaFila, i)
+Function formatPrint(ultima, i)
 ' Dando formato apaisado, expandido a A4 y con titulares. Una sóla página.
 
 ' Delimitando el tamaño de hojas y márgenes
 Dim filasTotales As Integer
-filasTotales = ultimaFila + 1
+filasTotales = ultima + 1
 
 ' Formatea la última columna que NO saldrá impresa, sólo para acomodar, nada más
 Range("D:K").Columns.AutoFit
 
 ' Centrando el contenido
 Range("E:E").HorizontalAlignment = xlCenter
-Cells(ultimaFila + 1, 5).HorizontalAlignment = xlRight
+Cells(ultima + 1, 5).HorizontalAlignment = xlRight
 
 ' Acomoda el texto de las celdas con datos
 Range("B:B").ColumnWidth = 40
 Range("C:C").ColumnWidth = 50
 Range("A:A").ColumnWidth = 7
 Range("E:E").ColumnWidth = 12
-'Range(Cells(2, 1), Cells(ultimaFila, 11)).WrapText = True
+'Range(Cells(2, 1), Cells(ultima, 11)).WrapText = True
 
 ' Ajusta automáticamente la altura de las filas
-Range(Cells(2, 1), Cells(ultimaFila, 11)).Rows.AutoFit
+Range(Cells(2, 1), Cells(ultima, 11)).Rows.AutoFit
 
 ' Formato de impresión
 With ActiveSheet.PageSetup
@@ -196,7 +196,7 @@ With ActiveSheet.PageSetup
     .FooterMargin = Application.CentimetersToPoints(0.76)
     .CenterHorizontally = True
     .CenterVertically = False
-    .PrintArea = ActiveSheet.Range("A1:G" & ultimaFila + 1).Address
+    .PrintArea = ActiveSheet.Range("A1:G" & ultima + 1).Address
     .Zoom = False
     .FitToPagesTall = 1
     .FitToPagesWide = 1
@@ -205,7 +205,7 @@ End With
     
 End Function
 
-Function formato(ultimaFila, i)
+Function formato(ultima, i)
 ' DA FORMATO A LA TABLA DE EXCEL PARA QUE SE VEA BONITA
 
 Range("A1").CurrentRegion.Select
@@ -243,38 +243,38 @@ Range("A1:M1").Select
 Selection.Borders.LineStyle = xlContinuous
 
 ' Se cuentan cuantas celdas ocupadas hasta el final
-Range(Cells(ultimaFila, 1), Cells(ultimaFila, 13)).Select
+Range(Cells(ultima, 1), Cells(ultima, 13)).Select
     With Selection
         .Borders(xlEdgeBottom).LineStyle = xlContinuous
     End With
 
 ' Colocando totales de productos y dando formato
-Cells(ultimaFila + 1, 5).Value = "TOTALES:"
-Cells(ultimaFila + 1, 6).Select
-Cells(ultimaFila + 1, 6).Value = "=SUM(F2:F" & ultimaFila & ")"
-Range(Cells(ultimaFila + 1, 5), Cells(ultimaFila + 1, 6)).Select
+Cells(ultima + 1, 5).Value = "TOTALES:"
+Cells(ultima + 1, 6).Select
+Cells(ultima + 1, 6).Value = "=SUM(F2:F" & ultima & ")"
+Range(Cells(ultima + 1, 5), Cells(ultima + 1, 6)).Select
     With Selection
         .Font.Bold = True
         .Font.Size = 15
         .HorizontalAlignment = xlRight
         .VerticalAlignment = xlBottom
     End With
-Cells(ultimaFila + 1, 6).Borders.LineStyle = xlContinuous
+Cells(ultima + 1, 6).Borders.LineStyle = xlContinuous
 
 ' Colocando el total de rótulos a imprimir
-Cells(ultimaFila + 1, 2).Value = "ROTULOS:"
-Cells(ultimaFila + 1, 3).Value = "=COUNTA(A2:A" & ultimaFila & ")"
-Range(Cells(ultimaFila + 1, 2), Cells(ultimaFila + 1, 3)).Select
+Cells(ultima + 1, 2).Value = "ROTULOS:"
+Cells(ultima + 1, 3).Value = "=COUNTA(A2:A" & ultima & ")"
+Range(Cells(ultima + 1, 2), Cells(ultima + 1, 3)).Select
 With Selection
     .Font.Bold = True
     .Font.Size = 15
     .VerticalAlignment = xlBottom
     .HorizontalAlignment = xlRight
 End With
-Cells(ultimaFila + 1, 3).HorizontalAlignment = xlLeft
+Cells(ultima + 1, 3).HorizontalAlignment = xlLeft
 
 ' Colocando un borde superior
-For i = 3 To ultimaFila
+For i = 3 To ultima
     Range(Cells(i, 1), Cells(i, 13)).Select
     If Cells(i, 1).Value <> "" Then
         With Selection
@@ -302,7 +302,6 @@ ruta = ruta & "WEB\"
 
 'Controlando si la compu EDGARD está prendida y conectada a red.
 If Dir(ruta, vbDirectory) = "" Then
-    ' MkDir (ruta)
     MsgBox ("No hay acceso la compu EDGARD. Debes prender esa compu y que se conecte a la red.")
     Exit Sub
 End If
@@ -377,7 +376,7 @@ Dim dni As String
 Dim numVenta As String
 Dim planilla As Object
 Dim packar As Object
-Dim ultimaFila As Integer
+Dim ultima As Integer
 Dim fecha As String
 Dim i As Integer
 Dim rotulos As Integer
@@ -406,7 +405,7 @@ fecha = Day(Date) & "-" & Month(Date) & "-" & Year(Date)
 ' Guardando el archivo con nombre específico
 Call GuardarArchivo(fecha, ruta, nombreArchivo)
 Range("A1").Activate
-ultimaFila = ActiveSheet.Cells(Rows.count, 1).End(xlUp).Row
+ultima = ActiveSheet.Cells(Rows.count, 1).End(xlUp).Row
 
 ' Borrando información innecesaria
 Range("Y:Y").EntireColumn.Copy
@@ -422,7 +421,7 @@ Range("G:G").Select
 Selection.NumberFormat = "0"
 
 ' CORRIGIENDO NOMBRE DE CLIENTES
-For i = 2 To ultimaFila
+For i = 2 To ultima
     ' Mayúsculas en los nombres
     Cells(i, 2).Value = UCase(Cells(i, 2).Value)
     Cells(i, 8).Value = UCase(Cells(i, 8).Value)
@@ -457,7 +456,7 @@ Range("L:L").EntireColumn.Delete
 
 
 ' Purgando los teléfonos
-For i = 2 To ultimaFila
+For i = 2 To ultima
     ' Columna de los teléfonos
     Cells(i, 8).Value = Right(Cells(i, 8).Value, 10)
 Next i
@@ -467,7 +466,7 @@ Range("I:I").EntireColumn.Insert
 Range("I1:I1").Value = "Detalles"
 
 ' Dando formato
-For i = 2 To ultimaFila
+For i = 2 To ultima
     ' Columna de las ubicaciones de productos
     With Cells(i, 9)
         .WrapText = False
@@ -498,11 +497,11 @@ Do While ActiveCell.Value <> ""
 Loop
 
 ' DANDO FORMATO A TODA LA PLANILLA
-Call formato(ultimaFila, i)
+Call formato(ultima, i)
 
 
 ' GENERANDO LOS ROTULOS DE RETIRO
-For i = 2 To ultimaFila
+For i = 2 To ultima
     If Sheets("ventas").Cells(i, 13).Value = "Retiras en Rerda Mendoza" Then
         
         ' Se coloca la leyenda en la celda
@@ -535,7 +534,7 @@ Sheets("ventas").Range("A1").Activate
 Set planilla = ActiveWorkbook
 
 ' DANDO FORMATO DE IMPRESION
-Call formatPrint(ultimaFila, i)
+Call formatPrint(ultima, i)
 
 
 
@@ -549,17 +548,17 @@ ruta = ruta & "..\"
 Workbooks.Open ruta & "ENCOMIENDAS_WEB.xlsx"
 Set packar = ActiveWorkbook
 
-Call correo(numVenta, nombre, ultimaFila, i, packar, planilla)
+Call correo(numVenta, nombre, ultima, i, packar, planilla)
 
 ' Generando una planilla sólo para dpto. DEPOSITO
-Call deposito(planilla, ultimaFila, i, ruta)
+Call deposito(planilla, ultima, i, ruta)
 
 ' Posicionando al principio
 planilla.Sheets("ventas").Activate
 ActiveWorkbook.Save
 End Sub
 
-Function deposito(nombreArchivo, ultimaFila, i, enrutacion)
+Function deposito(nombreArchivo, ultima, i, enrutacion)
 ' GENERA UNA PLANILLA SÓLO PARA USO EXCLUSIVO DEL DEPOSITO
 Dim ruta As String
 ruta = "'" & enrutacion & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
@@ -578,7 +577,7 @@ Cells(1, 6).Value = "Cantidad"
 Cells(1, 7).Value = "Ubicación"
 
 ' Completando los datos
-For i = 2 To ultimaFila
+For i = 2 To ultima
     ' Venta
     Cells(i, 1).Value = Sheets(1).Cells(i, 1).Value
     
@@ -621,10 +620,10 @@ With Range("A1").CurrentRegion
 End With
 
 ' Colocando totales de productos y dando formato
-Cells(ultimaFila + 1, 5).Value = "TOTALES:"
-Cells(ultimaFila + 1, 6).Select
-Cells(ultimaFila + 1, 6).Value = "=SUM(F2:F" & ultimaFila & ")"
-Range(Cells(ultimaFila + 1, 5), Cells(ultimaFila + 1, 6)).Select
+Cells(ultima + 1, 5).Value = "TOTALES:"
+Cells(ultima + 1, 6).Select
+Cells(ultima + 1, 6).Value = "=SUM(F2:F" & ultima & ")"
+Range(Cells(ultima + 1, 5), Cells(ultima + 1, 6)).Select
 With Selection
     .Font.Bold = True
     .Font.Size = 15
@@ -634,16 +633,16 @@ End With
 
 
 ' Colocando el total de rótulos a imprimir
-Cells(ultimaFila + 1, 2).Value = "ROTULOS:"
-Cells(ultimaFila + 1, 3).Value = "=COUNTA(A2:A" & ultimaFila & ")"
-Range(Cells(ultimaFila + 1, 2), Cells(ultimaFila + 1, 3)).Select
+Cells(ultima + 1, 2).Value = "ROTULOS:"
+Cells(ultima + 1, 3).Value = "=COUNTA(A2:A" & ultima & ")"
+Range(Cells(ultima + 1, 2), Cells(ultima + 1, 3)).Select
 With Selection
     .Font.Bold = True
     .Font.Size = 15
     .VerticalAlignment = xlBottom
     .HorizontalAlignment = xlRight
 End With
-Cells(ultimaFila + 1, 3).HorizontalAlignment = xlLeft
+Cells(ultima + 1, 3).HorizontalAlignment = xlLeft
 
 With Range("A1").CurrentRegion
     .Borders.LineStyle = xlContinuous
@@ -661,7 +660,7 @@ With ActiveSheet.PageSetup
     .FooterMargin = Application.CentimetersToPoints(0.76)
     .CenterHorizontally = True
     .CenterVertically = False
-    .PrintArea = ActiveSheet.Range("A1:G" & ultimaFila + 1).Address
+    .PrintArea = ActiveSheet.Range("A1:G" & ultima + 1).Address
     .Zoom = False
     .FitToPagesTall = 1
     .FitToPagesWide = 1
