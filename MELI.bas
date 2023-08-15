@@ -253,14 +253,14 @@ Range("K:K").Columns.AutoFit
 ' Acomoda el texto de las celdas con datos
 Range(Cells(2, 1), Cells(ultima, 11)).WrapText = True
 
-' Formato a la ubiación de los productos.
-With Range(Cells(2, 9), Cells(ultima, 10))
+' Ajusta automáticamente la altura de las filas
+Range(Cells(2, 1), Cells(ultima, 10)).Rows.AutoFit
+
+' Formato a la descripción y los clientes.
+With Range(Cells(2, 3), Cells(ultima, 4))
     .ShrinkToFit = True
     .WrapText = False
 End With
-
-' Ajusta automáticamente la altura de las filas
-Range(Cells(2, 1), Cells(ultima, 10)).Rows.AutoFit
 
 ' Borde externo faltante
 Range(Cells(2, 1), Cells(ultima, 11)).BorderAround LineStyle:=xlContinuous
@@ -413,7 +413,7 @@ End If
 
 ' ============== FIN DE TODA LA MACRO.
 End Sub
-Function deposito()
+Sub deposito()
 ' Planilla para el Depósito
 ' GENERA UNA PLANILLA SÓLO PARA USO EXCLUSIVO DEL DEPOSITO
 
@@ -421,25 +421,49 @@ Dim rutaFormula As String
 Dim carpeta As String
 Dim i As Byte
 Dim ultima As Byte
+Dim meli As Boolean
 
 carpeta = ActiveWorkbook.Path
 rutaFormula = "'" & carpeta & "\..\" & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
-Debug.Print rutaFormula
+meli = False
+
+
+' Control si existe la pestaña "Depósito"
+For i = 1 To Sheets.count
+    Debug.Print Sheets(i).Name
+    If Sheets(i).Name = "Planilla" Then
+        meli = True
+        Sheets(i).Activate
+    ElseIf Sheets(i).Name = "Depósito" Then
+        Application.DisplayAlerts = False
+        Sheets("Depósito").Delete
+        Application.DisplayAlerts = True
+        Sheets.Add(After:=Sheets("Planilla")).Name = "Depósito"
+    End If
+    
+    If meli = False Then
+        MsgBox "Esta planilla no es de MercadoLibre :-("
+        Exit Sub
+    End If
+Next i
+
 
 ' Nueva hoja con nombre Depósito
-ActiveWorkbook.Sheets("Planilla").Activate
-ultima = Cells(Rows.count, 1).End(xlUp).Row
-ActiveWorkbook.Sheets.Add(After:=Sheets("Planilla")).Name = "Depósito"
+ActiveWorkbook.Sheets("Depósito").Activate
+ultima = Sheets("Planilla").Cells(Rows.count, 2).End(xlUp).Row - 1
+'Sheets.Add(After:=Sheets("Planilla")).Name = "Depósito"
 
 ' Creando las columnas
-Cells(1, 1).Value = "Nº Venta"
-Cells(1, 2).Value = "Cliente"
-Cells(1, 3).Value = "Descripción"
-Cells(1, 4).Value = "Código"
-Cells(1, 5).Value = "Color"
-Cells(1, 6).Value = "Talle"
-Cells(1, 7).Value = "Cantidad"
-Cells(1, 8).Value = "Ubicación"
+With Sheets("Depósito")
+    .Cells(1, 1).Value = "Nº Venta"
+    .Cells(1, 2).Value = "Cliente"
+    .Cells(1, 3).Value = "Descripción"
+    .Cells(1, 4).Value = "Código"
+    .Cells(1, 5).Value = "Color"
+    .Cells(1, 6).Value = "Talle"
+    .Cells(1, 7).Value = "Cantidad"
+    .Cells(1, 8).Value = "Ubicación"
+End With
 
 ' Completando los datos
 For i = 2 To ultima
@@ -539,7 +563,7 @@ With ActiveSheet.PageSetup
     .CenterHeader = "&B&20&F" & vbNewLine & "SOLO PARA USO EN DEPOSITO"
 End With
 
-End Function
+End Sub
 
 
 Function correo(ruta, i, ultima)
@@ -589,5 +613,5 @@ Function correo(ruta, i, ultima)
             packar.Sheets(1).Cells(i + continuacion, 3).Value = tn
         End If
     Next i
-End Function
+End Sub
 

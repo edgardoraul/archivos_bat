@@ -558,16 +558,43 @@ planilla.Sheets("ventas").Activate
 ActiveWorkbook.Save
 End Sub
 
-Function deposito(nombreArchivo, ultima, i, enrutacion)
+Sub deposito()
 ' GENERA UNA PLANILLA SÓLO PARA USO EXCLUSIVO DEL DEPOSITO
 Dim ruta As String
-ruta = "'" & enrutacion & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
+Dim nombreArchivo As String
+Dim ultima As Byte
+Dim i As Byte
+Dim enrutacion As String
+Dim web As Boolean
 
-' Nueva hoja con nombre Depósito
-Workbooks(nombreArchivo.Name).Sheets("ventas").Activate
-Workbooks(nombreArchivo.Name).Sheets.Add(After:=Sheets("ventas")).Name = "Depósito"
+ruta = "'" & enrutacion & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
+ultima = Sheets("ventas").Cells(Rows.count, 2).End(xlUp).Row - 1
+web = False
+
+
+' Control si existe la pestaña "Depósito"
+For i = 1 To Sheets.count
+    Debug.Print Sheets(i).Name
+    If Sheets(i).Name = "ventas" Then
+        web = True
+        Sheets(i).Activate
+    ElseIf Sheets(i).Name = "Depósito" Then
+        Application.DisplayAlerts = False
+        Sheets("Depósito").Delete
+        Application.DisplayAlerts = True
+        Sheets.Add(After:=Sheets("ventas")).Name = "Depósito"
+        
+    End If
+    
+    If web = False Then
+        MsgBox "Esta planilla no es de la web :-("
+        Exit Sub
+    End If
+Next i
+
 
 ' Creando las columnas
+Sheets("Depósito").Activate
 Cells(1, 1).Value = "Nº Venta"
 Cells(1, 2).Value = "Cliente"
 Cells(1, 3).Value = "Descripción"
@@ -670,4 +697,4 @@ End With
 Sheets("ventas").Activate
 Range("A1").Activate
 
-End Function
+End Sub
