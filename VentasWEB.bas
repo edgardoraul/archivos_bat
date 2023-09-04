@@ -1,5 +1,7 @@
 Attribute VB_Name = "VentasWEB"
 Option Explicit
+
+
 Function correo(numVenta, nombre, ultima, i, packar, planilla)
     ' GENERA UN LISTADO DE VENTAS Y N° GUIAS PARA EL CORREO
     ' Acumulador negativo para evitar filas en blanco
@@ -358,15 +360,18 @@ Sheets("ventas").Range("A1").Select
 ActiveWorkbook.SaveAs Filename:=nombre, FileFormat:=xlOpenXMLStrictWorkbook, ConflictResolution:=xlUserResolution, AddToMru:=True, Local:=True
 ActiveWorkbook.Save
 Application.ThisWorkbook.Save
+
+
 End Sub
 
 
 Sub ventasWeb()
+
 ' Controlar que no se haya hecho formato antes
-If Range("I1").Value = "Detalle" Then
+If ActiveSheet.Range("I1").Value = "Detalle" Then
     MsgBox ("Ya le diste formato a esta planilla. " & VBA.vbNewLine & "Probá con otra.")
     Range("A1").Select
-    'Exit Sub
+    Exit Sub
 End If
 
 ' Declarando variables a utilizar
@@ -528,7 +533,10 @@ For i = 2 To ultima
 Next i
 
 'Posicionando al principio
-Sheets("ventas").Range("A1").Activate
+Sheets.Add(After:=Sheets("ventas")).Name = "Depósito"
+Sheets.Add(After:=Sheets("Depósito")).Name = "Exportar TXT"
+Sheets("ventas").Activate
+Range("A1").Activate
 
 ' Definiendo este archivo
 Set planilla = ActiveWorkbook
@@ -543,15 +551,19 @@ If rotulos > 0 Then
     MsgBox ("Tenés " & rotulos & " rótulos de retiro en local, para imprimir." & VBA.vbNewLine & "Aquí abajo en las pestañas.")
 End If
 
+
+' Generando una planilla sólo para dpto. DEPOSITO
+Call deposito
+
+
 ' Abrir el archivo
 ruta = ruta & "..\"
 Workbooks.Open ruta & "ENCOMIENDAS_WEB.xlsx"
 Set packar = ActiveWorkbook
 
+' Generando una planilla de informe para el Correo Argentino
 Call correo(numVenta, nombre, ultima, i, packar, planilla)
 
-' Generando una planilla sólo para dpto. DEPOSITO
-Call deposito(planilla, ultima, i, ruta)
 
 ' Posicionando al principio
 planilla.Sheets("ventas").Activate
@@ -566,6 +578,8 @@ Dim ultima As Byte
 Dim i As Byte
 Dim enrutacion As String
 Dim web As Boolean
+enrutacion = ActiveWorkbook.Path & "\..\"
+Debug.Print enrutacion
 
 ruta = "'" & enrutacion & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
 ultima = Sheets("ventas").Cells(Rows.count, 2).End(xlUp).Row - 1
@@ -573,28 +587,22 @@ web = False
 
 
 ' Control si existe la pestaña "Depósito"
-For i = 1 To Sheets.count
-    Debug.Print Sheets(i).Name
-    If Sheets(i).Name = "ventas" Then
-        web = True
-        Sheets(i).Activate
-    ElseIf Sheets(i).Name = "Depósito" Then
-        Application.DisplayAlerts = False
-        Sheets("Depósito").Delete
-        Application.DisplayAlerts = True
-        Sheets.Add(After:=Sheets("ventas")).Name = "Depósito"
-        
-    End If
-    
-    If web = False Then
-        MsgBox "Esta planilla no es de la web :-("
-        Exit Sub
-    End If
-Next i
+If Sheets(1).Name = "ventas" Then
+    web = True
+    Sheets(1).Activate
+Else
+    Debug.Print "Todo ok hasta ahora..."
+End If
+
+If web = False Then
+    MsgBox "Esta planilla no es de la web :-("
+    Exit Sub
+End If
 
 
 ' Creando las columnas
 Sheets("Depósito").Activate
+Sheets("Depósito").Cells.Clear
 Cells(1, 1).Value = "Nº Venta"
 Cells(1, 2).Value = "Cliente"
 Cells(1, 3).Value = "Descripción"
@@ -698,3 +706,175 @@ Sheets("ventas").Activate
 Range("A1").Activate
 
 End Sub
+
+
+Sub exportarTxt()
+
+' GENERA UN ARCHIVO DE TEXTO PARA IMPORTAR AL D.F.
+
+Dim fila As Long, columna As Long
+Dim textoArchivo As String
+Dim server As String
+
+Dim carpetaDestino As String
+
+Dim nombreArchivo As String
+Dim limite As Byte
+Dim item As Variant
+Dim i As Byte
+Dim ultimaFila As Byte
+Dim resto As Byte
+Dim cantArchivos As Byte
+
+Dim matrixCodColor As Object
+ultimaFila = Sheets("Depósito").Cells(Rows.count, 2).End(xlUp).Row - 1
+nombreArchivo = Len(ActiveWorkbook.Name)
+server = "\\SER-DF\A Remitar TXT"
+carpetaDestino = "\WEB\"
+Set matrixCodColor = CreateObject("Scripting.Dictionary")
+limite = 30
+
+Sheets("Exportar TXT").Activate
+
+matrixCodColor.Add "01", "PITON GRIS"
+matrixCodColor.Add "02", "PITON BEIGE"
+matrixCodColor.Add "03", "BEIGE"
+matrixCodColor.Add "04", "WOODLAND"
+matrixCodColor.Add "05", "DIGITAL DESERT O DIGITAL DESERTICO"
+matrixCodColor.Add "06", "VERDE"
+matrixCodColor.Add "07", "ACU"
+matrixCodColor.Add "08", "MULTICAM"
+matrixCodColor.Add "09", "NEGRO"
+matrixCodColor.Add "10", "TRI DESERT"
+matrixCodColor.Add "11", "DIGITAL WOODLAND"
+matrixCodColor.Add "12", "PITON VERDE"
+matrixCodColor.Add "13", "GRIS"
+matrixCodColor.Add "14", "REAL TREE"
+matrixCodColor.Add "15", "DIGITAL TIGER WOODLAND"
+matrixCodColor.Add "16", "DIGITAL FUERZA AEREA"
+matrixCodColor.Add "17", "DIGITAL NAVAL"
+matrixCodColor.Add "18", "AZUL"
+matrixCodColor.Add "19", "CAMUFLADO"
+matrixCodColor.Add "20", "BLANCO"
+matrixCodColor.Add "21", "CPL MULTICAM BLACK"
+matrixCodColor.Add "22", "ROJO"
+matrixCodColor.Add "23", "DIGITAL RUSO"
+matrixCodColor.Add "24", "BORDO"
+matrixCodColor.Add "25", "CAMEL"
+matrixCodColor.Add "26", "VIAL TUCUMAN"
+matrixCodColor.Add "27", "DIGITAL GRIS"
+matrixCodColor.Add "30", "STAR SEG"
+matrixCodColor.Add "ABR", "ABROJO"
+matrixCodColor.Add "ESTAMP", "ESTAMP"
+matrixCodColor.Add "REF", "REFLECTIVO"
+
+' Recorre la colección
+'For Each item In matrixCodColor
+    'Debug.Print item & ": " & matrixCodColor(item)
+'Next item
+
+' Limpiar la hoja
+Sheets("Exportar TXT").Cells.Clear
+
+' Separación de talles y colores ==========
+' Datos fuentes
+Sheets("Depósito").Activate
+Sheets("Depósito").Range(Cells(2, 5), Cells(ultimaFila, 5)).Select
+Selection.Copy
+Sheets("Exportar TXT").Range("C1").PasteSpecial xlPasteValues
+Application.CutCopyMode = False
+Sheets("Exportar TXT").Activate
+
+' Separar en columnas
+Sheets("Exportar TXT").Range(Cells(1, 3), Cells(ultimaFila + 1, 3)).TextToColumns _
+    Destination:=Range(Cells(1, 3), Cells(ultimaFila + 1, 3)), _
+    DataType:=xlDelimited, _
+    ConsecutiveDelimiter:=True, _
+    Tab:=False, _
+    Semicolon:=False, _
+    Comma:=True
+
+Range("a1").Activate
+
+' Acomodar los datos del 1° el color y 2° el talle
+For fila = 1 To ultimaFila
+    Cells(fila, 3).Select
+    ' Recorre el diccionario buscando coincidencia
+    For Each item In matrixCodColor
+        If matrixCodColor(item) = Cells(fila, 3).Value Then
+            Cells(fila, 3).Value = "'" & item
+            GoTo proximaFila
+        ElseIf Cells(fila, 3).Value = "" Then
+            GoTo proximaFila
+        End If
+    Next item
+
+' Traslandando el talle a la siguiente columna
+Cells(fila, 4).Value = Cells(fila, 3).Value
+Cells(fila, 3).Value = ""
+proximaFila:
+Next fila
+
+' Borrar espacios en blanco
+Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="", LookAt:=xlPart, searchorder:= _
+        xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+
+
+' Completa planilla para exportar
+For fila = 1 To ultimaFila - 1
+    
+    ' 1º) Stock
+    Cells(fila, 1).Value = "'" & Sheets("Depósito").Cells(fila + 1, 6).Value
+    
+    ' 2º Codigo
+    Cells(fila, 2).Value = "'" & Sheets("Depósito").Cells(fila + 1, 4).Value
+    
+Next fila
+
+' Ajuste ultima Fila - HARDCODEO ESTO PARA PROBAR
+ultimaFila = ultimaFila - 1 + 124
+
+' Si se pasa del tope (30 líneas), serán "n" archivos con 30 líneas y otro con el resto
+' de items que quedaron fuera. Sería el resto de una división, el módulo.
+resto = ultimaFila Mod limite
+cantArchivos = Int(ultimaFila / limite) + 1
+Debug.Print "Faltan " & resto; " items que remitar. "; "Archivos a importar: " & cantArchivos
+
+
+' Generación del txt
+Call generarTxt(fila, ultimaFila, "", cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+
+End Sub
+
+Function generarTxt(fila, ultimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+Dim rutaArchivo As String
+Dim i As Byte
+
+
+' Generación del txt
+For i = 1 To cantArchivos
+    For fila = 1 To (ultimaFila - (cantArchivos - 1) * limite)
+        Cells(fila, 1).Activate
+        textoArchivo = textoArchivo _
+            & Cells(fila, 1).Value _
+            & "+" & Cells(fila, 2).Value _
+            & "!" & Cells(fila, 3).Value _
+            & "!" & Cells(fila, 4).Value _
+            & vbNewLine
+            Debug.Print i, fila
+    Next fila
+    
+    nombreArchivo = Left(ActiveWorkbook.Name, nombreArchivo - 9) & " - " & i & ".txt"
+    rutaArchivo = server & carpetaDestino & nombreArchivo
+    
+    Debug.Print textoArchivo
+    Open rutaArchivo For Output As #1
+    Print #1, textoArchivo
+    Close #1
+    
+    MsgBox "Datos exportados con éxito a " & rutaArchivo, vbInformation, "Cargar detalle desde txt"
+Next i
+
+
+
+End Function

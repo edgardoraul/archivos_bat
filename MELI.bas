@@ -413,7 +413,12 @@ End If
 
 ' ============== FIN DE TODA LA MACRO.
 End Sub
+
+
+
 Sub deposito()
+Attribute deposito.VB_Description = "Regenera la planilla del Depósito"
+Attribute deposito.VB_ProcData.VB_Invoke_Func = "D\n14"
 ' Planilla para el Depósito
 ' GENERA UNA PLANILLA SÓLO PARA USO EXCLUSIVO DEL DEPOSITO
 
@@ -425,33 +430,12 @@ Dim meli As Boolean
 
 carpeta = ActiveWorkbook.Path
 rutaFormula = "'" & carpeta & "\..\" & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
-meli = False
-
-
-' Control si existe la pestaña "Depósito"
-For i = 1 To Sheets.count
-    Debug.Print Sheets(i).Name
-    If Sheets(i).Name = "Planilla" Then
-        meli = True
-        Sheets(i).Activate
-    ElseIf Sheets(i).Name = "Depósito" Then
-        Application.DisplayAlerts = False
-        Sheets("Depósito").Delete
-        Application.DisplayAlerts = True
-        Sheets.Add(After:=Sheets("Planilla")).Name = "Depósito"
-    End If
-    
-    If meli = False Then
-        MsgBox "Esta planilla no es de MercadoLibre :-("
-        Exit Sub
-    End If
-Next i
-
 
 ' Nueva hoja con nombre Depósito
-ActiveWorkbook.Sheets("Depósito").Activate
 ultima = Sheets("Planilla").Cells(Rows.count, 2).End(xlUp).Row - 1
 'Sheets.Add(After:=Sheets("Planilla")).Name = "Depósito"
+Call CrearHoja("Depósito")
+ActiveWorkbook.Sheets("Depósito").Activate
 
 ' Creando las columnas
 With Sheets("Depósito")
@@ -563,6 +547,8 @@ With ActiveSheet.PageSetup
     .CenterHeader = "&B&20&F" & vbNewLine & "SOLO PARA USO EN DEPOSITO"
 End With
 
+Sheets("Planilla").Activate
+
 End Sub
 
 
@@ -613,5 +599,20 @@ Function correo(ruta, i, ultima)
             packar.Sheets(1).Cells(i + continuacion, 3).Value = tn
         End If
     Next i
-End Sub
+End Function
 
+
+Function CrearHoja(nombreHoja As String) As Boolean
+    ' controla si una hoja existe o no
+    Dim existe As Boolean
+     
+    On Error Resume Next
+    existe = (Worksheets(nombreHoja).Name <> "")
+     
+    If Not existe Then
+        Worksheets.Add(After:=Worksheets(Worksheets.count)).Name = nombreHoja
+    End If
+     
+    CrearHoja = existe
+     
+End Function
