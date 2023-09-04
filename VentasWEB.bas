@@ -571,6 +571,8 @@ ActiveWorkbook.Save
 End Sub
 
 Sub deposito()
+Attribute deposito.VB_Description = "Genera planilla de depósito para la Web."
+Attribute deposito.VB_ProcData.VB_Invoke_Func = "S\n14"
 ' GENERA UNA PLANILLA SÓLO PARA USO EXCLUSIVO DEL DEPOSITO
 Dim ruta As String
 Dim nombreArchivo As String
@@ -587,17 +589,7 @@ web = False
 
 
 ' Control si existe la pestaña "Depósito"
-If Sheets(1).Name = "ventas" Then
-    web = True
-    Sheets(1).Activate
-Else
-    Debug.Print "Todo ok hasta ahora..."
-End If
-
-If web = False Then
-    MsgBox "Esta planilla no es de la web :-("
-    Exit Sub
-End If
+Call CrearHoja("Depósito")
 
 
 ' Creando las columnas
@@ -706,6 +698,21 @@ Sheets("ventas").Activate
 Range("A1").Activate
 
 End Sub
+
+Function CrearHoja(nombreHoja As String) As Boolean
+    ' controla si una hoja existe o no
+    Dim existe As Boolean
+     
+    On Error Resume Next
+    existe = (Worksheets(nombreHoja).Name <> "")
+     
+    If Not existe Then
+        Worksheets.Add(After:=Worksheets(Worksheets.count)).Name = nombreHoja
+    End If
+     
+    CrearHoja = existe
+     
+End Function
 
 
 Sub exportarTxt()
