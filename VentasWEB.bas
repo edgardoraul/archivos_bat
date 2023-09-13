@@ -198,7 +198,7 @@ With ActiveSheet.PageSetup
     .FooterMargin = Application.CentimetersToPoints(0.76)
     .CenterHorizontally = True
     .CenterVertically = False
-    .PrintArea = ActiveSheet.Range("A1:G" & ultima + 1).Address
+    .PrintArea = ActiveSheet.Range("A1:I" & ultima + 1).Address
     .Zoom = False
     .FitToPagesTall = 1
     .FitToPagesWide = 1
@@ -693,7 +693,7 @@ With ActiveSheet.PageSetup
     .FitToPagesWide = 1
     .CenterHeader = "&B&20&F" & vbNewLine & "SOLO PARA USO EN DEPOSITO"
 End With
-
+Call exportarTxt
 Sheets("ventas").Activate
 Range("A1").Activate
 
@@ -839,13 +839,13 @@ For fila = 1 To ultimaFila - 1
 Next fila
 
 ' Ajuste ultima Fila - HARDCODEO ESTO PARA PROBAR
-ultimaFila = ultimaFila - 1 + 124
+ultimaFila = ultimaFila - 1
 
 ' Si se pasa del tope (30 líneas), serán "n" archivos con 30 líneas y otro con el resto
 ' de items que quedaron fuera. Sería el resto de una división, el módulo.
 resto = ultimaFila Mod limite
 cantArchivos = Int(ultimaFila / limite) + 1
-Debug.Print "Faltan " & resto; " items que remitar. "; "Archivos a importar: " & cantArchivos
+Debug.Print "Archivos a importar: " & cantArchivos
 
 
 ' Generación del txt
@@ -856,11 +856,18 @@ End Sub
 Function generarTxt(fila, ultimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
 Dim rutaArchivo As String
 Dim i As Byte
+Dim tope As Byte
+fila = 0
 
 
 ' Generación del txt
 For i = 1 To cantArchivos
-    For fila = 1 To (ultimaFila - (cantArchivos - 1) * limite)
+tope = i * limite
+    If i = cantArchivos Then
+        tope = ultimaFila
+    End If
+    
+    For fila = (limite * (i - 1)) + 1 To tope
         Cells(fila, 1).Activate
         textoArchivo = textoArchivo _
             & Cells(fila, 1).Value _
@@ -868,12 +875,17 @@ For i = 1 To cantArchivos
             & "!" & Cells(fila, 3).Value _
             & "!" & Cells(fila, 4).Value _
             & vbNewLine
-            Debug.Print i, fila
+            Debug.Print "Archivo N°: " & i, "Fila N° :" & fila
     Next fila
     
-    nombreArchivo = Left(ActiveWorkbook.Name, nombreArchivo - 9) & " - " & i & ".txt"
-    rutaArchivo = server & carpetaDestino & nombreArchivo
+    ' Si es mayor a uno, se van nombrando incrementalmente
+    If cantArchivos > 1 Then
+        nombreArchivo = Left(ActiveWorkbook.Name, Len(ActiveWorkbook.Name) - 5) & " - " & i & ".txt"
+    Else
+        nombreArchivo = Left(ActiveWorkbook.Name, Len(ActiveWorkbook.Name) - 5) & ".txt"
+    End If
     
+    rutaArchivo = server & carpetaDestino & nombreArchivo
     Debug.Print textoArchivo
     Open rutaArchivo For Output As #1
     Print #1, textoArchivo

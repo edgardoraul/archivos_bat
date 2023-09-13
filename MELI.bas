@@ -439,6 +439,8 @@ ActiveWorkbook.Sheets("Depósito").Activate
 
 ' Creando las columnas
 With Sheets("Depósito")
+    ' Limpia la hoja, por las dudas, de todo contenido y formato
+    .Cells.Clear
     .Cells(1, 1).Value = "Nº Venta"
     .Cells(1, 2).Value = "Cliente"
     .Cells(1, 3).Value = "Descripción"
