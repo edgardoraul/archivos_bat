@@ -486,8 +486,8 @@ Dim ExisteArchivo As String
 Dim nombre As String
 Dim nombreCarpeta As String
 
-' Variables necesarias
-nombreCarpeta = ThisWorkbook.Path & "\"
+' Variables necesarias. Un nivel más arriba
+nombreCarpeta = ThisWorkbook.Path & "\..\"
 ultima = 34
 ruta = "'" & nombreCarpeta & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
 
