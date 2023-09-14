@@ -317,9 +317,7 @@ Function proforma(apellidoNombre, direccion, provincia, codigoPostal, ciudad, te
     Dim cotizacion As Double
     cotizacion = 0
         
-    Do While cotizacion = 0
-        cotizacion = Application.InputBox(Prompt:="Cotización del dólar", Title:="Factura Proforma", Default:=1)
-    Loop
+    
     
     'Limpiando información previa
     With Sheets("Proforma")
@@ -343,6 +341,11 @@ Function proforma(apellidoNombre, direccion, provincia, codigoPostal, ciudad, te
     End With
     
     If provincia = "TIERRA DEL FUEGO" Or provincia = "Tierra del Fuego" Then
+        ' Pide cotización del dólar
+        Do While cotizacion = 0
+            cotizacion = Application.InputBox(Prompt:="Cotización del dólar", Title:="Factura Proforma", Default:=1)
+        Loop
+        
         'hacer proforma
         With Sheets("Proforma")
             .Cells(7, 9).Value = UCase(apellidoNombre)
@@ -517,11 +520,15 @@ For i = 2 To ultima
     ' Cliente
     Cells(i, 1).Value = Sheets("Planilla").Cells(i, 2).Value
     
-    ' Descripción
-    Cells(i, 2).Value = Sheets("Planilla").Cells(i, 4).Formula
+    ' Descripción. Sólo si hay código
+    If Sheets("Planilla").Cells(i, 3).Value = "" Then
+        Cells(i, 2).ClearContents
+    Else
+        Cells(i, 2).Value = "=VLOOKUP(C" & i & "," & ruta & ", 2, FALSE)"
+    End If
     
     ' Código
-    Cells(i, 3).Value = Sheets("Planilla").Cells(i, 3).Value
+    Cells(i, 3).Value = "'" & Sheets("Planilla").Cells(i, 3).Value
     
     ' Color
     Cells(i, 4).Value = Sheets("Planilla").Cells(i, 6).Value
@@ -536,7 +543,7 @@ For i = 2 To ultima
     If Cells(i, 3) = "" Then
         Cells(i, 7).Value = ""
     Else
-        Cells(i, 7).Formula = "=VLOOKUP(C" & i & "," & ruta & ",7,FALSE)"
+        Cells(i, 7).Formula = "=VLOOKUP(C" & i & "," & ruta & ", 3, FALSE)"
     End If
 Next i
 
