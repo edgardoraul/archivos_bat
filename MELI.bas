@@ -434,7 +434,7 @@ rutaFormula = "'" & carpeta & "\..\" & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
 ' Nueva hoja con nombre Depósito
 ultima = Sheets("Planilla").Cells(Rows.count, 2).End(xlUp).Row - 1
 'Sheets.Add(After:=Sheets("Planilla")).Name = "Depósito"
-Call CrearHoja("Depósito")
+Call CrearHoja(ActiveWorkbook, "Depósito")
 ActiveWorkbook.Sheets("Depósito").Activate
 
 ' Creando las columnas
@@ -464,10 +464,10 @@ For i = 2 To ultima
     Cells(i, 2).Value = Sheets(1).Cells(i, 3).Value
     
     ' Descripción
-    Cells(i, 3).Value = "=VLOOKUP(LEFT(D" & i & ",7)*1," & rutaFormula & ",2,FALSE)"
+    Cells(i, 3).Value = "=VLOOKUP(LEFT(D" & i & ", 7)," & rutaFormula & ",2,FALSE)"
     
     ' Código
-    Cells(i, 4).Value = Sheets(1).Cells(i, 5).Value
+    Cells(i, 4).Value = "'" & Sheets(1).Cells(i, 5).Value
     
     ' Color
     Cells(i, 5).Value = Sheets(1).Cells(i, 6).Value
@@ -479,7 +479,7 @@ For i = 2 To ultima
     Cells(i, 7).Value = Sheets(1).Cells(i, 8).Value
         
     ' La ubicación
-    Cells(i, 8).Formula = "=VLOOKUP(LEFT(D" & i & ",7)*1," & rutaFormula & ",7,FALSE)"
+    Cells(i, 8).Formula = "=VLOOKUP(LEFT(D" & i & ", 7)," & rutaFormula & ",3,FALSE)"
 Next i
 
 ' Ordenando alfabéticamente esta columna de ubicación
@@ -551,6 +551,15 @@ End With
 
 Sheets("Planilla").Activate
 
+' Genera TXT. Comprueba de qué cuenta es.
+Dim cuenta As Byte
+If Left(ActiveWorkbook.Name, 8) = " CUENTA 2" Then
+    cuenta = 2
+Else
+    cuenta = 1
+End If
+
+Call exportarTxt("MELI" & cuenta, ActiveWorkbook)
 End Sub
 
 
@@ -604,17 +613,145 @@ Function correo(ruta, i, ultima)
 End Function
 
 
-Function CrearHoja(nombreHoja As String) As Boolean
+Function CrearHoja(archivo As Workbook, nombreHoja As String) As Boolean
     ' controla si una hoja existe o no
     Dim existe As Boolean
      
     On Error Resume Next
-    existe = (Worksheets(nombreHoja).Name <> "")
+    existe = archivo.Worksheets(nombreHoja).Name <> ""
      
     If Not existe Then
-        Worksheets.Add(After:=Worksheets(Worksheets.count)).Name = nombreHoja
+        archivo.Worksheets.Add(After:=Worksheets(Worksheets.count)).Name = nombreHoja
     End If
      
     CrearHoja = existe
      
 End Function
+
+
+
+Sub exportarTxt(carpeta As String, planillaActual As Workbook)
+
+' GENERA UN ARCHIVO DE TEXTO PARA IMPORTAR AL D.F.
+' Variable temporal
+
+Dim fila As Byte
+Dim codigo As String
+Dim Equivalencia As Workbook
+Dim camino As String
+camino = planillaActual.Path & "\..\Equivalencia.XLS"
+Set Equivalencia = Workbooks.Open(camino, False, True)
+
+
+
+Dim textoArchivo As String
+Dim server As String
+Dim txt As String
+txt = "Exportar TXT"
+Dim carpetaDestino As String
+
+Dim nombreArchivo As String
+Dim limite As Byte
+Dim item As Variant
+Dim i As Byte
+Dim ultimaFila As Byte
+Dim resto As Byte
+Dim cantArchivos As Byte
+Dim ruta As Range
+
+Set ruta = Equivalencia.Sheets(1).Range("A1:G10000")
+ultimaFila = planillaActual.Sheets("Planilla").Cells(Rows.count, 2).End(xlUp).Row - 1
+nombreArchivo = planillaActual.Name
+server = "\\SER-DF\A Remitar TXT"
+carpetaDestino = "\" & carpeta & "\"
+limite = ultimaFila
+Debug.Print nombreArchivo
+
+' Crea la hoja
+Call CrearHoja(planillaActual, txt)
+
+' Limpiar la hoja
+planillaActual.Sheets(txt).Cells.Clear
+
+' Completa planilla para exportar
+For fila = 1 To ultimaFila - 1
+    With planillaActual.Sheets(txt)
+        ' 1º) Stock
+        .Cells(fila, 1).Value = "'" & planillaActual.Sheets("Depósito").Cells(fila + 1, 7).Value
+    
+        ' 2º Codigo
+        codigo = "" & planillaActual.Sheets("Depósito").Cells(fila + 1, 4).Value & ""
+        .Cells(fila, 2).Value = Left(codigo, 7)
+
+        ' 3° Color
+        On Error Resume Next
+        .Cells(fila, 3) = "'" & Application.WorksheetFunction.VLookup(codigo, ruta, 4, False)
+        
+        ' 4° Talle
+        .Cells(fila, 4) = "'" & Application.WorksheetFunction.VLookup(codigo, ruta, 6, False)
+    End With
+Next fila
+
+' Ajuste ultima Fila - HARDCODEO ESTO PARA PROBAR
+ultimaFila = ultimaFila - 1
+
+' Si se pasa del tope (30 líneas), serán "n" archivos con 30 líneas y otro con el resto
+' de items que quedaron fuera. Sería el resto de una división, el módulo.
+resto = ultimaFila Mod limite
+cantArchivos = Int(ultimaFila / limite) + 1
+Debug.Print "Archivos a importar: " & cantArchivos
+
+' Cierra el archivo con el listado de las equivalencias
+Equivalencia.Close False
+
+' Generación del txt
+Call generarTxt(fila, ultimaFila, "", cantArchivos, planillaActual, carpetaDestino, limite, resto, server, txt)
+planillaActual.Sheets("Depósito").Activate
+End Sub
+
+Function generarTxt(fila, ultimaFila, textoArchivo, cantArchivos, archivoFuente, carpetaDestino, limite, resto, server, hoja)
+Dim rutaArchivo As String
+Dim nombreArchivo As String
+Dim i As Byte
+Dim tope As Byte
+fila = 0
+
+
+' Generación del txt
+For i = 1 To cantArchivos
+tope = i * limite
+    If i = cantArchivos Then
+        tope = ultimaFila
+    End If
+    
+    For fila = (limite * (i - 1)) + 1 To tope
+        archivoFuente.Sheets(hoja).Activate
+        Cells(fila, 1).Activate
+        textoArchivo = textoArchivo _
+            & Cells(fila, 1).Value _
+            & "+" & archivoFuente.Sheets(hoja).Cells(fila, 2).Value _
+            & "!" & archivoFuente.Sheets(hoja).Cells(fila, 3).Value _
+            & "!" & archivoFuente.Sheets(hoja).Cells(fila, 4).Value _
+            & vbNewLine
+            Debug.Print "Archivo N°: " & i, "Fila N° :" & fila
+    Next fila
+    
+    ' Si es mayor a uno, se van nombrando incrementalmente
+    If cantArchivos > 1 Then
+        nombreArchivo = Left(archivoFuente.Name, Len(archivoFuente.Name) - 5) & " - " & i & ".txt"
+    Else
+        nombreArchivo = Left(archivoFuente.Name, Len(archivoFuente.Name) - 5) & ".txt"
+    End If
+    
+    rutaArchivo = server & carpetaDestino & nombreArchivo
+    Debug.Print textoArchivo
+    Open rutaArchivo For Output As #1
+    Print #1, textoArchivo
+    Close #1
+    
+    MsgBox "Datos exportados con éxito a " & rutaArchivo, vbInformation, "Cargar detalle desde txt"
+Next i
+End Function
+
+
+

@@ -615,7 +615,7 @@ For i = 2 To ultima
     Cells(i, 3).Value = "=VLOOKUP(D" & i & "," & ruta & ",2,FALSE)"
     
     ' Código
-    Cells(i, 4).Value = Sheets(1).Cells(i, 4).Value
+    Cells(i, 4).Value = "'" & Sheets(1).Cells(i, 4).Value
     
     ' Variante
     Cells(i, 5).Value = Sheets(1).Cells(i, 5).Value
@@ -624,7 +624,7 @@ For i = 2 To ultima
     Cells(i, 6).Value = Sheets(1).Cells(i, 6).Value
         
     ' La ubiación
-    Cells(i, 7).Formula = "=VLOOKUP(D" & i & "," & ruta & ",7,FALSE)"
+    Cells(i, 7).Formula = "=VLOOKUP(D" & i & "," & ruta & ",3,FALSE)"
 Next i
 
 ' Ordenando alfabéticamente esta columna de ubicación
