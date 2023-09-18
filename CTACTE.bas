@@ -147,7 +147,7 @@ Sub Rotulador()
         
         ' Validando si existe o no el dato.
         On Error Resume Next
-        codigoNis = Sheets("Sucursales").Range("$F$4:$F$5000").Find(What:=codigoPostal, LookIn:=xlValues, LookAt:=xlPart).Offset(0, -5)
+        codigoNis = Sheets("Sucursales").Range("$F$4:$F$5000").Find(what:=codigoPostal, LookIn:=xlValues, LookAt:=xlPart).Offset(0, -5)
     
         If codigoNis = "" Then
             ' Todo salió mal
@@ -182,7 +182,7 @@ Sub Rotulador()
         
         ' Validando si existe o no el dato.
         On Error Resume Next
-        codigoNis = Sheets("Sucursales").Range("$F$4:$F$5000").Find(What:=codigoPostal, LookIn:=xlValues, LookAt:=xlPart).Offset(0, -5)
+        codigoNis = Sheets("Sucursales").Range("$F$4:$F$5000").Find(what:=codigoPostal, LookIn:=xlValues, LookAt:=xlPart).Offset(0, -5)
     
         If codigoNis = "" Then
             ' Todo salió mal
@@ -264,7 +264,7 @@ End Function
 Function Validar_CP(cp)
 ' Valida si el código postal es correcto, existe o no.
 
-    codigoNis = Sheets("Sucursales").Range("F1576:F5000").Find(What:=cp, LookIn:=xlValues, SearchOrder:=xlByRows, LookAt:=xlWhole).Offset(0, -5)
+    codigoNis = Sheets("Sucursales").Range("F1576:F5000").Find(what:=cp, LookIn:=xlValues, searchorder:=xlByRows, LookAt:=xlWhole).Offset(0, -5)
     
     If codigoNis = "" Then
         ' Todo salió mal
@@ -705,7 +705,7 @@ arrayMeses = Array("ENE-FEB", "FEB-MAR", "MAR-ABR", "ABR-MAY", "MAY-JUN", "JUN-J
 Dim mesCtaCte As String
 
 ' Sirve para posicionar la pestaña al comenzar
-If Day(Date) < 21 Then
+If Day(Date) <= 19 Then
     mesCtaCte = Month(Date + 1)
 Else
     mesCtaCte = Month(Date)
@@ -714,7 +714,6 @@ Debug.Print mesCtaCte
 
 ' Abrir archivo Cuentas Corrientes
 Workbooks.Open(carpetaActual & "\..\" & archivoCtaCte).Sheets(arrayMeses(mesCtaCte - 1)).Activate
-'Workbooks.Open(carpetaActual & "\" & archivoCtaCte).Sheets(arrayMeses(mesCtaCte - 1)).Activate
 
 ' Ultima fila de la pestaña actual
 Dim ultimaFila As Byte
@@ -780,3 +779,193 @@ ActiveSheet.UsedRange.EntireRow.AutoFit
 Range("A1").Activate
 
 End Sub
+
+
+Sub exportarTxt()
+
+' GENERA UN ARCHIVO DE TEXTO PARA IMPORTAR AL D.F.
+Dim txt As String
+Dim fila As Long, columna As Long
+Dim textoArchivo As String
+Dim server As String
+Dim carpetaDestino As String
+Dim carpetaActual As String
+Dim nombreArchivo As String
+Dim planillaVentas As Objet
+Dim limite As Byte
+Dim item As Variant
+Dim i As Byte
+Dim ultimaFila As Byte
+Dim resto As Byte
+Dim cantArchivos As Byte
+Dim matrixCodColor As Object
+
+' Planilla de Ventas
+carpetaActual = ActiveWorkbook.Path
+Set planillaVentas = ActiveWorkbook.Name
+nombreArchivo = Len(planillaVentas)
+ultimaFila = Sheets("Depósito").Cells(Rows.Count, 2).End(xlUp).Row - 1
+server = "\\SER-DF\A Remitar TXT"
+carpetaDestino = "\" & Sheets("Planilla").Range("W2").Value & "\"
+
+' Crea un archivo temporal
+txt = "Exportar TXT"
+Workbooks.Add.SaveAs Filename:=(carpetaActual & "\" & txt)
+Sheets(1).Name = txt
+
+
+Set matrixCodColor = CreateObject("Scripting.Dictionary")
+limite = 30
+
+matrixCodColor.Add "01", "PITON GRIS"
+matrixCodColor.Add "02", "PITON BEIGE"
+matrixCodColor.Add "03", "BEIGE"
+matrixCodColor.Add "04", "WOODLAND"
+matrixCodColor.Add "05", "DIGITAL DESERT O DIGITAL DESERTICO"
+matrixCodColor.Add "06", "VERDE"
+matrixCodColor.Add "07", "ACU"
+matrixCodColor.Add "08", "MULTICAM"
+matrixCodColor.Add "09", "NEGRO"
+matrixCodColor.Add "10", "TRI DESERT"
+matrixCodColor.Add "11", "DIGITAL WOODLAND"
+matrixCodColor.Add "12", "PITON VERDE"
+matrixCodColor.Add "13", "GRIS"
+matrixCodColor.Add "14", "REAL TREE"
+matrixCodColor.Add "15", "DIGITAL TIGER WOODLAND"
+matrixCodColor.Add "16", "DIGITAL FUERZA AEREA"
+matrixCodColor.Add "17", "DIGITAL NAVAL"
+matrixCodColor.Add "18", "AZUL"
+matrixCodColor.Add "19", "CAMUFLADO"
+matrixCodColor.Add "20", "BLANCO"
+matrixCodColor.Add "21", "CPL MULTICAM BLACK"
+matrixCodColor.Add "22", "ROJO"
+matrixCodColor.Add "23", "DIGITAL RUSO"
+matrixCodColor.Add "24", "BORDO"
+matrixCodColor.Add "25", "CAMEL"
+matrixCodColor.Add "26", "VIAL TUCUMAN"
+matrixCodColor.Add "27", "DIGITAL GRIS"
+matrixCodColor.Add "30", "STAR SEG"
+matrixCodColor.Add "ABR", "ABROJO"
+matrixCodColor.Add "ESTAMP", "ESTAMP"
+matrixCodColor.Add "REF", "REFLECTIVO"
+
+
+
+
+' Separación de talles y colores ==========
+' Datos fuentes
+Workbooks(planillaVentas).Sheets("Depósito").Activate
+Workbooks(planillaVentas).Sheets("Depósito").Range(Cells(2, 4), Cells(ultimaFila, 4)).Select
+Selection.Copy
+Workbooks(txt).Sheets(1).Range("C1").PasteSpecial xlPasteValues
+Workbooks(txt).Sheets().Range
+Application.CutCopyMode = False
+Workbooks(txt).Sheets(txt).Activate
+
+' Separar en columnas
+Sheets("Exportar TXT").Range(Cells(1, 3), Cells(ultimaFila + 1, 3)).TextToColumns _
+    Destination:=Range(Cells(1, 3), Cells(ultimaFila + 1, 3)), _
+    DataType:=xlDelimited, _
+    ConsecutiveDelimiter:=True, _
+    Tab:=False, _
+    Semicolon:=False, _
+    Comma:=True
+
+Range("a1").Activate
+
+' Acomodar los datos del 1° el color y 2° el talle
+For fila = 1 To ultimaFila
+    Cells(fila, 3).Select
+    ' Recorre el diccionario buscando coincidencia
+    For Each item In matrixCodColor
+        If matrixCodColor(item) = Cells(fila, 3).Value Then
+            Cells(fila, 3).Value = "'" & item
+            GoTo proximaFila
+        ElseIf Cells(fila, 3).Value = "" Then
+            GoTo proximaFila
+        End If
+    Next item
+
+' Traslandando el talle a la siguiente columna
+Cells(fila, 4).Value = Cells(fila, 3).Value
+Cells(fila, 3).Value = ""
+proximaFila:
+Next fila
+
+' Borrar espacios en blanco
+Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="", LookAt:=xlPart, searchorder:= _
+        xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+
+
+' Completa planilla para exportar
+For fila = 1 To ultimaFila - 1
+    
+    ' 1º) Stock
+    Cells(fila, 1).Value = "'" & Sheets("Depósito").Cells(fila + 1, 6).Value
+    
+    ' 2º Codigo
+    Cells(fila, 2).Value = "'" & Sheets("Depósito").Cells(fila + 1, 4).Value
+    
+Next fila
+
+' Ajuste ultima Fila - HARDCODEO ESTO PARA PROBAR
+ultimaFila = ultimaFila - 1
+
+' Si se pasa del tope (30 líneas), serán "n" archivos con 30 líneas y otro con el resto
+' de items que quedaron fuera. Sería el resto de una división, el módulo.
+resto = ultimaFila Mod limite
+cantArchivos = Int(ultimaFila / limite) + 1
+Debug.Print "Archivos a importar: " & cantArchivos
+
+
+' Generación del txt
+Call generarTxt(fila, ultimaFila, "", cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+
+End Sub
+
+Function generarTxt(fila, ultimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+Dim rutaArchivo As String
+Dim i As Byte
+Dim tope As Byte
+fila = 0
+
+
+' Generación del txt
+For i = 1 To cantArchivos
+tope = i * limite
+    If i = cantArchivos Then
+        tope = ultimaFila
+    End If
+    
+    For fila = (limite * (i - 1)) + 1 To tope
+        Cells(fila, 1).Activate
+        textoArchivo = textoArchivo _
+            & Cells(fila, 1).Value _
+            & "+" & Cells(fila, 2).Value _
+            & "!" & Cells(fila, 3).Value _
+            & "!" & Cells(fila, 4).Value _
+            & vbNewLine
+            Debug.Print "Archivo N°: " & i, "Fila N° :" & fila
+    Next fila
+    
+    ' Si es mayor a uno, se van nombrando incrementalmente
+    If cantArchivos > 1 Then
+        nombreArchivo = Left(ActiveWorkbook.Name, Len(ActiveWorkbook.Name) - 5) & " - " & i & ".txt"
+    Else
+        nombreArchivo = Left(ActiveWorkbook.Name, Len(ActiveWorkbook.Name) - 5) & ".txt"
+    End If
+    
+    rutaArchivo = server & carpetaDestino & nombreArchivo
+    Debug.Print textoArchivo
+    Open rutaArchivo For Output As #1
+    Print #1, textoArchivo
+    Close #1
+    
+    MsgBox "Datos exportados con éxito a " & rutaArchivo, vbInformation, "Cargar detalle desde txt"
+Next i
+
+
+
+End Function
+
+
