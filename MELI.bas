@@ -553,7 +553,7 @@ Sheets("Planilla").Activate
 
 ' Genera TXT. Comprueba de qué cuenta es.
 Dim cuenta As Byte
-If Left(ActiveWorkbook.Name, 8) = " CUENTA 2" Then
+If Left(ActiveWorkbook.Name, 8) = "CUENTA 2" Then
     cuenta = 2
 Else
     cuenta = 1
