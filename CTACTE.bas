@@ -614,8 +614,11 @@ With ActiveSheet.PageSetup
     .CenterHeader = "&B&20&F" & vbNewLine & "SOLO PARA USO EN DEPOSITO"
 End With
 
+' Guarda cambios
 ThisWorkbook.Save
 
+' Exporta un txt
+Call exportarTxt
 End Sub
 Sub construirCtaCte()
 ' CONSTRUYE LA PLANILLA DE CUENTA CORRIENTE
