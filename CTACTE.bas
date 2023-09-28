@@ -784,132 +784,76 @@ End Sub
 Sub exportarTxt()
 
 ' GENERA UN ARCHIVO DE TEXTO PARA IMPORTAR AL D.F.
+Dim fila As Long
+Dim columna As Long
+
 Dim txt As String
-Dim fila As Long, columna As Long
 Dim textoArchivo As String
 Dim server As String
 Dim carpetaDestino As String
 Dim carpetaActual As String
 Dim nombreArchivo As String
-Dim planillaVentas As Objet
+
+Dim largo As Byte
 Dim limite As Byte
-Dim item As Variant
 Dim i As Byte
 Dim ultimaFila As Byte
 Dim resto As Byte
 Dim cantArchivos As Byte
-Dim matrixCodColor As Object
+
+Dim planillaVentas As Object
+
+Dim txtTemporal As Workbook
+
 
 ' Planilla de Ventas
-carpetaActual = ActiveWorkbook.Path
-Set planillaVentas = ActiveWorkbook.Name
-nombreArchivo = Len(planillaVentas)
-ultimaFila = Sheets("Depósito").Cells(Rows.Count, 2).End(xlUp).Row - 1
-server = "\\SER-DF\A Remitar TXT"
-carpetaDestino = "\" & Sheets("Planilla").Range("W2").Value & "\"
+
+Set planillaVentas = ActiveWorkbook
+carpetaActual = planillaVentas.Path
+
+nombreArchivo = Len(planillaVentas.Name)
+ultimaFila = planillaVentas.Sheets("Depósito").Cells(Rows.Count, 2).End(xlUp).Row - 1
+server = "\\SER-DF\d\A Remitar TXT\"
+carpetaDestino = planillaVentas.Sheets("Planilla").Cells(2, Columns.Count).End(xlToLeft).Value & "\"
+Debug.Print nombreArchivo; ultimaFila; carpetaDestino
+
 
 ' Crea un archivo temporal
-txt = "Exportar TXT"
-Workbooks.Add.SaveAs Filename:=(carpetaActual & "\" & txt)
-Sheets(1).Name = txt
-
-
-Set matrixCodColor = CreateObject("Scripting.Dictionary")
+txt = "TXT Temporal"
+Application.DisplayAlerts = False
+Set txtTemporal = Workbooks.Add
+txtTemporal.SaveAs (planillaVentas.Path & "\" & txt)
+Application.DisplayAlerts = True
 limite = 30
 
-matrixCodColor.Add "01", "PITON GRIS"
-matrixCodColor.Add "02", "PITON BEIGE"
-matrixCodColor.Add "03", "BEIGE"
-matrixCodColor.Add "04", "WOODLAND"
-matrixCodColor.Add "05", "DIGITAL DESERT O DIGITAL DESERTICO"
-matrixCodColor.Add "06", "VERDE"
-matrixCodColor.Add "07", "ACU"
-matrixCodColor.Add "08", "MULTICAM"
-matrixCodColor.Add "09", "NEGRO"
-matrixCodColor.Add "10", "TRI DESERT"
-matrixCodColor.Add "11", "DIGITAL WOODLAND"
-matrixCodColor.Add "12", "PITON VERDE"
-matrixCodColor.Add "13", "GRIS"
-matrixCodColor.Add "14", "REAL TREE"
-matrixCodColor.Add "15", "DIGITAL TIGER WOODLAND"
-matrixCodColor.Add "16", "DIGITAL FUERZA AEREA"
-matrixCodColor.Add "17", "DIGITAL NAVAL"
-matrixCodColor.Add "18", "AZUL"
-matrixCodColor.Add "19", "CAMUFLADO"
-matrixCodColor.Add "20", "BLANCO"
-matrixCodColor.Add "21", "CPL MULTICAM BLACK"
-matrixCodColor.Add "22", "ROJO"
-matrixCodColor.Add "23", "DIGITAL RUSO"
-matrixCodColor.Add "24", "BORDO"
-matrixCodColor.Add "25", "CAMEL"
-matrixCodColor.Add "26", "VIAL TUCUMAN"
-matrixCodColor.Add "27", "DIGITAL GRIS"
-matrixCodColor.Add "30", "STAR SEG"
-matrixCodColor.Add "ABR", "ABROJO"
-matrixCodColor.Add "ESTAMP", "ESTAMP"
-matrixCodColor.Add "REF", "REFLECTIVO"
-
-
-
-
 ' Separación de talles y colores ==========
-' Datos fuentes
-Workbooks(planillaVentas).Sheets("Depósito").Activate
-Workbooks(planillaVentas).Sheets("Depósito").Range(Cells(2, 4), Cells(ultimaFila, 4)).Select
-Selection.Copy
-Workbooks(txt).Sheets(1).Range("C1").PasteSpecial xlPasteValues
-Workbooks(txt).Sheets().Range
-Application.CutCopyMode = False
-Workbooks(txt).Sheets(txt).Activate
-
-' Separar en columnas
-Sheets("Exportar TXT").Range(Cells(1, 3), Cells(ultimaFila + 1, 3)).TextToColumns _
-    Destination:=Range(Cells(1, 3), Cells(ultimaFila + 1, 3)), _
-    DataType:=xlDelimited, _
-    ConsecutiveDelimiter:=True, _
-    Tab:=False, _
-    Semicolon:=False, _
-    Comma:=True
-
-Range("a1").Activate
-
-' Acomodar los datos del 1° el color y 2° el talle
-For fila = 1 To ultimaFila
-    Cells(fila, 3).Select
-    ' Recorre el diccionario buscando coincidencia
-    For Each item In matrixCodColor
-        If matrixCodColor(item) = Cells(fila, 3).Value Then
-            Cells(fila, 3).Value = "'" & item
-            GoTo proximaFila
-        ElseIf Cells(fila, 3).Value = "" Then
-            GoTo proximaFila
-        End If
-    Next item
-
-' Traslandando el talle a la siguiente columna
-Cells(fila, 4).Value = Cells(fila, 3).Value
-Cells(fila, 3).Value = ""
-proximaFila:
-Next fila
-
-' Borrar espacios en blanco
-Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="", LookAt:=xlPart, searchorder:= _
-        xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
-
-
 ' Completa planilla para exportar
-For fila = 1 To ultimaFila - 1
+For fila = 2 To ultimaFila
     
     ' 1º) Stock
-    Cells(fila, 1).Value = "'" & Sheets("Depósito").Cells(fila + 1, 6).Value
+    'planillaVentas.Sheets("Depósito").Cells(fila, 6).Value = "'" & txtTemporal.Sheets(1).Cells(fila - 1, 1).Value
+    txtTemporal.Sheets(1).Cells(fila - 1, 1).Value = planillaVentas.Sheets("Depósito").Cells(fila, 6).Value
     
     ' 2º Codigo
-    Cells(fila, 2).Value = "'" & Sheets("Depósito").Cells(fila + 1, 4).Value
+    'planillaVentas.Sheets("Depósito").Cells(fila, 3).Value = "'" & txtTemporal.Sheets(1).Cells(fila - 1, 2).Value
+    txtTemporal.Sheets(1).Cells(fila - 1, 2).Value = "'" & planillaVentas.Sheets("Depósito").Cells(fila, 3).Value
     
+    ' 3° Color
+    'planillaVentas.Sheets("Depósito").Cells(fila, 4).Value = "'" & Left(txtTemporal.Sheets(1).Cells(fila - 1, 3).Value, InStr(txtTemporal.Sheets(1).Cells(fila - 1, 3).Value, "."))
+    largo = InStr(planillaVentas.Sheets("Depósito").Cells(fila, 4).Value, ".")
+    If largo > 1 Then
+        largo = largo - 1
+    End If
+    txtTemporal.Sheets(1).Cells(fila - 1, 3).Value = "'" & Left(planillaVentas.Sheets("Depósito").Cells(fila, 4).Value, largo)
+    
+    ' 4° Talle
+    'planillaVentas.Sheets("Depósito").Cells(fila, 3).Value = "'" & txtTemporal.Sheets(1).Cells(fila - 1, 4).Value
+    txtTemporal.Sheets(1).Cells(fila - 1, 4).Value = "'" & planillaVentas.Sheets("Depósito").Cells(fila, 5).Value
 Next fila
 
 ' Ajuste ultima Fila - HARDCODEO ESTO PARA PROBAR
-ultimaFila = ultimaFila - 1
+ultimaFila = txtTemporal.Sheets(1).Cells(Rows.Count, 1).End(xlUp).Row
+Debug.Print ultimaFila
 
 ' Si se pasa del tope (30 líneas), serán "n" archivos con 30 líneas y otro con el resto
 ' de items que quedaron fuera. Sería el resto de una división, el módulo.
@@ -919,7 +863,15 @@ Debug.Print "Archivos a importar: " & cantArchivos
 
 
 ' Generación del txt
-Call generarTxt(fila, ultimaFila, "", cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+Call generarTxt(fila - 1, ultimaFila, "", cantArchivos, planillaVentas.Name, carpetaDestino, limite, resto, server)
+
+' Eliminación del archivo temporal
+Debug.Print txtTemporal.Name
+
+txtTemporal.Close (True)
+
+Kill (planillaVentas.Path & "\" & txt & ".xlsx")
+
 
 End Sub
 
@@ -950,9 +902,9 @@ tope = i * limite
     
     ' Si es mayor a uno, se van nombrando incrementalmente
     If cantArchivos > 1 Then
-        nombreArchivo = Left(ActiveWorkbook.Name, Len(ActiveWorkbook.Name) - 5) & " - " & i & ".txt"
+        nombreArchivo = Left(nombreArchivo, Len(nombreArchivo) - 5) & " - " & i & ".txt"
     Else
-        nombreArchivo = Left(ActiveWorkbook.Name, Len(ActiveWorkbook.Name) - 5) & ".txt"
+        nombreArchivo = Left(nombreArchivo, Len(nombreArchivo) - 5) & ".txt"
     End If
     
     rutaArchivo = server & carpetaDestino & nombreArchivo
