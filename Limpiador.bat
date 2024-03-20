@@ -1,4 +1,11 @@
 @echo off
 rem "Elimina los archivos viejos termporales."
-del /S /F /Q C:\Users\EDGARD\AppData\Local\Temp\*.*
-del /S /F /Q C:\Windows\Temp\*.*
+
+rem "del /S /F /Q C:\Users\%USERNAME%\AppData\Local\Temp\*.*"
+rmdir /S /Q C:\Users\%USERNAME%\AppData\Local\Temp\
+
+
+rem "del /S /F /Q C:\Windows\Temp\*.*"
+rmdir /S /Q C:\Windows\Temp\
+
+echo Carpetas temporales eliminadas :-P

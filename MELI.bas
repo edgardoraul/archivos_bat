@@ -22,9 +22,45 @@ End If
 ' Creando las hojas nuevas
 Cells.Select
 Cells.ClearFormats
-ActiveWorkbook.Sheets.Add(After:=ActiveWorkbook _
-    .Worksheets(ActiveWorkbook.Worksheets.count)).Name = "Planilla"
+ActiveWorkbook.Sheets.Add(after:=ActiveWorkbook _
+    .Worksheets(ActiveWorkbook.Worksheets.Count)).Name = "Planilla"
 Application.Worksheets(1).Select
+
+
+
+
+' Dando valor a la última fila
+ultima = Cells(Rows.Count, 1).End(xlUp).Row
+
+' Borrando una columna del barrio
+Range("AH:AH").Delete
+
+' Corrigiendo información
+Cells(1, 49).Activate
+
+' Bucle que recorre las filas y obtiene el nombre+apellido y/o razón social.
+
+For i = 2 To ultima
+    Debug.Print Cells(i, 49).Value
+    Cells(i, 49).Activate
+    
+    ' Obtención del usuario en mayúsculas
+    Cells(i, 49).Value = Cells(i, 4).Value
+    
+    ' Pero no coincide mucho con los rótulos
+    'If Cells(i, 49).Value = "XXXXXXX" And Cells(i, 45).Value <> "" Then
+    '    Cells(i, 49).Value = Cells(i, 45).Value & " " & Cells(i, 46).Value
+    'ElseIf Cells(i, 49).Value <> "XXXXXXX" Then
+    '    GoTo Siguiente
+    'Else
+     '   Cells(i, 49).Value = Cells(i, 42).Value
+    'End If
+'Siguiente:
+Next i
+
+
+
+
 
 ' Copiando información importante a la Planilla
 Range("A:A, C:C, H:H, J:J, L:L, N:N, O:O, P:P, AW:AW, AU:AU").Select
@@ -40,8 +76,7 @@ Range("M1").Activate
 Range("M1").PasteSpecial xlPasteAll
 Application.CutCopyMode = False
 
-' Dando valor a la última fila
-ultima = Cells(Rows.count, 1).End(xlUp).Row
+
 
 ' Reacomodando los datos
 For i = 2 To ultima
@@ -101,8 +136,8 @@ Loop
 
 ' Bucle. Debe coincidir el largo del arreglo con el fin del bucle
 For i = 0 To largo
-    Cells.Replace what:=cadenaOriginal(i), Replacement:="", LookAt:=xlPart, _
-        searchorder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+    Cells.Replace What:=cadenaOriginal(i), Replacement:="", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
 Next
 
@@ -299,11 +334,11 @@ Dim ws As Object
 Set ws = CreateObject("WScript.network")
 
 ' Asignando algunos valores de acuerdo en qué equipo de la red esté
-If ws.ComputerName = "EDGARD" Then
+If ws.ComputerName = "EDGAR" Then
     ruta = "D:\Web\Listados de Ventas Online\MELI"
     Debug.Print "Estoy en la computadora: " & ws.ComputerName
 Else
-    ruta = "\\EDGARD\Web\Listados de Ventas Online\MELI"
+    ruta = "\\EDGAR\Web\Listados de Ventas Online\MELI"
     Debug.Print "Estoy en una computadora de la red, llamada: " & ws.ComputerName
 End If
 Debug.Print "Se guardan los archivos en: " & ruta
@@ -337,7 +372,7 @@ u = 1
 archivos = Dir(ruta)
     
 ' Recorrido de la carpeta
-ActiveWorkbook.Sheets.Add(After:=ActiveWorkbook _
+ActiveWorkbook.Sheets.Add(after:=ActiveWorkbook _
     .Worksheets("Planilla")).Name = "Listado"
 Sheets("Listado").Visible = False
 Sheets("Planilla").Select
@@ -398,7 +433,7 @@ ActiveWorkbook.SaveAs Filename:=nombre, FileFormat:=xlOpenXMLStrictWorkbook, Con
 ActiveWorkbook.Save
 
 ' Generando planilla para Depósito
-Call deposito
+Call depositoMeli
 
 Sheets("Planilla").Activate
 Range("A1").Activate
@@ -416,9 +451,9 @@ End Sub
 
 
 
-Sub deposito()
-Attribute deposito.VB_Description = "Regenera la planilla del Depósito"
-Attribute deposito.VB_ProcData.VB_Invoke_Func = "D\n14"
+Sub depositoMeli()
+Attribute depositoMeli.VB_Description = "Regenera la planilla del Depósito"
+Attribute depositoMeli.VB_ProcData.VB_Invoke_Func = "D\n14"
 ' Planilla para el Depósito
 ' GENERA UNA PLANILLA SÓLO PARA USO EXCLUSIVO DEL DEPOSITO
 
@@ -432,7 +467,7 @@ carpeta = ActiveWorkbook.Path
 rutaFormula = "'" & carpeta & "\..\" & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
 
 ' Nueva hoja con nombre Depósito
-ultima = Sheets("Planilla").Cells(Rows.count, 2).End(xlUp).Row - 1
+ultima = Sheets("Planilla").Cells(Rows.Count, 2).End(xlUp).Row - 1
 'Sheets.Add(After:=Sheets("Planilla")).Name = "Depósito"
 Call CrearHoja(ActiveWorkbook, "Depósito")
 ActiveWorkbook.Sheets("Depósito").Activate
@@ -605,7 +640,7 @@ Function correo(ruta, i, ultima)
         ' Controlamos que el número de venta esté completo
         ' y además que NO SEA un retiro en Local
         If numVenta <> "" And planilla.Sheets(1).Cells(i, 9).Value <> "Retira en Local" Then
-            packar.Sheets(1).Cells(i + continuacion, 1).Value = numVenta
+            packar.Sheets(1).Cells(i + continuacion, 1).Value = "'" & numVenta
             packar.Sheets(1).Cells(i + continuacion, 2).Value = Cliente
             packar.Sheets(1).Cells(i + continuacion, 3).Value = tn
         End If
@@ -621,7 +656,7 @@ Function CrearHoja(archivo As Workbook, nombreHoja As String) As Boolean
     existe = archivo.Worksheets(nombreHoja).Name <> ""
      
     If Not existe Then
-        archivo.Worksheets.Add(After:=Worksheets(Worksheets.count)).Name = nombreHoja
+        archivo.Worksheets.Add(after:=Worksheets(Worksheets.Count)).Name = nombreHoja
     End If
      
     CrearHoja = existe
@@ -660,7 +695,7 @@ Dim cantArchivos As Byte
 Dim ruta As Range
 
 Set ruta = Equivalencia.Sheets(1).Range("A1:G10000")
-ultimaFila = planillaActual.Sheets("Planilla").Cells(Rows.count, 2).End(xlUp).Row - 1
+ultimaFila = planillaActual.Sheets("Planilla").Cells(Rows.Count, 2).End(xlUp).Row - 1
 nombreArchivo = planillaActual.Name
 server = "\\SER-DF\A Remitar TXT"
 carpetaDestino = "\" & carpeta & "\"
@@ -745,7 +780,7 @@ tope = i * limite
     
     rutaArchivo = server & carpetaDestino & nombreArchivo
     Debug.Print textoArchivo
-    Open rutaArchivo For Output As #1
+    'Open rutaArchivo For Output As #1
     Print #1, textoArchivo
     Close #1
     
