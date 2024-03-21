@@ -1,6 +1,7 @@
 Attribute VB_Name = "copiaRenombraImgenes_Rerda"
 Option Explicit
 Sub CopiarPegarRenombrarBorrarSubcarpetas()
+Attribute CopiarPegarRenombrarBorrarSubcarpetas.VB_ProcData.VB_Invoke_Func = "P\n14"
     Dim origenPath As String
     Dim destinoPath As String
     Dim origenFolder As Object
@@ -9,12 +10,12 @@ Sub CopiarPegarRenombrarBorrarSubcarpetas()
     
     ' Obtener la ruta de la carpeta de origen
     With Application.FileDialog(msoFileDialogFolderPicker)
-        .InitialFileName = ThisWorkbook.Path & "\"
+        .InitialFileName = ActiveWorkbook.Path & "\"
         .Title = "Seleccionar carpeta"
         .Show
     
         If .SelectedItems.Count = 0 Then
-            Debug.Print "Nada"
+            Exit Sub
         Else
             origenPath = .SelectedItems(1)
             Debug.Print origenPath
