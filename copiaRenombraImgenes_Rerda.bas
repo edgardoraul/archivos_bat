@@ -7,6 +7,10 @@ Attribute CopiarPegarRenombrarBorrarSubcarpetas.VB_ProcData.VB_Invoke_Func = "P\
     Dim origenFolder As Object
     Dim destinoFolder As Object
     Dim subFolder As Object
+    Dim caracteres As Integer
+    
+    ' Definiendo los caracteres a 7, por ejemplo, o lo que vos quieras.
+    caracteres = 7
     
     ' Obtener la ruta de la carpeta de origen
     With Application.FileDialog(msoFileDialogFolderPicker)
@@ -38,7 +42,8 @@ Attribute CopiarPegarRenombrarBorrarSubcarpetas.VB_ProcData.VB_Invoke_Func = "P\
         subFolder.Delete
     Next subFolder
     
-    ' Renombrar la carpeta copiada
-    destinoFolder.Name = Left(destinoFolder.Name, 7)
+    ' Renombrar la carpeta copiada a los primeros n caracteres.
+    ' El objetivo es que tenga por nombre el código del producto en cuestión o el que vos prefieras.
+    destinoFolder.Name = Left(destinoFolder.Name, caracteres)
 End Sub
 
