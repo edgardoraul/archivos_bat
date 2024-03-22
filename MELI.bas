@@ -306,7 +306,8 @@ With Worksheets("Planilla").PageSetup
     .PaperSize = xlPaperA4
     .LeftMargin = Application.CentimetersToPoints(0.64)
     .RightMargin = Application.CentimetersToPoints(0.64)
-    .TopMargin = Application.CentimetersToPoints(2.5)
+    '.TopMargin = Application.CentimetersToPoints(2.5) - Agrego más margen para evitar zona blanca
+    .TopMargin = Application.CentimetersToPoints(5)
     .BottomMargin = Application.CentimetersToPoints(1.91)
     .HeaderMargin = Application.CentimetersToPoints(0.76)
     .FooterMargin = Application.CentimetersToPoints(0.76)
@@ -316,8 +317,13 @@ With Worksheets("Planilla").PageSetup
     .Zoom = False
     .FitToPagesTall = 1
     .FitToPagesWide = 1
-    .CenterHeader = "&B&20&F"
+    ' Le agrego saltos de líneas para evadir la parte que no fucniona de la impresora
+    .CenterHeader = vbNewLine & vbNewLine & vbNewLine & vbNewLine & "&B&20&F"
 End With
+
+' Ajustanto texto a la columna de los clientes
+Range(Cells(2, 3), Cells(ultima, 3)).WrapText = True
+
 
 
 ' ==========================================================
@@ -512,9 +518,14 @@ For i = 2 To ultima
     
     ' Cantidad
     Cells(i, 7).Value = Sheets(1).Cells(i, 8).Value
-        
-    ' La ubicación
-    Cells(i, 8).Formula = "=VLOOKUP(LEFT(D" & i & ", 7)," & rutaFormula & ",3,FALSE)"
+       
+    ' La ubicación. Si está en planta baja agregar esta aclaración
+    If Sheets(1).Cells(i, 9).Value = "planta baja" Then
+        Cells(i, 8).Value = "10. PLANTA BAJA"
+    Else
+        Cells(i, 8).Formula = "=VLOOKUP(LEFT(D" & i & ", 7)," & rutaFormula & ",3,FALSE)"
+    End If
+    
 Next i
 
 ' Ordenando alfabéticamente esta columna de ubicación
@@ -571,7 +582,8 @@ With ActiveSheet.PageSetup
     .PaperSize = xlPaperA4
     .LeftMargin = Application.CentimetersToPoints(0.64)
     .RightMargin = Application.CentimetersToPoints(0.64)
-    .TopMargin = Application.CentimetersToPoints(4)
+    '.TopMargin = Application.CentimetersToPoints(4) - Agrego margen para evitar zona blanca
+    .TopMargin = Application.CentimetersToPoints(6)
     .BottomMargin = Application.CentimetersToPoints(1.91)
     .HeaderMargin = Application.CentimetersToPoints(0.76)
     .FooterMargin = Application.CentimetersToPoints(0.76)
@@ -581,7 +593,8 @@ With ActiveSheet.PageSetup
     .Zoom = False
     .FitToPagesTall = 1
     .FitToPagesWide = 1
-    .CenterHeader = "&B&20&F" & vbNewLine & "SOLO PARA USO EN DEPOSITO"
+    ' Agrego saltos de líne para evitar zona blanca
+    .CenterHeader = vbNewLine & vbNewLine & vbNewLine & "&B&20&F" & vbNewLine & "SOLO PARA USO EN DEPOSITO"
 End With
 
 Sheets("Planilla").Activate
