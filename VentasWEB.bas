@@ -192,7 +192,9 @@ With ActiveSheet.PageSetup
     .PaperSize = xlPaperA4
     .LeftMargin = Application.CentimetersToPoints(0.64)
     .RightMargin = Application.CentimetersToPoints(0.64)
-    .TopMargin = Application.CentimetersToPoints(2.5)
+    '.TopMargin = Application.CentimetersToPoints(2.5)
+    ' Para evitar el blanco
+    .TopMargin = Application.CentimetersToPoints(5)
     .BottomMargin = Application.CentimetersToPoints(1.91)
     .HeaderMargin = Application.CentimetersToPoints(0.76)
     .FooterMargin = Application.CentimetersToPoints(0.76)
@@ -202,7 +204,7 @@ With ActiveSheet.PageSetup
     .Zoom = False
     .FitToPagesTall = 1
     .FitToPagesWide = 1
-    .CenterHeader = "&B&20&F"
+    .CenterHeader = vbNewLine & vbNewLine & vbNewLine & "&B&20&F"
 End With
     
 End Function
@@ -302,9 +304,9 @@ Dim cuenta As String
 ruta = ruta & "WEB\"
 
 
-'Controlando si la compu EDGARD está prendida y conectada a red.
+'Controlando si la compu EDGAR está prendida y conectada a red.
 If Dir(ruta, vbDirectory) = "" Then
-    MsgBox ("No hay acceso la compu EDGARD. Debes prender esa compu y que se conecte a la red.")
+    MsgBox ("No hay acceso la compu EDGAR. Debes prender esa compu y que se conecte a la red.")
     Exit Sub
 End If
 
@@ -318,7 +320,7 @@ u = 1
 archivos = Dir(ruta)
     
 ' Recorrido de la carpeta
-ActiveWorkbook.Sheets.Add(After:=ActiveWorkbook _
+ActiveWorkbook.Sheets.Add(after:=ActiveWorkbook _
     .ActiveSheet).Name = "Listado"
 Sheets("Listado").Visible = False
 Sheets(1).Name = "ventas"
@@ -394,11 +396,11 @@ Dim ws As Object
 Set ws = CreateObject("WScript.network")
 
 ' Asignando algunos valores de acuerdo en qué equipo de la red esté
-If ws.ComputerName = "EDGARD" Then
+If ws.ComputerName = "EDGAR" Then
     ruta = "D:\Web\Listados de Ventas Online\"
     Debug.Print "Estoy en la computadora: " & ws.ComputerName
 Else
-    ruta = "\\EDGARD\Web\Listados de Ventas Online\"
+    ruta = "\\EDGAR\Web\Listados de Ventas Online\"
     Debug.Print "Estoy en una computadora de la red, llamada: " & ws.ComputerName
 End If
 Debug.Print "Se guardan los archivos en: " & ruta
@@ -410,7 +412,7 @@ fecha = Day(Date) & "-" & Month(Date) & "-" & Year(Date)
 ' Guardando el archivo con nombre específico
 Call GuardarArchivo(fecha, ruta, nombreArchivo)
 Range("A1").Activate
-ultima = ActiveSheet.Cells(Rows.count, 1).End(xlUp).Row
+ultima = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).Row
 
 ' Borrando información innecesaria
 Range("Y:Y").EntireColumn.Copy
@@ -486,7 +488,7 @@ Selection.TextToColumns Destination:=Range("C1"), DataType:=xlDelimited, _
         Semicolon:=False, Comma:=False, Space:=False, Other:=True, OtherChar _
         :="(", FieldInfo:=Array(Array(1, 1), Array(2, 1)), TrailingMinusNumbers:=True
 Range("A2").Activate
-Cells.Replace what:=")", Replacement:="", LookAt:=xlPart, searchorder:= _
+Cells.Replace What:=")", Replacement:="", LookAt:=xlPart, SearchOrder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 Range("D1").Value = "Código"
 Range("E1").Value = "Variante"
@@ -523,7 +525,7 @@ For i = 2 To ultima
         rotulos = rotulos + 1
         
         ' Se agrega una pestaña para el respectivo rótulo
-        ActiveWorkbook.Sheets.Add(After:=ActiveWorkbook.Sheets("ventas")).Name = "Venta N° " & Cells(i, 1).Value
+        ActiveWorkbook.Sheets.Add(after:=ActiveWorkbook.Sheets("ventas")).Name = "Venta N° " & Cells(i, 1).Value
         
         ' Se genera el rótulo respectivo
         Call generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
@@ -533,8 +535,8 @@ For i = 2 To ultima
 Next i
 
 'Posicionando al principio
-Sheets.Add(After:=Sheets("ventas")).Name = "Depósito"
-Sheets.Add(After:=Sheets("Depósito")).Name = "Exportar TXT"
+Sheets.Add(after:=Sheets("ventas")).Name = "Depósito"
+Sheets.Add(after:=Sheets("Depósito")).Name = "Exportar TXT"
 Sheets("ventas").Activate
 Range("A1").Activate
 
@@ -584,7 +586,7 @@ enrutacion = ActiveWorkbook.Path & "\..\"
 Debug.Print enrutacion
 
 ruta = "'" & enrutacion & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
-ultima = Sheets("ventas").Cells(Rows.count, 2).End(xlUp).Row - 1
+ultima = Sheets("ventas").Cells(Rows.Count, 2).End(xlUp).Row - 1
 web = False
 
 
@@ -681,7 +683,7 @@ With ActiveSheet.PageSetup
     .PaperSize = xlPaperA4
     .LeftMargin = Application.CentimetersToPoints(0.64)
     .RightMargin = Application.CentimetersToPoints(0.64)
-    .TopMargin = Application.CentimetersToPoints(4)
+    .TopMargin = Application.CentimetersToPoints(6)
     .BottomMargin = Application.CentimetersToPoints(1.91)
     .HeaderMargin = Application.CentimetersToPoints(0.76)
     .FooterMargin = Application.CentimetersToPoints(0.76)
@@ -691,7 +693,7 @@ With ActiveSheet.PageSetup
     .Zoom = False
     .FitToPagesTall = 1
     .FitToPagesWide = 1
-    .CenterHeader = "&B&20&F" & vbNewLine & "SOLO PARA USO EN DEPOSITO"
+    .CenterHeader = vbNewLine & vbNewLine & "&B&20&F" & vbNewLine & "SOLO PARA USO EN DEPOSITO"
 End With
 Call exportarTxt
 Sheets("ventas").Activate
@@ -707,7 +709,7 @@ Function CrearHoja(nombreHoja As String) As Boolean
     existe = (Worksheets(nombreHoja).Name <> "")
      
     If Not existe Then
-        Worksheets.Add(After:=Worksheets(Worksheets.count)).Name = nombreHoja
+        Worksheets.Add(after:=Worksheets(Worksheets.Count)).Name = nombreHoja
     End If
      
     CrearHoja = existe
@@ -734,7 +736,7 @@ Dim resto As Byte
 Dim cantArchivos As Byte
 
 Dim matrixCodColor As Object
-ultimaFila = Sheets("Depósito").Cells(Rows.count, 2).End(xlUp).Row - 1
+ultimaFila = Sheets("Depósito").Cells(Rows.Count, 2).End(xlUp).Row - 1
 nombreArchivo = Len(ActiveWorkbook.Name)
 server = "\\SER-DF\A Remitar TXT"
 carpetaDestino = "\WEB\"
@@ -823,7 +825,7 @@ proximaFila:
 Next fila
 
 ' Borrar espacios en blanco
-Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="", LookAt:=xlPart, searchorder:= _
+Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace What:=" ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 
 
@@ -887,8 +889,8 @@ tope = i * limite
     
     rutaArchivo = server & carpetaDestino & nombreArchivo
     Debug.Print textoArchivo
-    Open rutaArchivo For Output As #1
-    Print #1, textoArchivo
+    'Open rutaArchivo For Output As #1
+    'Print #1, textoArchivo
     Close #1
     
     MsgBox "Datos exportados con éxito a " & rutaArchivo, vbInformation, "Cargar detalle desde txt"
