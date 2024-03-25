@@ -60,8 +60,10 @@ Sub CopiarPegarRenombrarBorrarSubcarpetas()
     Set origenFolder = CreateObject("Scripting.FileSystemObject").GetFolder(origenPath)
     origenFolder.Copy Destination:=destinoPath & "\" & newFolderName
     
+   
     ' Obtener la carpeta copiada
     Set destinoFolder = CreateObject("Scripting.FileSystemObject").GetFolder(destinoPath & "\" & newFolderName)
+    
     
     ' Borrar subcarpetas
     For Each subFolder In destinoFolder.SubFolders
