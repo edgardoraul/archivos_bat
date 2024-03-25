@@ -18,6 +18,8 @@ Sub CopiarSubcarpetasConPatron()
     Dim subFolder As Object ' Definición de la variable subFolder
     Dim fso As Object
     Dim file As Object
+    Dim tempFolder As Object
+    Dim tempSubFolder As Object
     
     ' Obtener la ruta de la carpeta de origen
     With Application.FileDialog(msoFileDialogFolderPicker)
@@ -41,8 +43,17 @@ Sub CopiarSubcarpetasConPatron()
         End If
     End With
     
-    ' Obtener la carpeta de destino
-    destinoPath = "D:\Web\imagenes_rerda\" ' Cambia esta ruta por la ruta deseada
+    ' Obtener la carpeta de destino temporal
+    destinoPath = "D:\Web\imagenes_rerda\" ' Carpeta final de destino
+    
+    ' Crear la carpeta temporal si no existe
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FolderExists(destinoPath & "..\Temp") Then
+        fso.CreateFolder destinoPath & "..\Temp"
+    End If
+    
+    ' Obtener la carpeta de destino temporal
+    Set tempFolder = fso.GetFolder(destinoPath & "..\Temp")
     
     ' Inicializar expresión regular para buscar el patrón en los nombres de las carpetas
     Set regex = CreateObject("VBScript.RegExp")
@@ -51,45 +62,38 @@ Sub CopiarSubcarpetasConPatron()
     regex.pattern = "\d{7}" ' Patrón: 7 dígitos numéricos, espacio, guión medio, espacio
     
     ' Recorrer las subcarpetas de la carpeta de origen
-    Set origenFolder = CreateObject("Scripting.FileSystemObject").GetFolder(origenPath)
+    Set origenFolder = fso.GetFolder(origenPath)
     For Each subFolderOrigen In origenFolder.SubFolders
         Debug.Print subFolderOrigen.Name
         ' Verificar si el nombre de la subcarpeta cumple con el patrón utilizando expresiones regulares
         If regex.Test(subFolderOrigen.Name) Then
-            ' Copiar y pegar la subcarpeta en el destino con el nuevo nombre
+            ' Copiar y pegar la subcarpeta en la carpeta temporal con el nuevo nombre
             newFolderName = regex.Execute(subFolderOrigen.Name)(0)
-            Set destinoFolder = CreateObject("Scripting.FileSystemObject").GetFolder(destinoPath)
-            CreateObject("Scripting.FileSystemObject").CopyFolder subFolderOrigen.Path, destinoPath & newFolderName, True
+            fso.CopyFolder subFolderOrigen.Path, tempFolder.Path & "\" & newFolderName, True
             
-            ' Obtener la carpeta recién copiada en el destino
-            Set subFolderDestino = FindSubFolder(destinoFolder, newFolderName)
+            ' Obtener la carpeta recién copiada en la carpeta temporal
+            Set tempSubFolder = fso.GetFolder(tempFolder.Path & "\" & newFolderName)
             
             ' Borrar subcarpetas dentro de la carpeta recién copiada
-            If Not subFolderDestino Is Nothing Then
-                For Each subFolder In subFolderDestino.SubFolders
-                    subFolder.Delete
-                Next subFolder
-            End If
+            For Each subFolder In tempSubFolder.SubFolders
+                subFolder.Delete
+            Next subFolder
             
             ' Eliminar el archivo Thumbs.db dentro de la carpeta recién copiada
-            Set fso = CreateObject("Scripting.FileSystemObject")
-            For Each file In subFolderDestino.Files
+            For Each file In tempSubFolder.Files
                 If file.Name = "Thumbs.db" Then
                     fso.DeleteFile file.Path
                 End If
             Next file
         End If
     Next subFolderOrigen
+    
+    ' Copiar las carpetas de la carpeta temporal a la carpeta final de destino
+    For Each tempSubFolder In tempFolder.SubFolders
+        fso.CopyFolder tempSubFolder.Path, destinoPath, True
+    Next tempSubFolder
+    
+    ' Borrar la carpeta temporal
+    fso.DeleteFolder tempFolder.Path
 End Sub
-
-Function FindSubFolder(parentFolder As Object, folderName As String) As Object
-    Dim subFolder As Object
-    For Each subFolder In parentFolder.SubFolders
-        If subFolder.Name = folderName Then
-            Set FindSubFolder = subFolder
-            Exit Function
-        End If
-    Next subFolder
-    Set FindSubFolder = Nothing
-End Function
 
