@@ -22,7 +22,7 @@ Sub resaltarCeldas()
         
         ' Encontrar el valor mínimo en la fila (ignorando ceros)
         For j = 5 To lastCol ' Empezamos desde la tercera columna
-            If ws.Cells(i, j).Value <> 0 And ws.Cells(i, j).Value < minValue Then
+            If ws.Cells(i, j).Value > 0 And ws.Cells(i, j).Value < minValue Then
                 minValue = ws.Cells(i, j).Value
                 minCol = j
             End If

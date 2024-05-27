@@ -15,9 +15,27 @@ Sub ExportarComoPDF()
     
     Debug.Print nombreArchivo
     
+    ' Formato de impresión
+    With ActiveSheet.PageSetup
+        '.Orientation = xlPortrait
+        '.PaperSize = xlPaperA4
+        '.LeftMargin = Application.CentimetersToPoints(0.64)
+        '.RightMargin = Application.CentimetersToPoints(0.64)
+        '.TopMargin = Application.CentimetersToPoints(2.5)
+        '.BottomMargin = Application.CentimetersToPoints(1.91)
+        '.HeaderMargin = Application.CentimetersToPoints(0.76)
+        '.FooterMargin = Application.CentimetersToPoints(0.76)
+        '.CenterHorizontally = True '
+        '.CenterVertically = False '
+        '.PrintArea = ActiveSheet.Range("A1:H21")
+        '.Zoom = False
+        '.FitToPagesTall = 1
+        '.FitToPagesWide = 1
+    End With
+    
     ' Exportar como PDF con el mismo nombre y en la misma carpeta
     
-    ActiveSheet.ExportAsFixedFormat Type:=xlTypePDF, Filename:=rutaArchivo & ".pdf", _
+    ActiveSheet.ExportAsFixedFormat Type:=xlTypePDF, fileName:=rutaArchivo & ".pdf", _
         Quality:=xlQualityStandard, IncludeDocProperties:=True, IgnorePrintAreas:=False, _
         OpenAfterPublish:=True
         

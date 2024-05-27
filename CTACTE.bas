@@ -147,7 +147,7 @@ Sub Rotulador()
         
         ' Validando si existe o no el dato.
         On Error Resume Next
-        codigoNis = Sheets("Sucursales").Range("$F$4:$F$5000").Find(what:=codigoPostal, LookIn:=xlValues, LookAt:=xlPart).Offset(0, -5)
+        codigoNis = Sheets("Sucursales").Range("$F$4:$F$5000").Find(What:=codigoPostal, LookIn:=xlValues, LookAt:=xlPart).Offset(0, -5)
     
         If codigoNis = "" Then
             ' Todo salió mal
@@ -182,7 +182,7 @@ Sub Rotulador()
         
         ' Validando si existe o no el dato.
         On Error Resume Next
-        codigoNis = Sheets("Sucursales").Range("$F$4:$F$5000").Find(what:=codigoPostal, LookIn:=xlValues, LookAt:=xlPart).Offset(0, -5)
+        codigoNis = Sheets("Sucursales").Range("$F$4:$F$5000").Find(What:=codigoPostal, LookIn:=xlValues, LookAt:=xlPart).Offset(0, -5)
     
         If codigoNis = "" Then
             ' Todo salió mal
@@ -255,7 +255,7 @@ Function Rotulo_Correo_Argentino(apellidoNombre, rotulo, fecha)
     End If
     
     ' Generando el archivo pdf
-    rotulo.ExportAsFixedFormat Type:=xlTypePDF, Filename:= _
+    rotulo.ExportAsFixedFormat Type:=xlTypePDF, fileName:= _
         ruta & nombreCarpeta & UCase(nombre) & ".pdf", _
         OpenAfterPublish:=True
     Sheets("Planilla").Activate
@@ -264,7 +264,7 @@ End Function
 Function Validar_CP(cp)
 ' Valida si el código postal es correcto, existe o no.
 
-    codigoNis = Sheets("Sucursales").Range("F1576:F5000").Find(what:=cp, LookIn:=xlValues, searchorder:=xlByRows, LookAt:=xlWhole).Offset(0, -5)
+    codigoNis = Sheets("Sucursales").Range("F1576:F5000").Find(What:=cp, LookIn:=xlValues, SearchOrder:=xlByRows, LookAt:=xlWhole).Offset(0, -5)
     
     If codigoNis = "" Then
         ' Todo salió mal
@@ -637,7 +637,7 @@ archivoCtaCte = Year(Date) & ". CTACTE.xlsx"
 
 ' Control si existe de antes
 If Dir(carpetaActual & "\..\" & archivoCtaCte, vbNormal) = "" Then
-    Workbooks.Add.SaveAs Filename:=(carpetaActual & "\..\" & archivoCtaCte)
+    Workbooks.Add.SaveAs fileName:=(carpetaActual & "\..\" & archivoCtaCte)
 Else
     ' Workbooks.Open (carpetaActual & "\..\" & archivoCtaCte)
     MsgBox "Ya está creada la planilla de las cuentas corrientes de antes." & vbNewLine & "Esperá al año que viene."
@@ -670,13 +670,13 @@ Workbooks(archivoCtaCte).Close SaveChanges:=True
 End Sub
 
 Function construirHoja()
-Dim titulares As Variant
+Dim TITULARES As Variant
 Dim i As Byte
-titulares = Array("FAC NUM", "FECHA", "DNI", "CUENTA", "CBU", "CLIENTE", "IMPO.TOTAL", "CUOTAS", "IMP.CUOTA", "TELEFONO", "DOMICILIO", "LOCALIDAD", "PROVINCIA", "VENDEDOR")
+TITULARES = Array("FAC NUM", "FECHA", "DNI", "CUENTA", "CBU", "CLIENTE", "IMPO.TOTAL", "CUOTAS", "IMP.CUOTA", "TELEFONO", "DOMICILIO", "LOCALIDAD", "PROVINCIA", "VENDEDOR")
 With ActiveSheet
-    For i = 0 To UBound(titulares)
+    For i = 0 To UBound(TITULARES)
         With Cells(1, i + 1)
-            .Value = titulares(i)
+            .Value = TITULARES(i)
             .Font.Bold = True
             .HorizontalAlignment = xlCenter
             .Interior.ColorIndex = 15

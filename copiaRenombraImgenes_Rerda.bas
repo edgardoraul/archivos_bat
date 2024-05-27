@@ -5,6 +5,7 @@ Dim lastFolderPath As String ' Variable global para almacenar la última carpeta 
 Dim newFolderName As String ' Variable global para almacenar el nuevo nombre de carpeta
 
 Sub CopiarPegarRenombrarBorrarSubcarpetas()
+Attribute CopiarPegarRenombrarBorrarSubcarpetas.VB_ProcData.VB_Invoke_Func = "P\n14"
     Dim origenPath As String
     Dim destinoPath As String
     Dim origenFolder As Object

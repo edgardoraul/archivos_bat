@@ -17,19 +17,19 @@ Function correo(numVenta, nombre, ultima, i, packar, planilla)
     ' Completando la información
     For i = 2 To ultima
         ' Asignando el valor a cada N° vta.
-        numVenta = planilla.Sheets("ventas").Cells(i, 1).Value
-        nombre = planilla.Sheets("ventas").Cells(i, 2).Value
+        numVenta = planilla.Worksheets(1).Cells(i, 1).Value
+        nombre = planilla.Worksheets(1).Cells(i, 2).Value
         Debug.Print numVenta & "-" & nombre
         
         ' Controlando espacios vacíos
-        If numVenta = "" Or planilla.Sheets("ventas").Cells(i, 9).Value = "Retira en Local" Then
+        If numVenta = "" Or planilla.Worksheets(1).Cells(i, 9).Value = "Retira en Local" Then
             vacia = vacia + 1
         End If
         
         ' Recorremos la planilla del Correo
         ' Controlamos que el número de venta esté completo
         ' y además que NO SEA un retiro en Local
-        If numVenta <> "" And planilla.Sheets("ventas").Cells(i, 9).Value <> "Retira en Local" Then
+        If numVenta <> "" And planilla.Worksheets(1).Cells(i, 9).Value <> "Retira en Local" Then
             packar.Sheets(1).Cells(i + 7 - vacia, 1).Value = numVenta
             packar.Sheets(1).Cells(i + 7 - vacia, 2).Value = nombre
         End If
@@ -138,11 +138,17 @@ Function generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
     Range("g20:h20").Borders(xlEdgeBottom).LineStyle = xlContinuous
     
     ' FECHA ELABORACIÓN
-    Range("f12").Value = "FECHA DE ELABORACIÓN:"
-    Range("f12").HorizontalAlignment = xlRight
-    Range("f12:h12").Font.Bold = True
-    Range("g12").Value = fecha
-    Range("g12").HorizontalAlignment = xlLeft
+    With Range("F12")
+        .Value = "FECHA DE ELABORACIÓN:"
+        .HorizontalAlignment = xlRight
+    End With
+    
+    With Range("G12")
+        .Value = "'" & fecha
+        .HorizontalAlignment = xlLeft
+    End With
+    
+    Range("F12:H12").Font.Bold = True
     
     ' NUMERO DE VENTA
     Range("f14").Select
@@ -192,9 +198,9 @@ With ActiveSheet.PageSetup
     .PaperSize = xlPaperA4
     .LeftMargin = Application.CentimetersToPoints(0.64)
     .RightMargin = Application.CentimetersToPoints(0.64)
-    '.TopMargin = Application.CentimetersToPoints(2.5)
+    .TopMargin = Application.CentimetersToPoints(2.5)
     ' Para evitar el blanco
-    .TopMargin = Application.CentimetersToPoints(5)
+    '.TopMargin = Application.CentimetersToPoints(5)
     .BottomMargin = Application.CentimetersToPoints(1.91)
     .HeaderMargin = Application.CentimetersToPoints(0.76)
     .FooterMargin = Application.CentimetersToPoints(0.76)
@@ -204,7 +210,9 @@ With ActiveSheet.PageSetup
     .Zoom = False
     .FitToPagesTall = 1
     .FitToPagesWide = 1
-    .CenterHeader = vbNewLine & vbNewLine & vbNewLine & "&B&20&F"
+    .CenterHeader = "&B&20&F"
+    ' Para espacio en blanco0
+    '.CenterHeader = vbNewLine & vbNewLine & vbNewLine & "&B&20&F"
 End With
     
 End Function
@@ -320,8 +328,7 @@ u = 1
 archivos = Dir(ruta)
     
 ' Recorrido de la carpeta
-ActiveWorkbook.Sheets.Add(after:=ActiveWorkbook _
-    .ActiveSheet).Name = "Listado"
+ActiveWorkbook.Sheets.Add(after:=ActiveWorkbook.ActiveSheet).Name = "Listado"
 Sheets("Listado").Visible = False
 Sheets(1).Name = "ventas"
 Sheets("ventas").Select
@@ -356,10 +363,12 @@ Do While Len(parteNumero) < 6
     e = e + 1
 Loop
 nombreArchivo = "Ventas Web " & parteNumero & ". " & fecha & ".xlsx"
-nombre = ruta & "Ventas Web " & parteNumero & ". " & fecha & ".xlsx"
+nombre = ruta & nombreArchivo
 
 Sheets("ventas").Range("A1").Select
-ActiveWorkbook.SaveAs Filename:=nombre, FileFormat:=xlOpenXMLStrictWorkbook, ConflictResolution:=xlUserResolution, AddToMru:=True, Local:=True
+'ActiveWorkbook.SaveAs fileName:=nombre, FileFormat:=xlOpenXMLStrictWorkbook, ConflictResolution:=xlUserResolution, AddToMru:=True, Local:=True
+ActiveWorkbook.SaveAs fileName:=nombre, FileFormat:=xlOpenXMLWorkbook
+Sheets(1).Name = "ventas"
 ActiveWorkbook.Save
 Application.ThisWorkbook.Save
 
@@ -410,6 +419,7 @@ fecha = Day(Date) & "-" & Month(Date) & "-" & Year(Date)
 
 
 ' Guardando el archivo con nombre específico
+ActiveSheet.Name = "ventas"
 Call GuardarArchivo(fecha, ruta, nombreArchivo)
 Range("A1").Activate
 ultima = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).Row
@@ -509,7 +519,7 @@ Call formato(ultima, i)
 
 ' GENERANDO LOS ROTULOS DE RETIRO
 For i = 2 To ultima
-    If Sheets("ventas").Cells(i, 13).Value = "Retiras en Rerda Mendoza" Then
+    If Worksheets(1).Cells(i, 13).Value = "Retiras en Rerda Mendoza" Then
         
         ' Se coloca la leyenda en la celda
         Debug.Print Cells(i, 9).Value
@@ -525,19 +535,19 @@ For i = 2 To ultima
         rotulos = rotulos + 1
         
         ' Se agrega una pestaña para el respectivo rótulo
-        ActiveWorkbook.Sheets.Add(after:=ActiveWorkbook.Sheets("ventas")).Name = "Venta N° " & Cells(i, 1).Value
+        ActiveWorkbook.Sheets.Add(after:=ActiveWorkbook.Worksheets(1)).Name = "Venta N° " & Cells(i, 1).Value
         
         ' Se genera el rótulo respectivo
         Call generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
         
     End If
-    Sheets("ventas").Activate
+    Worksheets(1).Activate
 Next i
 
 'Posicionando al principio
-Sheets.Add(after:=Sheets("ventas")).Name = "Depósito"
+Sheets.Add(after:=Worksheets(1)).Name = "Depósito"
 Sheets.Add(after:=Sheets("Depósito")).Name = "Exportar TXT"
-Sheets("ventas").Activate
+Worksheets(1).Activate
 Range("A1").Activate
 
 ' Definiendo este archivo
@@ -568,7 +578,7 @@ Call correo(numVenta, nombre, ultima, i, packar, planilla)
 
 
 ' Posicionando al principio
-planilla.Sheets("ventas").Activate
+planilla.Worksheets(1).Activate
 ActiveWorkbook.Save
 End Sub
 
@@ -586,7 +596,7 @@ enrutacion = ActiveWorkbook.Path & "\..\"
 Debug.Print enrutacion
 
 ruta = "'" & enrutacion & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
-ultima = Sheets("ventas").Cells(Rows.Count, 2).End(xlUp).Row - 1
+ultima = Worksheets(1).Cells(Rows.Count, 2).End(xlUp).Row - 1
 web = False
 
 
@@ -683,7 +693,7 @@ With ActiveSheet.PageSetup
     .PaperSize = xlPaperA4
     .LeftMargin = Application.CentimetersToPoints(0.64)
     .RightMargin = Application.CentimetersToPoints(0.64)
-    .TopMargin = Application.CentimetersToPoints(6)
+    .TopMargin = Application.CentimetersToPoints(4)
     .BottomMargin = Application.CentimetersToPoints(1.91)
     .HeaderMargin = Application.CentimetersToPoints(0.76)
     .FooterMargin = Application.CentimetersToPoints(0.76)
@@ -693,10 +703,12 @@ With ActiveSheet.PageSetup
     .Zoom = False
     .FitToPagesTall = 1
     .FitToPagesWide = 1
-    .CenterHeader = vbNewLine & vbNewLine & "&B&20&F" & vbNewLine & "SOLO PARA USO EN DEPOSITO"
+    .CenterHeader = "&B&20&F" & vbNewLine & "SOLO PARA USO EN DEPOSITO"
+    ' Le agrego saltos de línea para evitar el Espacio en Blanco
+    '.CenterHeader = vbNewLine & vbNewLine & "&B&20&F" & vbNewLine & "SOLO PARA USO EN DEPOSITO"
 End With
 Call exportarTxt
-Sheets("ventas").Activate
+Worksheets(1).Activate
 Range("A1").Activate
 
 End Sub
@@ -889,9 +901,10 @@ tope = i * limite
     
     rutaArchivo = server & carpetaDestino & nombreArchivo
     Debug.Print textoArchivo
+    ' Lo comenté porque generaba un error. No debería.
     'Open rutaArchivo For Output As #1
-    'Print #1, textoArchivo
-    Close #1
+'    Print #1, textoArchivo
+    'Close #1
     
     MsgBox "Datos exportados con éxito a " & rutaArchivo, vbInformation, "Cargar detalle desde txt"
 Next i

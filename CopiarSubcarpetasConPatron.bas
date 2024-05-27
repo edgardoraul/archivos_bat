@@ -4,6 +4,7 @@ Option Explicit
 Dim lastFolderPath As String ' Variable global para almacenar la última carpeta seleccionada
 
 Sub CopiarSubcarpetasConPatron()
+Attribute CopiarSubcarpetasConPatron.VB_ProcData.VB_Invoke_Func = " \n14"
     Dim origenPath As String
     Dim destinoPath As String
     Dim origenFolder As Object
@@ -91,6 +92,7 @@ Sub CopiarSubcarpetasConPatron()
     ' Copiar las carpetas de la carpeta temporal a la carpeta final de destino
     For Each tempSubFolder In tempFolder.SubFolders
         fso.CopyFolder tempSubFolder.Path, destinoPath, True
+        Debug.Print tempSubFolder.Name
     Next tempSubFolder
     
     ' Borrar la carpeta temporal

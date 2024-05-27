@@ -396,7 +396,7 @@ ultimaColumna = Worksheets(1).Cells(2, Columns.Count).End(xlToLeft).Column
 If ActiveCell.Column >= DesdeAqui And ActiveCell.Column <= ultimaColumna And ActiveCell.Row > 2 Then
     
     If ActiveCell.Interior.ColorIndex = verde Or Selection.Interior.ColorIndex = verde Then
-        ActiveCell.Interior.Color = xlNone
+        ActiveCell.Interior.color = xlNone
         Selection.Interior.ColorIndex = xlNone
     Else
         ActiveCell.Interior.ColorIndex = verde
