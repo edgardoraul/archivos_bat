@@ -147,7 +147,7 @@ Sub Rotulador()
         
         ' Validando si existe o no el dato.
         On Error Resume Next
-        codigoNis = Sheets("Sucursales").Range("$F$4:$F$5000").Find(What:=codigoPostal, LookIn:=xlValues, LookAt:=xlPart).Offset(0, -5)
+        codigoNis = Sheets("Sucursales").Range("$F$4:$F$5000").Find(what:=codigoPostal, LookIn:=xlValues, LookAt:=xlPart).Offset(0, -5)
     
         If codigoNis = "" Then
             ' Todo salió mal
@@ -182,7 +182,7 @@ Sub Rotulador()
         
         ' Validando si existe o no el dato.
         On Error Resume Next
-        codigoNis = Sheets("Sucursales").Range("$F$4:$F$5000").Find(What:=codigoPostal, LookIn:=xlValues, LookAt:=xlPart).Offset(0, -5)
+        codigoNis = Sheets("Sucursales").Range("$F$4:$F$5000").Find(what:=codigoPostal, LookIn:=xlValues, LookAt:=xlPart).Offset(0, -5)
     
         If codigoNis = "" Then
             ' Todo salió mal
@@ -255,7 +255,7 @@ Function Rotulo_Correo_Argentino(apellidoNombre, rotulo, fecha)
     End If
     
     ' Generando el archivo pdf
-    rotulo.ExportAsFixedFormat Type:=xlTypePDF, fileName:= _
+    rotulo.ExportAsFixedFormat Type:=xlTypePDF, Filename:= _
         ruta & nombreCarpeta & UCase(nombre) & ".pdf", _
         OpenAfterPublish:=True
     Sheets("Planilla").Activate
@@ -264,7 +264,7 @@ End Function
 Function Validar_CP(cp)
 ' Valida si el código postal es correcto, existe o no.
 
-    codigoNis = Sheets("Sucursales").Range("F1576:F5000").Find(What:=cp, LookIn:=xlValues, SearchOrder:=xlByRows, LookAt:=xlWhole).Offset(0, -5)
+    codigoNis = Sheets("Sucursales").Range("F1576:F5000").Find(what:=cp, LookIn:=xlValues, searchorder:=xlByRows, LookAt:=xlWhole).Offset(0, -5)
     
     If codigoNis = "" Then
         ' Todo salió mal
@@ -637,7 +637,7 @@ archivoCtaCte = Year(Date) & ". CTACTE.xlsx"
 
 ' Control si existe de antes
 If Dir(carpetaActual & "\..\" & archivoCtaCte, vbNormal) = "" Then
-    Workbooks.Add.SaveAs fileName:=(carpetaActual & "\..\" & archivoCtaCte)
+    Workbooks.Add.SaveAs Filename:=(carpetaActual & "\..\" & archivoCtaCte)
 Else
     ' Workbooks.Open (carpetaActual & "\..\" & archivoCtaCte)
     MsgBox "Ya está creada la planilla de las cuentas corrientes de antes." & vbNewLine & "Esperá al año que viene."
@@ -670,13 +670,13 @@ Workbooks(archivoCtaCte).Close SaveChanges:=True
 End Sub
 
 Function construirHoja()
-Dim TITULARES As Variant
+Dim titulares As Variant
 Dim i As Byte
-TITULARES = Array("FAC NUM", "FECHA", "DNI", "CUENTA", "CBU", "CLIENTE", "IMPO.TOTAL", "CUOTAS", "IMP.CUOTA", "TELEFONO", "DOMICILIO", "LOCALIDAD", "PROVINCIA", "VENDEDOR")
+titulares = Array("FAC NUM", "FECHA", "DNI", "CUENTA", "CBU", "CLIENTE", "IMPO.TOTAL", "CUOTAS", "IMP.CUOTA", "TELEFONO", "DOMICILIO", "LOCALIDAD", "PROVINCIA", "VENDEDOR")
 With ActiveSheet
-    For i = 0 To UBound(TITULARES)
+    For i = 0 To UBound(titulares)
         With Cells(1, i + 1)
-            .Value = TITULARES(i)
+            .Value = titulares(i)
             .Font.Bold = True
             .HorizontalAlignment = xlCenter
             .Interior.ColorIndex = 15
@@ -689,9 +689,9 @@ End Function
 
 Sub CTACTE()
 ' CARGA DATOS DE LA PLANILLA EN EL ARCHIVO DE LAS CUENTAS CORRIENTES
-
+Dim a As String
 ' Nombre Planilla de Ventas
-Dim planillaVentas As String
+Static planillaVentas As String
 planillaVentas = ThisWorkbook.Name
 
 ' Carpeta actual de Planilla de Ventas
@@ -716,7 +716,9 @@ End If
 Debug.Print mesCtaCte
 
 ' Abrir archivo Cuentas Corrientes
+On Error GoTo ManejoError
 Workbooks.Open(carpetaActual & "\..\" & archivoCtaCte).Sheets(arrayMeses(mesCtaCte - 1)).Activate
+
 
 ' Ultima fila de la pestaña actual
 Dim ultimaFila As Byte
@@ -733,7 +735,14 @@ For i = 2 To 34
         
         With Workbooks(archivoCtaCte).Sheets(arrayMeses(mesCtaCte - 1))
             ' N° Factura
-            .Cells(ultimaFila, 1).Value = Workbooks(planillaVentas).Sheets("Planilla").Cells(i, 11).Value
+            If Workbooks(planillaVentas).Sheets("Planilla").Cells(i, 11).Value <> "" Then
+                .Cells(ultimaFila, 1).Value = Workbooks(planillaVentas).Sheets("Planilla").Cells(i, 11).Value
+            Else
+                MsgBox "Te falta facturar!!"
+                Workbooks.Open(carpetaActual & "\..\" & archivoCtaCte).Close
+                Workbooks(planillaVentas).Worksheets("Planilla").Cells(i, 11).Activate
+                Exit Sub
+            End If
             
             ' Fecha
             .Cells(ultimaFila, 2).Value = Workbooks(planillaVentas).Sheets("Planilla").Cells(i, 1).Value
@@ -780,6 +789,11 @@ Next i
 ActiveSheet.UsedRange.EntireColumn.AutoFit
 ActiveSheet.UsedRange.EntireRow.AutoFit
 Range("A1").Activate
+
+ManejoError:
+    ' En caso de error, mostrar mensaje y finalizar la macro
+    MsgBox "Ufa! Ele! Ubicá bien tu planilla:" & vbNewLine & "Así ->" & vbNewLine & "\VENTAS AÑO\VENTAS MES\" & planillaVentas, vbCritical
+    Exit Sub
 
 End Sub
 
