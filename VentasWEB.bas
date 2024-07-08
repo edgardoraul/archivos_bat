@@ -491,6 +491,12 @@ For i = 2 To ultima
     End With
 Next i
 
+' Limpiando el contenido de "(sin color)" y "(sin talle)"
+Cells.Replace What:="(Sin Color), ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+        xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+Cells.Replace What:="(Sin Talle), ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+        xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+
 ' Generando las columnas de código/talle/color/cantidad
 Range("C:C").Select
 Selection.TextToColumns Destination:=Range("C1"), DataType:=xlDelimited, _
