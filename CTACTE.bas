@@ -442,6 +442,7 @@ Workbooks.Open ruta
 
 ' Borra el contenido
 For i = 13 To 32
+    Cells(i, 3).Activate
     Cells(i, 3) = ""
     Cells(i, 10) = ""
 Next i
@@ -450,7 +451,7 @@ Next i
     
     ' Si hay más de 20, se genera un nuevo archivo.
     For i = 2 To 34
-        If planillaGeneradora.Worksheets("Planilla").Cells(i, 2) <> "" Then
+        If planillaGeneradora.Worksheets("Planilla").Cells(i, 2).Value <> "" And planillaGeneradora.Worksheets("Planilla").Cells(i, 22).Value <> "RETIRO EN LOCAL" Then
             ' Datos del nombre/apellido y demás
             Cells(comienzo + e, 3).Value = UCase(planillaGeneradora.Worksheets("Planilla").Cells(i, 2).Value) & " - DNI/CUIT: " & planillaGeneradora.Worksheets("Planilla").Cells(i, 12).Value & " - CP " & planillaGeneradora.Worksheets("Planilla").Cells(i, 19).Value & " - " & planillaGeneradora.Worksheets("Planilla").Cells(i, 21).Value
             
