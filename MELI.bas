@@ -136,7 +136,7 @@ Loop
 
 ' Bucle. Debe coincidir el largo del arreglo con el fin del bucle
 For i = 0 To largo
-    Cells.Replace What:=cadenaOriginal(i), Replacement:="", LookAt:=xlPart, _
+    Cells.Replace what:=cadenaOriginal(i), Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
 Next

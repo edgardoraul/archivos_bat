@@ -298,6 +298,12 @@ Next i
 ' Autofit para la última columna
 Range("J:M").EntireColumn.AutoFit
 
+' Ajustar el contenido
+With Range("C:E").EntireColumn
+    .WrapText = True
+    .ShrinkToFit = True
+End With
+
 
 End Function
 
@@ -492,10 +498,30 @@ For i = 2 To ultima
 Next i
 
 ' Limpiando el contenido de "(sin color)" y "(sin talle)"
-Cells.Replace What:="(Sin Color), ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+' Con comas y doble paréntesis
+Cells.Replace what:="((Sin Color)), ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
-Cells.Replace What:="(Sin Talle), ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+Cells.Replace what:="((Sin Talle)), ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+
+' Doble paréntesis
+Cells.Replace what:="((Sin Color))", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+        xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+Cells.Replace what:="((Sin Talle))", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+        xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+
+' Con comas
+Cells.Replace what:="(Sin Color), ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+        xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+Cells.Replace what:="(Sin Talle), ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+        xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+
+' Simples
+Cells.Replace what:="(Sin Color)", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+        xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+Cells.Replace what:="(Sin Talle)", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+        xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+
 
 ' Generando las columnas de código/talle/color/cantidad
 Range("C:C").Select
@@ -504,7 +530,7 @@ Selection.TextToColumns Destination:=Range("C1"), DataType:=xlDelimited, _
         Semicolon:=False, Comma:=False, Space:=False, Other:=True, OtherChar _
         :="(", FieldInfo:=Array(Array(1, 1), Array(2, 1)), TrailingMinusNumbers:=True
 Range("A2").Activate
-Cells.Replace What:=")", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+Cells.Replace what:=")", Replacement:="", LookAt:=xlPart, SearchOrder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 Range("D1").Value = "Código"
 Range("E1").Value = "Variante"
@@ -843,7 +869,7 @@ proximaFila:
 Next fila
 
 ' Borrar espacios en blanco
-Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace What:=" ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 
 

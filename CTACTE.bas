@@ -255,7 +255,7 @@ Function Rotulo_Correo_Argentino(apellidoNombre, rotulo, fecha)
     End If
     
     ' Generando el archivo pdf
-    rotulo.ExportAsFixedFormat Type:=xlTypePDF, Filename:= _
+    rotulo.ExportAsFixedFormat Type:=xlTypePDF, fileName:= _
         ruta & nombreCarpeta & UCase(nombre) & ".pdf", _
         OpenAfterPublish:=True
     Sheets("Planilla").Activate
@@ -264,7 +264,7 @@ End Function
 Function Validar_CP(cp)
 ' Valida si el código postal es correcto, existe o no.
 
-    codigoNis = Sheets("Sucursales").Range("F1576:F5000").Find(what:=cp, LookIn:=xlValues, searchorder:=xlByRows, LookAt:=xlWhole).Offset(0, -5)
+    codigoNis = Sheets("Sucursales").Range("F1576:F5000").Find(what:=cp, LookIn:=xlValues, SearchOrder:=xlByRows, LookAt:=xlWhole).Offset(0, -5)
     
     If codigoNis = "" Then
         ' Todo salió mal
@@ -442,7 +442,6 @@ Workbooks.Open ruta
 
 ' Borra el contenido
 For i = 13 To 32
-    Cells(i, 3).Activate
     Cells(i, 3) = ""
     Cells(i, 10) = ""
 Next i
@@ -451,7 +450,7 @@ Next i
     
     ' Si hay más de 20, se genera un nuevo archivo.
     For i = 2 To 34
-        If planillaGeneradora.Worksheets("Planilla").Cells(i, 2).Value <> "" And planillaGeneradora.Worksheets("Planilla").Cells(i, 22).Value <> "RETIRO EN LOCAL" Then
+        If planillaGeneradora.Worksheets("Planilla").Cells(i, 2) <> "" Then
             ' Datos del nombre/apellido y demás
             Cells(comienzo + e, 3).Value = UCase(planillaGeneradora.Worksheets("Planilla").Cells(i, 2).Value) & " - DNI/CUIT: " & planillaGeneradora.Worksheets("Planilla").Cells(i, 12).Value & " - CP " & planillaGeneradora.Worksheets("Planilla").Cells(i, 19).Value & " - " & planillaGeneradora.Worksheets("Planilla").Cells(i, 21).Value
             
@@ -638,7 +637,7 @@ archivoCtaCte = Year(Date) & ". CTACTE.xlsx"
 
 ' Control si existe de antes
 If Dir(carpetaActual & "\..\" & archivoCtaCte, vbNormal) = "" Then
-    Workbooks.Add.SaveAs Filename:=(carpetaActual & "\..\" & archivoCtaCte)
+    Workbooks.Add.SaveAs fileName:=(carpetaActual & "\..\" & archivoCtaCte)
 Else
     ' Workbooks.Open (carpetaActual & "\..\" & archivoCtaCte)
     MsgBox "Ya está creada la planilla de las cuentas corrientes de antes." & vbNewLine & "Esperá al año que viene."
