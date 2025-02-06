@@ -49,12 +49,11 @@ Function buscarPalabraExacta(palabra As String, fila As Integer)
                 Set c = .Find(What:=palabra, LookIn:=xlValues, LookAt:=xlPart)
                 If Not c Is Nothing Then
                     firstAddress = c.Address
-                    Debug.Print c.Value
                     
                     
                     Do
-                        ' Verificar que la celda contenga exactamente la palabra buscada
-                        If StrComp(Trim(c.Value), palabra, vbTextCompare) = 0 Then
+                        ' Validar que la celda contenga la palabra según las condiciones especificadas
+                        If EsPalabraValida(c.Value, palabra) Then
                             ' Coloca los resultados en la fila correspondiente de la última hoja
                             With ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count)
                                 
@@ -63,12 +62,17 @@ Function buscarPalabraExacta(palabra As String, fila As Integer)
                                 If col < 5 Then col = 5
                                 .Cells(fila, col).Activate
                                 .Cells(fila, col).Value = sh.Name
-                                .Hyperlinks.Add Anchor:=.Cells(fila, col), Address:="", SubAddress:= _
-                                sh.Name & "!" & c.Address, TextToDisplay:=sh.Name
+                                .Hyperlinks.Add Anchor:=.Cells(fila, col), _
+                                    Address:="", SubAddress:="'" & sh.Name & "'!" & c.Address, _
+                                    TextToDisplay:=sh.Name, _
+                                    ScreenTip:=sh.Name & "!" & c.Address
+                                    
+                                    ' Depuracion
+                                    Debug.Print sh.Name & "!" & c.Address
                                 
-                                ' Tamaño de 8 a la letra
+                                ' Tamaño de letra 8
                                 .Cells(fila, col).Font.Size = 8
-                                Debug.Print "Encontrado en: " & sh.Name
+                                Debug.Print "Encontrado en: " & sh.Name & " -> " & c.Address
                                 
                             End With
                             
@@ -87,6 +91,74 @@ Function buscarPalabraExacta(palabra As String, fila As Integer)
 meta:
     Next sh
 End Function
+
+
+
+' Función auxiliar que valida si la palabra encontrada cumple las condiciones requeridas.
+Function EsPalabraValida(texto As String, palabra As String) As Boolean
+    Dim pos As Integer
+    Dim endPos As Integer
+    Dim okPre As Boolean, okPost As Boolean
+    
+    ' 1. Coincidencia exacta (después de quitar espacios al inicio y fin)
+    If StrComp(Trim(texto), palabra, vbTextCompare) = 0 Then
+        EsPalabraValida = True
+        Exit Function
+    End If
+    
+    pos = 1
+    Do
+        pos = InStr(pos, texto, palabra, vbTextCompare)
+        If pos = 0 Then Exit Do
+        
+        endPos = pos + Len(palabra) - 1
+        
+        ' Determinar el estado del carácter precedente:
+        If pos = 1 Then
+            ' Si está al comienzo, no se evalúa el carácter previo.
+            okPre = True
+        Else
+            okPre = (Mid(texto, pos - 1, 1) = " ")
+        End If
+        
+        ' Determinar el estado del carácter siguiente:
+        If endPos = Len(texto) Then
+            ' Si está al final, no se evalúa el carácter siguiente.
+            okPost = True
+        Else
+            okPost = (Mid(texto, endPos + 1, 1) = " ")
+        End If
+        
+        ' 2. Si la palabra está al comienzo (pos = 1), debe tener un espacio justo después.
+        If pos = 1 And endPos < Len(texto) Then
+            If okPost Then
+                EsPalabraValida = True
+                Exit Function
+            End If
+        End If
+        
+        ' 3. Si la palabra está al final (endPos = Len(texto)), debe tener un espacio justo antes.
+        If endPos = Len(texto) And pos > 1 Then
+            If okPre Then
+                EsPalabraValida = True
+                Exit Function
+            End If
+        End If
+        
+        ' 4. Si la palabra está en medio (no al inicio ni al final), debe estar rodeada por espacios.
+        If pos > 1 And endPos < Len(texto) Then
+            If okPre And okPost Then
+                EsPalabraValida = True
+                Exit Function
+            End If
+        End If
+        
+        pos = pos + 1
+    Loop
+    EsPalabraValida = False
+End Function
+
+
 
 Sub reemplazarCaracteres()
     Dim ws As Worksheet
