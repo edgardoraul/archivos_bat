@@ -782,7 +782,7 @@ Dim cantArchivos As Byte
 Dim matrixCodColor As Object
 ultimaFila = Sheets("Depósito").Cells(Rows.Count, 2).End(xlUp).Row - 1
 nombreArchivo = Len(ActiveWorkbook.Name)
-server = "\\SER-DF\A Remitar TXT"
+server = "\\SER-DF\D\A Remitar TXT"
 carpetaDestino = "\WEB\"
 Set matrixCodColor = CreateObject("Scripting.Dictionary")
 limite = 30
@@ -933,10 +933,12 @@ tope = i * limite
     
     rutaArchivo = server & carpetaDestino & nombreArchivo
     Debug.Print textoArchivo
+    
+   
     ' Lo comenté porque generaba un error. No debería.
-    'Open rutaArchivo For Output As #1
-'    Print #1, textoArchivo
-    'Close #1
+    Open rutaArchivo For Output As #1
+    Print #1, textoArchivo
+    Close #1
     
     MsgBox "Datos exportados con éxito a " & rutaArchivo, vbInformation, "Cargar detalle desde txt"
 Next i

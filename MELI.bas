@@ -476,7 +476,6 @@ rutaFormula = "'" & carpeta & "\..\" & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
 
 ' Nueva hoja con nombre Depósito
 ultima = Sheets("Planilla").Cells(Rows.Count, 2).End(xlUp).Row - 1
-'Sheets.Add(After:=Sheets("Planilla")).Name = "Depósito"
 Call CrearHoja(ActiveWorkbook, "Depósito")
 ActiveWorkbook.Sheets("Depósito").Activate
 
@@ -713,7 +712,7 @@ Dim ruta As Range
 Set ruta = Equivalencia.Sheets(1).Range("A1:G10000")
 ultimaFila = planillaActual.Sheets("Planilla").Cells(Rows.Count, 2).End(xlUp).Row - 1
 nombreArchivo = planillaActual.Name
-server = "\\SER-DF\A Remitar TXT"
+server = "\\SER-DF\D\A Remitar TXT"
 carpetaDestino = "\" & carpeta & "\"
 limite = ultimaFila
 Debug.Print nombreArchivo
@@ -796,7 +795,6 @@ tope = i * limite
     
     rutaArchivo = server & carpetaDestino & nombreArchivo
     Debug.Print textoArchivo
-    ' Lo comento porque al parecer provocaba un error.
     Open rutaArchivo For Output As #1
     Print #1, textoArchivo
     Close #1

@@ -43,6 +43,10 @@ Function buscarPalabraExacta(palabra As String, fila As Integer)
     
     ' Recorre todas las hojas excepto la última
     For Each sh In ThisWorkbook.Sheets
+        If sh.Name = "DIAGRAMAS" Or sh.Index = 1 Then
+            GoTo meta
+        End If
+        
         If sh.Index < ThisWorkbook.Sheets.Count Then
             
             With sh.UsedRange
