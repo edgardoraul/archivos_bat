@@ -214,3 +214,50 @@ Sub reemplazarCaracteres()
 End Sub
 
 
+Sub DividirPorO()
+    Dim ws As Worksheet
+    Dim fila As Integer
+    Dim totalFilas As Integer
+    Dim celda As Range
+    Dim textoCompleto As String
+    Dim primeraParte As String, segundaParte As String
+    
+    Set ws = ActiveSheet
+    fila = 1
+    totalFilas = ws.Cells(Rows.Count, 1).End(xlUp).Row
+    
+    Do While fila <= totalFilas
+        Set celda = ws.Cells(fila, 2)
+        celda.Select
+        textoCompleto = celda.Value
+        
+        If InStr(1, textoCompleto, " o ") > 0 Then
+            ' Cortar el contenido desde " o " en adelante
+            primeraParte = Left(textoCompleto, InStr(1, textoCompleto, " o ") - 1)
+            segundaParte = Mid(textoCompleto, InStr(1, textoCompleto, " o "))
+            
+            ' Guardar la primera parte en la celda original
+            celda.Value = primeraParte
+            
+            ' Insertar una nueva fila debajo
+            celda.Offset(1, 0).EntireRow.Insert
+            
+            ' Limpiar los caracteres " o " al inicio si los tiene
+            If Left(segundaParte, 3) = " o " Then
+                segundaParte = Mid(segundaParte, 4)
+            End If
+            
+            ' Poner la segunda parte en la celda de abajo
+            celda.Offset(1, 0).Value = segundaParte
+            
+            ' Ajustar el total de filas
+            totalFilas = totalFilas + 1
+        
+        Else
+            ' Pasar a la siguiente fila solo si no se ha realizado una división
+            fila = fila + 1
+        End If
+    Loop
+    
+    MsgBox "Proceso finalizado", vbInformation
+End Sub
