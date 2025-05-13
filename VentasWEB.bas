@@ -22,14 +22,16 @@ Function correo(numVenta, nombre, ultima, i, packar, planilla)
         Debug.Print numVenta & "-" & nombre
         
         ' Controlando espacios vacíos
-        If numVenta = "" Or planilla.Worksheets(1).Cells(i, 9).Value = "Retira en Local" Then
+        If numVenta = "" Or planilla.Worksheets(1).Cells(i, 9).Value = "Retira en Local" Or planilla.Worksheets(1).Cells(i, 9).Value = "Rerda S.A. - Sastrería Militar" Then
             vacia = vacia + 1
         End If
+        'Rerda S.A. - Sastrería Militar
+
         
         ' Recorremos la planilla del Correo
         ' Controlamos que el número de venta esté completo
         ' y además que NO SEA un retiro en Local
-        If numVenta <> "" And planilla.Worksheets(1).Cells(i, 9).Value <> "Retira en Local" Then
+        If numVenta <> "" And planilla.Worksheets(1).Cells(i, 9).Value <> "Retira en Local" And planilla.Worksheets(1).Cells(i, 9).Value <> "Rerda S.A. - Sastrería Militar" Then
             packar.Sheets(1).Cells(i + 7 - vacia, 1).Value = numVenta
             packar.Sheets(1).Cells(i + 7 - vacia, 2).Value = nombre
         End If
@@ -551,7 +553,7 @@ Call formato(ultima, i)
 
 ' GENERANDO LOS ROTULOS DE RETIRO
 For i = 2 To ultima
-    If Worksheets(1).Cells(i, 13).Value = "Retiras en Rerda Mendoza" Then
+    If Worksheets(1).Cells(i, 13).Value = "Retiras en Rerda Mendoza" Or Worksheets(1).Cells(i, 13).Value = "Rerda S.A. - Sastrería Militar" Then
         
         ' Se coloca la leyenda en la celda
         Debug.Print Cells(i, 9).Value

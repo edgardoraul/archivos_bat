@@ -34,7 +34,7 @@ Public cantCols As Byte
 Public productoActual As String
 
 ' Textos
-Public TITULARES As Variant
+Public titulares As Variant
 Public hojasTotalizadoras As Variant
 Public hojita As Variant
 
@@ -67,7 +67,7 @@ Sub constructorHoja()
     Dim hojasTotales As Byte 'Cantidad de hojas del documento. Irá incrementando a medida que se vayan creando
     
     ' Textos a utilizar más adelante
-    TITULARES = Array("TALLES", "TOTALES", "SEPARADOS", "FALTANTES")
+    titulares = Array("TALLES", "TOTALES", "SEPARADOS", "FALTANTES")
     
     ultimaColumna = Worksheets(1).Cells(2, Columns.Count).End(xlToLeft).Column
     ultimaFila = Worksheets(1).Cells(Rows.Count, 2).End(xlUp).Row

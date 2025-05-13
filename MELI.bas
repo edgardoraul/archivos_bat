@@ -27,8 +27,6 @@ ActiveWorkbook.Sheets.Add(after:=ActiveWorkbook _
 Application.Worksheets(1).Select
 
 
-
-
 ' Dando valor a la última fila
 ultima = Cells(Rows.Count, 1).End(xlUp).Row
 
@@ -39,27 +37,13 @@ Range("AH:AH").Delete
 Cells(1, 49).Activate
 
 ' Bucle que recorre las filas y obtiene el nombre+apellido y/o razón social.
-
 For i = 2 To ultima
     Debug.Print Cells(i, 49).Value
     Cells(i, 49).Activate
     
     ' Obtención del usuario en mayúsculas
     Cells(i, 49).Value = Cells(i, 4).Value
-    
-    ' Pero no coincide mucho con los rótulos
-    'If Cells(i, 49).Value = "XXXXXXX" And Cells(i, 45).Value <> "" Then
-    '    Cells(i, 49).Value = Cells(i, 45).Value & " " & Cells(i, 46).Value
-    'ElseIf Cells(i, 49).Value <> "XXXXXXX" Then
-    '    GoTo Siguiente
-    'Else
-     '   Cells(i, 49).Value = Cells(i, 42).Value
-    'End If
-'Siguiente:
 Next i
-
-
-
 
 
 ' Copiando información importante a la Planilla
@@ -75,7 +59,6 @@ Sheets("Planilla").Activate
 Range("M1").Activate
 Range("M1").PasteSpecial xlPasteAll
 Application.CutCopyMode = False
-
 
 
 ' Reacomodando los datos
@@ -114,7 +97,6 @@ Range("D1").Value = "Descripción"
 Range("E1").Value = "Código"
 Range("I1").Value = "Detalles"
 Range("J1").Value = "Firma Control"
-
 
 
 ' ============================================================
@@ -243,7 +225,6 @@ Do While ultima - contador > 1
         Cells(ultima - contador - 1, 11).Select
         Cells(ultima - contador, 11).ClearContents
         Range(Cells(ultima - contador, 1), Cells(ultima - contador, 3)).ClearContents
-        
     End If
     
     ' Aprovechando para colocar un borde superior
@@ -307,7 +288,6 @@ With Worksheets("Planilla").PageSetup
     .LeftMargin = Application.CentimetersToPoints(0.64)
     .RightMargin = Application.CentimetersToPoints(0.64)
     .TopMargin = Application.CentimetersToPoints(2.5)
-    '.TopMargin = Application.CentimetersToPoints(5)
     .BottomMargin = Application.CentimetersToPoints(1.91)
     .HeaderMargin = Application.CentimetersToPoints(0.76)
     .FooterMargin = Application.CentimetersToPoints(0.76)
@@ -436,7 +416,6 @@ End If
 
 Sheets("Planilla").Range("A1").Select
 
-'ActiveWorkbook.SaveAs fileName:=nombre, FileFormat:=xlOpenXMLStrictWorkbook, ConflictResolution:=xlUserResolution, AddToMru:=True, Local:=True
 ActiveWorkbook.SaveAs nombre
 ActiveWorkbook.Save
 
@@ -584,7 +563,6 @@ With ActiveSheet.PageSetup
     .LeftMargin = Application.CentimetersToPoints(0.64)
     .RightMargin = Application.CentimetersToPoints(0.64)
     .TopMargin = Application.CentimetersToPoints(4)
-    '.TopMargin = Application.CentimetersToPoints(6)
     .BottomMargin = Application.CentimetersToPoints(1.91)
     .HeaderMargin = Application.CentimetersToPoints(0.76)
     .FooterMargin = Application.CentimetersToPoints(0.76)

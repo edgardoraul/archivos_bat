@@ -1,5 +1,5 @@
 Attribute VB_Name = "redimensionaImganes"
-
+Option Explicit
 Public Sub FitPic()
 Attribute FitPic.VB_ProcData.VB_Invoke_Func = "h\n14"
 'https://www.extendoffice.com/documents/excel/1060-excel-resize-picture-to-fit-cell.html
@@ -26,7 +26,7 @@ Attribute FitPic.VB_ProcData.VB_Invoke_Func = "h\n14"
     End Select
     With Selection
         .Top = .TopLeftCell.Top + 4
-        .Left = .TopLeftCell.Left + 4
+        .Left = .TopLeftCell.Left + (.TopLeftCell.Width - .Width) / 2
     End With
     Exit Sub
 NOT_SHAPE:

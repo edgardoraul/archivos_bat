@@ -17,10 +17,10 @@ Attribute CopiarPegarRenombrarBorrarSubcarpetas.VB_ProcData.VB_Invoke_Func = "P\
     ' Obtener la ruta de la carpeta de origen
     With Application.FileDialog(msoFileDialogFolderPicker)
         If lastFolderPath <> "" Then
-            If Right(lastFolderPath, 1) = "\\" Then
+            If Right(lastFolderPath, 1) = "\" Then
                 lastFolderPath = Left(lastFolderPath, Len(lastFolderPath) - 1)
             End If
-            origenPath = Left(lastFolderPath, InStrRev(lastFolderPath, "\\") - 1)
+            origenPath = Left(lastFolderPath, InStrRev(lastFolderPath, "\") - 1)
             .InitialFileName = origenPath
         Else
             .InitialFileName = ActiveWorkbook.Path & "\"
