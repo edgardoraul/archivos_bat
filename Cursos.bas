@@ -392,7 +392,7 @@ Attribute marcar.VB_ProcData.VB_Invoke_Func = "M\n14"
 ' SOLO LAS CELDAS MARCADAS PUEDEN SUMARSE
 Dim ultimaColumna As Byte
 ultimaColumna = Worksheets(1).Cells(2, Columns.Count).End(xlToLeft).Column
-
+Call DESPROTEGE
 If ActiveCell.Column >= DesdeAqui And ActiveCell.Column <= ultimaColumna And ActiveCell.Row > 2 Then
     
     If ActiveCell.Interior.ColorIndex = verde Or Selection.Interior.ColorIndex = verde Then
