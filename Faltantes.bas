@@ -6,7 +6,17 @@ Public Const naranja As String = 40
 Public Respuesta As Variant
 
 Option Explicit
+' Desalertar
+Function NoAlertas()
+    Application.DisplayAlerts = False
+    Application.Calculation = xlCalculationManual
+End Function
 
+' Alertar
+Function SiAlertas()
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
+End Function
 
 ' PROTEGER
 Function proteger()
@@ -67,7 +77,7 @@ Attribute Marcar.VB_ProcData.VB_Invoke_Func = "M\n14"
     ' Ctrol +  May + M
     ' MARCA LAS CELDAS CON COLOR
     ' SOLO LAS CELDAS MARCADAS PUEDEN SUMARSE
-    Application.DisplayAlerts = False
+    Call NoAlertas
     Sheets("LISTADO").Unprotect pass
     Call ultima
     If ActiveCell.Column >= 5 And ActiveCell.Column <= ultimaDerecha And ActiveCell.Row > 4 Then
@@ -81,11 +91,12 @@ Attribute Marcar.VB_ProcData.VB_Invoke_Func = "M\n14"
         End If
     End If
     Sheets("LISTADO").Protect pass
-    Application.DisplayAlerts = True
+    Call SiAlertas
 End Sub
 
 ' Inserta una persona en la fila Nº 5.
 Sub InsPersona()
+    Call NoAlertas
     Sheets("LISTADO").Unprotect pass
     Rows(5).Insert Shift:=xlShiftDown, CopyOrigin:=xlFormatFromRightOrBelow
     Cells(5, 1).Activate
@@ -93,6 +104,7 @@ Sub InsPersona()
     Cells(ultimaConDatos, 2).Formula = "=COUNTA(" & "B5:B" & ultimaConDatos - 1 & ")"
     Call ultima
     Sheets("LISTADO").Protect pass
+    Call SiAlertas
     ThisWorkbook.Save
 End Sub
 
@@ -102,6 +114,7 @@ Sub BorrarPersona()
     
     ' Se advierte sobre el borrado. Se sale si se cancela.
     Call Advertencia
+    Call NoAlertas
     If Respuesta <> vbYes Then Exit Sub
     
     Call ultima
@@ -113,12 +126,14 @@ Sub BorrarPersona()
     End If
     Call ultima
     Sheets("LISTADO").Protect pass
+    Call SiAlertas
     ThisWorkbook.Save
 End Sub
 
 ' Inserta un producto: son 3 columnas, con su formato, fórmula y restricciones.
 Sub InsProducto()
     Sheets("LISTADO").Unprotect pass
+    Call NoAlertas
     Call ultima
     Columns("E:G").Select
     Selection.Insert CopyOrigin:=xlFormatFromRightOrBelow
@@ -138,6 +153,7 @@ Sub InsProducto()
     Range("E2").Select
     Call ultima
     Sheets("LISTADO").Protect pass
+    Call SiAlertas
     ThisWorkbook.Save
 End Sub
 
@@ -148,9 +164,11 @@ Sub RemProducto()
     
     ' Advirtiendo sobre el borrado. Se sale si se cancela
     Call Advertencia
+    Call NoAlertas
     If Respuesta <> vbYes Then Exit Sub
     
-    Application.DisplayAlerts = False
+    
+    
     If ultimaDerecha < 8 Then
         MsgBox "No se puede eliminar el último producto."
         Range("E2").Select
@@ -162,10 +180,15 @@ Sub RemProducto()
     Range("E2").Select
     Call ultima
     Sheets("LISTADO").Protect pass
+    Call SiAlertas
     ThisWorkbook.Save
 End Sub
 
 ' Calcula un resumen de totales, separados y faltantes.
 Sub Faltantes()
-    Range("C2").Activate
+    Call ultima
+    Cells(ultimaConDatos, 1).Activate
 End Sub
+
+
+
