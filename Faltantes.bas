@@ -4,8 +4,14 @@ Public ultimaConDatos As Integer
 Public ultimaDerecha As Integer
 Public Const naranja As String = 40
 Public Respuesta As Variant
-
+Public Talle As Variant
+'Public color As String
+Public Cantidad As Integer
+Public Producto As Object
+Public ordenTalles As Variant
 Option Explicit
+
+
 ' Desalertar
 Function NoAlertas()
     Application.DisplayAlerts = False
@@ -65,8 +71,8 @@ End Function
 
 ' Generando las últimas celdas con datos.
 Function ultima()
-    ultimaConDatos = Cells(Rows.Count, 1).End(xlUp).Row
-    ultimaDerecha = Cells(4, Columns.Count).End(xlToLeft).Column
+    ultimaConDatos = Sheets("LISTADO").Cells(Rows.Count, 1).End(xlUp).Row
+    ultimaDerecha = Sheets("LISTADO").Cells(4, Columns.Count).End(xlToLeft).Column
     Debug.Print "Ultima fila: " & ultimaConDatos
     Debug.Print "Ultima columna: " & ultimaDerecha
     ThisWorkbook.Save
@@ -148,8 +154,8 @@ Sub InsProducto()
     Selection.PasteSpecial Paste:=xlPasteFormats
     Application.CutCopyMode = False
     Range("E2").Activate
-    Range("E2").Value = ""
-    Range(Cells(5, 5), Cells(ultimaConDatos - 1, 7)).Value = ""
+    Range("E2").value = ""
+    Range(Cells(5, 5), Cells(ultimaConDatos - 1, 7)).value = ""
     Range("E2").Select
     Call ultima
     Sheets("LISTADO").Protect pass
@@ -198,6 +204,9 @@ Private Function CleanSheetName(sIn As String) As String
 End Function
 
 
+'==================================================================================================
+' MACRO PRINCIPAL: Faltantes
+'==================================================================================================
 Sub Faltantes()
     Dim ws As Worksheet
     Dim shFaltantes As Worksheet
@@ -207,6 +216,7 @@ Sub Faltantes()
     Dim j_col As Long ' Índice de columna para productos
     Dim lastProductColPlanilla As Long
     Dim i_sheetCounter As Long ' Para bucle de borrado de hojas
+    ordenTalles = Array("3XS", "XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL", "6XL")
 
     Dim preservedSheetNames As Object
     Set preservedSheetNames = CreateObject("Scripting.Dictionary")
@@ -228,7 +238,7 @@ Sub Faltantes()
 
     For i_sheetCounter = ThisWorkbook.Worksheets.Count To 1 Step -1 ' Iterar hacia atrás al eliminar
         Set ws = ThisWorkbook.Worksheets(i_sheetCounter)
-        If Not preservedSheetNames.Exists(UCase(ws.Name)) Then
+        If Not preservedSheetNames.exists(UCase(ws.Name)) Then
             ws.Delete ' DisplayAlerts ya está en False
         End If
     Next i_sheetCounter
@@ -258,9 +268,9 @@ Sub Faltantes()
         ' El MsgBox al final indicará que la lógica de llenado está pendiente.
     Else
         ' Determinar la última columna con códigos de producto en la Fila 2 de "PLANILLA"
-        If IsEmpty(shPlanilla.Cells(2, shPlanilla.Columns.Count).Value) And shPlanilla.Cells(2, 1).Value = "" Then
+        If IsEmpty(shPlanilla.Cells(2, shPlanilla.Columns.Count).value) And shPlanilla.Cells(2, 1).value = "" Then
              ' Si la última celda de la fila 2 está vacía Y la primera también, la fila podría estar vacía
-            If shPlanilla.Cells(2, shPlanilla.Columns.Count).End(xlToLeft).Column = 1 And IsEmpty(shPlanilla.Cells(2, 1).Value) Then
+            If shPlanilla.Cells(2, shPlanilla.Columns.Count).End(xlToLeft).Column = 1 And IsEmpty(shPlanilla.Cells(2, 1).value) Then
                 lastProductColPlanilla = 0 ' Indica que la fila está esencialmente vacía o solo datos en col A
             Else
                 lastProductColPlanilla = shPlanilla.Cells(2, shPlanilla.Columns.Count).End(xlToLeft).Column
@@ -273,7 +283,7 @@ Sub Faltantes()
             Debug.Print "No se encontraron códigos de producto en la Fila 2 de 'PLANILLA' a partir de la Columna E."
         Else
             For j_col = 5 To lastProductColPlanilla Step 3 ' Desde Col E, cada 3 columnas
-                productCode = Trim(CStr(shPlanilla.Cells(2, j_col).Value))
+                productCode = Trim(CStr(shPlanilla.Cells(2, j_col).value))
 
                 If productCode <> "" Then
                     Dim tempSheetNameAttempt As String
@@ -309,9 +319,32 @@ Sub Faltantes()
                     On Error GoTo Faltantes_ErrorHandler ' Restaurar manejador principal
 
                     If Not productSheet Is Nothing Then
-                        Debug.Print "Creada hoja de producto: '" & productSheet.Name & "' para código: '" & productCode & "'"
-                        ' Aquí es donde, más adelante, llenarías esta productSheet.
-                        ' Ejemplo: productSheet.Cells(1, 1).Value = "Datos para Producto: " & productCode
+                        Debug.Print "Creada hoja de producto: " & productSheet.Name
+                        
+                        ' CREANDO LOS TITULARES DE CADA HOJA
+                        productSheet.Cells(1, 1).value = productSheet.Name & ": "
+                        productSheet.Cells(1, 2).value = "Código: " & productSheet.Name
+                        productSheet.Cells(1, 3).value = Trim(CStr(shPlanilla.Cells(3, j_col).value))
+                        productSheet.Cells(3, 1).value = "TALLE"
+                        productSheet.Cells(3, 2).value = "COLOR"
+                        productSheet.Cells(3, 3).value = "TOTAL"
+                        productSheet.Cells(3, 4).value = "SEPARADOS"
+                        productSheet.Cells(3, 5).value = "FALTANTES"
+                        
+                        ' CREANDO LOS HIPERVINCULOS DE LAS HOJAS HACIA EL RESUMEN
+                        productSheet.Cells(1, 1).Select
+                        With Selection.Hyperlinks
+                            .Add Anchor:=Selection, Address:="", SubAddress:="FALTANTES!A1", TextToDisplay:="<<-  Volver al Resumen"
+                        End With
+                        
+                        productSheet.Cells(1, 2).Select
+                        With Selection.Hyperlinks
+                            .Add Anchor:=Selection, Address:="", SubAddress:="FALTANTES!A1"
+                        End With
+                        
+                        ' Calculando los totales y faltantes
+                        Call CalcFal(productSheet.Name, j_col)
+                        
                     Else
                         Debug.Print "No se pudo crear la hoja para el código de producto: '" & productCode & "'"
                     End If
@@ -325,9 +358,6 @@ SiguienteCodigoProducto:
     
     ' --- FIN DE LA NUEVA LÓGICA ---
 
-    ' Las siguientes líneas son de tu estructura original para Faltantes:
-    Call ultima ' Tu función: establece ultimaConDatos y ultimaDerecha (basado en ActiveSheet)
-    
     If ultimaConDatos > 0 Then
         Dim wsActivar As Worksheet
         Set wsActivar = Nothing ' Asegurar que está limpio
@@ -352,10 +382,11 @@ SiguienteCodigoProducto:
         Debug.Print "'ultimaConDatos' es 0 después de llamar a 'ultima', no se activó celda."
     End If
     
-    ' ...aquí irá el resto del código....
-    MsgBox "Estructura de hojas base creada." & vbNewLine & _
-           "La lógica para llenar estas hojas con datos se implementará a continuación.", vbInformation, "Siguientes Pasos"
+    ' ...COLOCANDO TITULARES Y ENLACES....
+    ' MOSTRANDO EL RESUMEN =======================
+    Sheets("LISTADO").Activate
     
+      
 Faltantes_Cleanup:
     Call proteger ' Tu función
     
@@ -372,7 +403,146 @@ Faltantes_Cleanup:
 
 Faltantes_ErrorHandler:
     MsgBox "Error en Sub Faltantes: " & Err.Number & " - " & Err.Description, vbCritical, "Error en Macro Faltantes"
-    ' Considera si quieres intentar la limpieza incluso después de un error
     Resume Faltantes_Cleanup
+
+    
 End Sub
 
+' ======= CUENTA Y CALCULA LOS FALTANTES (VERSIÓN MEJORADA) =======
+Sub CalcFal(Producto As String, Col_Talle As Long)
+    ' Declaración de variables
+    Dim dict As Object
+    Dim wsListado As Worksheet
+    Dim wsProducto As Worksheet
+    Dim i As Long
+    Dim ultimaFilaListado As Long
+    
+    Dim Talle As Variant
+    Dim Color As String
+    Dim Cantidad As Long
+    Dim key As Variant
+    
+    Dim outputRow As Long
+    Dim dataArray As Variant
+    
+    ' Crear el objeto Dictionary para almacenar los datos agregados
+    Set dict = CreateObject("Scripting.Dictionary")
+    
+    ' Establecer referencias a las hojas para mayor claridad y rendimiento
+    Set wsListado = ThisWorkbook.Sheets("LISTADO")
+    Set wsProducto = ThisWorkbook.Sheets(Producto)
+    
+    ' Obtener la última fila con datos en la hoja LISTADO una sola vez
+    ultimaFilaListado = wsListado.Cells(wsListado.Rows.Count, 1).End(xlUp).Row
+
+    '================================================================
+    ' PASO 1: AGREGAR DATOS DESDE LA HOJA "LISTADO"
+    '================================================================
+    ' Bucle que recorre las filas de clientes/pedidos
+    For i = 5 To ultimaFilaListado - 1 ' Asumiendo que la última fila es un total
+        ' Leer los datos de la fila actual para el producto correspondiente
+        Talle = wsListado.Cells(i, Col_Talle).value
+        Color = wsListado.Cells(i, Col_Talle).Offset(0, 1).value
+        
+        ' Solo procesar si hay una cantidad válida y un talle
+        If IsNumeric(wsListado.Cells(i, Col_Talle).Offset(0, 2).value) And Not IsEmpty(Talle) And Talle <> "" Then
+            Cantidad = CLng(wsListado.Cells(i, Col_Talle).Offset(0, 2).value)
+            
+            If Cantidad > 0 Then
+                ' Crear una clave única para la combinación Talle-Color
+                key = Trim(CStr(Talle)) & "|" & Trim(CStr(Color))
+                
+                ' Si la combinación Talle-Color no existe en el diccionario, se añade
+                If Not dict.exists(key) Then
+                    ' Se añade con un array: (Total Pedido, Total Separado)
+                    dict.Add key, Array(0, 0)
+                End If
+                
+                ' Obtener el array actual de la clave
+                dataArray = dict(key)
+                
+                ' Acumular la cantidad total
+                dataArray(0) = dataArray(0) + Cantidad
+                
+                ' Acumular la cantidad de "Separados" solo si la celda de Talle está coloreada
+                ' La variable global 'naranja' tiene el valor 40
+                If wsListado.Cells(i, Col_Talle).Interior.ColorIndex = naranja Then
+                    dataArray(1) = dataArray(1) + Cantidad
+                End If
+                
+                ' Devolver el array actualizado al diccionario
+                dict(key) = dataArray
+                
+                Debug.Print "Procesado: " & Producto & " | Fila: " & i & " | Key: " & key & " | Cant: " & Cantidad & " | Total Acum: " & dataArray(0) & " | Sep. Acum: " & dataArray(1)
+            End If
+        End If
+    Next i
+
+    '================================================================
+    ' PASO 2: VOLCAR LOS DATOS AGREGADOS A LA HOJA DEL PRODUCTO
+    '================================================================
+    If dict.Count > 0 Then
+        ' Empezar a escribir en la fila 4 de la hoja de producto
+        outputRow = 4
+        
+        ' Recorrer todas las combinaciones Talle-Color encontradas
+        For Each key In dict.keys
+            ' Separar la clave para obtener Talle y Color
+            Talle = Split(key, "|")(0)
+            Color = Split(key, "|")(1)
+            
+            ' Obtener los datos del diccionario
+            dataArray = dict(key)
+            Dim totalPedido As Long
+            Dim totalSeparado As Long
+            Dim totalFaltante As Long
+            
+            totalPedido = dataArray(0)
+            totalSeparado = dataArray(1)
+            If totalSeparado = 0 Then
+                totalSeparado = Empty
+            End If
+            
+            totalFaltante = totalPedido - totalSeparado
+            If totalFaltante = 0 Then
+                totalFaltante = Empty
+            End If
+            
+            ' Escribir los datos en la hoja del producto
+            wsProducto.Cells(outputRow, 1).value = Talle
+            wsProducto.Cells(outputRow, 2).value = Color
+            wsProducto.Cells(outputRow, 3).value = totalPedido
+            wsProducto.Cells(outputRow, 4).value = totalSeparado
+            wsProducto.Cells(outputRow, 5).value = totalFaltante
+            
+            ' Moverse a la siguiente fila para el próximo registro
+            outputRow = outputRow + 1
+        Next key
+        
+        '================================================================
+        ' PASO 3: AÑADIR FILA DE TOTALES GENERALES
+        '================================================================
+        ' La variable 'outputRow' ahora apunta a la primera fila vacía
+        With wsProducto
+            .Range("A3:E3").Font.Bold = True
+            .Cells(outputRow, 2).value = "TOTALES"
+            .Cells(outputRow, 2).Font.Bold = True
+            
+            ' Añadir fórmulas para sumar cada columna
+            .Cells(outputRow, 3).Formula = "=SUM(C4:C" & outputRow - 1 & ")"
+            .Cells(outputRow, 4).Formula = "=SUM(D4:D" & outputRow - 1 & ")"
+            .Cells(outputRow, 5).Formula = "=SUM(E4:E" & outputRow - 1 & ")"
+            
+            ' Aplicar formato negrita a los totales
+            .Range(.Cells(outputRow, 3), .Cells(outputRow, 5)).Font.Bold = True
+        End With
+    Else
+        ' Mensaje por si no se encontraron pedidos para este producto
+        wsProducto.Cells(4, 1).value = "No se encontraron pedidos para este producto."
+    End If
+    
+    ' Liberar memoria
+    Set dict = Nothing
+    Set wsListado = Nothing
+    Set wsProducto = Nothing
+End Sub
