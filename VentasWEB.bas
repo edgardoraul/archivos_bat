@@ -31,7 +31,7 @@ Function correo(numVenta, nombre, ultima, i, packar, planilla)
         ' Recorremos la planilla del Correo
         ' Controlamos que el número de venta esté completo
         ' y además que NO SEA un retiro en Local
-        If numVenta <> "" And planilla.Worksheets(1).Cells(i, 9).Value <> "Retira en Local" And planilla.Worksheets(1).Cells(i, 9).Value <> "Rerda S.A. - Sastrería Militar" Then
+        If numVenta <> "" And planilla.Worksheets(1).Cells(i, 9).Value <> "Retira en Local" And planilla.Worksheets(1).Cells(i, 9).Value <> "Rerda S.A. - Sastrería Militar" And planilla.Worksheets(1).Cells(i, 9).Value <> "Local Rerda" Then
             packar.Sheets(1).Cells(i + 7 - vacia, 1).Value = numVenta
             packar.Sheets(1).Cells(i + 7 - vacia, 2).Value = nombre
         End If
@@ -553,7 +553,7 @@ Call formato(ultima, i)
 
 ' GENERANDO LOS ROTULOS DE RETIRO
 For i = 2 To ultima
-    If Worksheets(1).Cells(i, 13).Value = "Retiras en Rerda Mendoza" Or Worksheets(1).Cells(i, 13).Value = "Rerda S.A. - Sastrería Militar" Then
+    If Worksheets(1).Cells(i, 13).Value = "Retiras en Rerda Mendoza" Or Worksheets(1).Cells(i, 13).Value = "Rerda S.A. - Sastrería Militar" Or Worksheets(1).Cells(i, 13).Value = "Local Rerda" Then
         
         ' Se coloca la leyenda en la celda
         Debug.Print Cells(i, 9).Value
@@ -780,6 +780,8 @@ Dim i As Byte
 Dim ultimaFila As Byte
 Dim resto As Byte
 Dim cantArchivos As Byte
+Dim RangoVariante As Range
+
 
 Dim matrixCodColor As Object
 ultimaFila = Sheets("Depósito").Cells(Rows.Count, 2).End(xlUp).Row - 1
@@ -835,21 +837,26 @@ Sheets("Exportar TXT").Cells.Clear
 ' Datos fuentes
 Sheets("Depósito").Activate
 Sheets("Depósito").Range(Cells(2, 5), Cells(ultimaFila, 5)).Select
+Set RangoVariante = Sheets("Depósito").Range(Cells(2, 5), Cells(ultimaFila, 5))
 Selection.Copy
 Sheets("Exportar TXT").Range("C1").PasteSpecial xlPasteValues
 Application.CutCopyMode = False
 Sheets("Exportar TXT").Activate
 
 ' Separar en columnas
-Sheets("Exportar TXT").Range(Cells(1, 3), Cells(ultimaFila + 1, 3)).TextToColumns _
-    Destination:=Range(Cells(1, 3), Cells(ultimaFila + 1, 3)), _
-    DataType:=xlDelimited, _
-    ConsecutiveDelimiter:=True, _
-    Tab:=False, _
-    Semicolon:=False, _
-    Comma:=True
+' Comprobar si hay datos en el rango "Variante" antes de procesar
+If Application.WorksheetFunction.CountA(RangoVariante) > 0 Then
+    Sheets("Exportar TXT").Range(Cells(1, 3), Cells(ultimaFila + 1, 3)).TextToColumns _
+        Destination:=Range(Cells(1, 3), Cells(ultimaFila + 1, 3)), _
+        DataType:=xlDelimited, _
+        ConsecutiveDelimiter:=True, _
+        Tab:=False, _
+        Semicolon:=False, _
+        Comma:=True
+End If
 
-Range("a1").Activate
+
+Range("A1").Activate
 
 ' Acomodar los datos del 1° el color y 2° el talle
 For fila = 1 To ultimaFila
