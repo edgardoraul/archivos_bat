@@ -640,7 +640,7 @@ Sub CalcFal(Producto As String, Col_Talle As Long)
        
         
         ' Incrementar las filas para el pròximo pegue
-        ultimaResumen = ultimaResumen + outputRow + 2
+        ultimaResumen = ultimaResumen + outputRow + 1
         Range("A1:E" & outputRow).Columns.AutoFit
         
     Else
