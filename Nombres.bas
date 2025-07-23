@@ -49,8 +49,8 @@ Sub CompletarNombres()
         Exit Sub
         
     ' Limite razonable para filas en versiones antiguas
-    ElseIf CantNombre < 0 Or CantNombre > 65536 Then
-         MsgBox ("¿Cuántos nombres vas a imprimir? " & vbNewLine & "Hasta 65536 (límite de filas en versiones antiguas)") ' Ajustado el mensaje
+    ElseIf CantNombre < 0 Or CantNombre > 40000 Then
+         MsgBox ("¿Cuántos nombres vas a imprimir? " & vbNewLine & "Hasta 40000 (límite de filas en versiones antiguas)") ' Ajustado el mensaje
          Exit Sub
     
     ' Para saber asegurarse que siempre sea par
@@ -133,7 +133,12 @@ COLOR:
         Call formato(columnaImagen, celdaDestino, BackgroundColor, TextColor)
         
         ' Contenido
-        celdaDestino.Value = celdaFuente & vbNewLine & contenido & vbNewLine & UCase(Sheets("Listado").Cells(filaFuente + 1, 3).Value)
+        If Sheets("Listado").Cells(filaFuente + 1, 3).Value = "" Then
+            celdaDestino.Value = celdaFuente & vbNewLine & contenido
+        Else
+            celdaDestino.Value = celdaFuente & vbNewLine & contenido & vbNewLine & UCase(Sheets("Listado").Cells(filaFuente + 1, 3).Value)
+        End If
+        
         celdaDestino.Value = RTrim(celdaDestino.Value)
 
         ' Columna 3 (Imagen)
@@ -157,7 +162,12 @@ COLOR:
         Call formato(columnaImagen, celdaDestino, BackgroundColor, TextColor)
         
         ' Contenido
-        celdaDestino.Value = celdaFuente & vbNewLine & contenido & vbNewLine & UCase(Sheets("Listado").Cells(filaFuente + 1, 3).Value)
+        If Sheets("Listado").Cells(filaFuente + 1, 3).Value = "" Then
+            celdaDestino.Value = celdaFuente & vbNewLine & contenido
+        Else
+            celdaDestino.Value = celdaFuente & vbNewLine & contenido & vbNewLine & UCase(Sheets("Listado").Cells(filaFuente + 1, 3).Value)
+        End If
+        
         celdaDestino.Value = RTrim(celdaDestino.Value)
         
 
