@@ -28,15 +28,17 @@ End Function
 ' PROTEGER
 Function proteger()
     Dim ws As Worksheet
-    If Sheets("CODIGOS").Visible = True Then
-        Sheets("CODIGOS").Visible = False
+    If Worksheets("CODIGOS").Visible = True Then
+        Worksheets("CODIGOS").Visible = False
     End If
     
-    If Sheets("VARIANTES").Visible = True Then
-        Sheets("VARIANTES").Visible = False
+    If Worksheets("VARIANTES").Visible = True Then
+        Worksheets("VARIANTES").Visible = False
     End If
     For Each ws In ThisWorkbook.Worksheets
-        ws.Protect pass
+
+        ws.Protect pass, AllowFiltering:=True, AllowSorting:=True
+
     Next ws
     ThisWorkbook.Protect pass
 End Function
@@ -55,27 +57,53 @@ Function Advertencia()
 
     ' Mostrar el cuadro de diálogo con Aceptar y Cancelar
     Respuesta = MsgBox("¡Cuidado!" & vbNewLine & "Vas a borrar la información cargada.", vbYesNo, "Confirmación")
-    Debug.Print Respuesta
-    ' Analizar la respuesta
-    If Respuesta = vbYes Then ' El usuario ha seleccionado "Aceptar"
-    
-        ' Opcional: MsgBox "Has seleccionado Aceptar. El proceso de borrado continuará.", vbInformation
-        Debug.Print Respuesta & ". Aceptasteeeee!!!"
-        
-    Else ' El usuario ha seleccionado "Cancelar"
-    
-        ' Opcional: MsgBox "Has seleccionado Cancelar. El proceso de borrado se detendrá.", vbInformation
-        Debug.Print Respuesta & ". ¡Chau! Cancelaste."
-    End If
     
 End Function
 
 ' Generando las últimas celdas con datos.
 Function ultima()
-    ultimaConDatos = Sheets("LISTADO").Cells(Rows.Count, 1).End(xlUp).Row
-    ultimaDerecha = Sheets("LISTADO").Cells(4, Columns.Count).End(xlToLeft).Column
-    ThisWorkbook.Save
+    ultimaConDatos = Worksheets("LISTADO").Cells(Rows.Count, 1).End(xlUp).row - 4
+    ultimaDerecha = Worksheets("LISTADO").Cells(4, Columns.Count).End(xlToLeft).Column
 End Function
+
+Function Activar(Fila)
+    ' ACTIVA LA FILA DE UN CANDIDATO
+    
+    Call NoAlertas
+    ActiveSheet.Unprotect pass
+    With Range(Cells(Fila, 1), Cells(Fila, ultimaDerecha))
+        .Locked = False
+        .Font.ColorIndex = xlAutomatic
+    End With
+    ActiveSheet.Protect pass
+    Call SiAlertas
+End Function
+
+Function Desactivar(Fila)
+    ' BLOQUEA UNA FILA DE UN CANDIDATO PARA QUE NO SEA TENIDA EN CUENTA
+    
+    Call NoAlertas
+    ActiveSheet.Unprotect pass
+    With Range(Cells(Fila, 1), Cells(Fila, ultimaDerecha))
+        .Font.ColorIndex = 48
+    End With
+    
+    Range(Cells(Fila, 2), Cells(Fila, ultimaDerecha)).Locked = True
+    
+    ActiveSheet.Protect pass
+    Call SiAlertas
+End Function
+
+Sub Filtrar()
+    ' HABILITA EL FILTRADO Y ORDENAMIENTO DE DATOS DE LA PLANILLA
+    Call ultima
+    ActiveSheet.Unprotect pass
+    With Range(Cells(4, 1), Cells(4, ultimaDerecha))
+        .Locked = False
+        .Interior.Color = xlAutomatic
+        .AutoFilter
+    End With
+End Sub
 
 Sub Marcar()
 Attribute Marcar.VB_ProcData.VB_Invoke_Func = "M\n14"
@@ -83,9 +111,9 @@ Attribute Marcar.VB_ProcData.VB_Invoke_Func = "M\n14"
     ' MARCA LAS CELDAS CON COLOR
     ' SOLO LAS CELDAS MARCADAS PUEDEN SUMARSE
     Call NoAlertas
-    Sheets("LISTADO").Unprotect pass
+    Worksheets("LISTADO").Unprotect pass
     Call ultima
-    If ActiveCell.Column >= 5 And ActiveCell.Column <= ultimaDerecha And ActiveCell.Row > 4 Then
+    If ActiveCell.Column >= 5 And ActiveCell.Column <= ultimaDerecha And ActiveCell.row > 4 Then
         
         If ActiveCell.Interior.ColorIndex = naranja Or Selection.Interior.ColorIndex = naranja Then
             ActiveCell.Interior.Color = xlNone
@@ -95,27 +123,52 @@ Attribute Marcar.VB_ProcData.VB_Invoke_Func = "M\n14"
             Selection.Interior.ColorIndex = naranja
         End If
     End If
-    Sheets("LISTADO").Protect pass
+    Worksheets("LISTADO").Protect pass
     Call SiAlertas
 End Sub
 
 ' Inserta una persona en la fila Nº 5.
 Sub InsPersona()
+    Dim criterio As String
+    
     Call NoAlertas
-    Sheets("LISTADO").Unprotect pass
+    
+    Worksheets("LISTADO").Unprotect pass
     Rows(5).Insert Shift:=xlShiftDown, CopyOrigin:=xlFormatFromRightOrBelow
+    criterio = ",=""" & Worksheets("VARIANTES").Range("C3").Value & """"
+    Debug.Print criterio
+    
+    '--- NUEVAS LÍNEAS ---
+    ' Restablece solo el color de fondo de la fila a "Sin relleno".
+    Rows(5).Interior.ColorIndex = xlNone
+    ' Restablece solo el color de la letra a "Automático" (normalmente negro).
+    Rows(5).Font.ColorIndex = xlAutomatic
+    
     Cells(5, 1).Activate
     Call ultima
-    Cells(ultimaConDatos, 2).Formula = "=COUNTA(" & "B5:B" & ultimaConDatos - 1 & ")"
+    
+    ' Celda con los inactivos
+    Cells(ultimaConDatos + 2, 2).Formula = "=COUNTIF(" & "A5:A" & ultimaConDatos & ",""=Activo"")"
+    
+    ' Celda con los inactivos
+    Cells(ultimaConDatos + 3, 2).Formula = "=COUNTIF(" & "A5:A" & ultimaConDatos & ",""=Inactivo"")"
+    
+    ' Celda con los totales
+    Cells(ultimaConDatos + 4, 2).Formula = "=COUNTA(" & "B5:B" & ultimaConDatos & ")"
+    
+    
+    
     Call ultima
-    Sheets("LISTADO").Protect pass
+    
+    Worksheets("LISTADO").Protect pass
+    
     Call SiAlertas
     ThisWorkbook.Save
 End Sub
 
 ' Borra una fila, siempre la Nº 5. Deja una solita, nada más.
 Sub BorrarPersona()
-    Sheets("LISTADO").Unprotect pass
+    Worksheets("LISTADO").Unprotect pass
     
     ' Se advierte sobre el borrado. Se sale si se cancela.
     Call Advertencia
@@ -130,14 +183,14 @@ Sub BorrarPersona()
         MsgBox "No se puede borrar esta fila."
     End If
     Call ultima
-    Sheets("LISTADO").Protect pass
+    Worksheets("LISTADO").Protect pass
     Call SiAlertas
     ThisWorkbook.Save
 End Sub
 
 ' Inserta un producto: son 3 columnas, con su formato, fórmula y restricciones.
 Sub InsProducto()
-    Sheets("LISTADO").Unprotect pass
+    Worksheets("LISTADO").Unprotect pass
     Call NoAlertas
     Call ultima
     Columns("E:G").Select
@@ -151,10 +204,17 @@ Sub InsProducto()
     Columns("H:J").Copy
     Columns("E:G").Select
     Selection.PasteSpecial Paste:=xlPasteFormats
+        
+     '--- NUEVAS COLUMNAS ---
+    ' Restablece solo el color de fondo de la fila a "Sin relleno".
+    Selection.Interior.ColorIndex = xlNone
+    ' Restablece solo el color de la letra a "Automático" (normalmente negro).
+    Selection.Font.ColorIndex = xlAutomatic
+    
     Application.CutCopyMode = False
     Range("E2").Activate
-    Range("E2").value = ""
-    Range(Cells(5, 5), Cells(ultimaConDatos - 1, 7)).value = ""
+    Range("E2").Value = ""
+    Range(Cells(5, 5), Cells(ultimaConDatos - 1, 7)).Value = ""
     Range("E2").Select
     Call ultima
     Sheets("LISTADO").Protect pass
@@ -164,7 +224,7 @@ End Sub
 
 ' Borra un producto (grupo de 3 columnas), siempre las columnas E a G.
 Sub RemProducto()
-    Sheets("LISTADO").Unprotect pass
+    Worksheets("LISTADO").Unprotect pass
     Call ultima
     
     ' Advirtiendo sobre el borrado. Se sale si se cancela
@@ -180,9 +240,13 @@ Sub RemProducto()
     Columns("E:G").Select
     Selection.Delete
     Range("E2").Select
+    
     Call ultima
-    Sheets("LISTADO").Protect pass
+    
+    Worksheets("LISTADO").Protect pass
+    
     Call SiAlertas
+    
     ThisWorkbook.Save
 End Sub
 
@@ -260,7 +324,7 @@ Sub Faltantes()
 
     ' 3. Identificar códigos de producto desde "PLANILLA" y crear hojas de producto
     On Error Resume Next ' Intentar obtener la hoja "PLANILLA"
-    Set shPlanilla = ThisWorkbook.Sheets("LISTADO")
+    Set shPlanilla = ThisWorkbook.Worksheets("LISTADO")
     On Error GoTo Faltantes_ErrorHandler ' Restaurar manejador de errores principal
 
     If shPlanilla Is Nothing Then
@@ -269,9 +333,9 @@ Sub Faltantes()
         ' El MsgBox al final indicará que la lógica de llenado está pendiente.
     Else
         ' Determinar la última columna con códigos de producto en la Fila 2 de "PLANILLA"
-        If IsEmpty(shPlanilla.Cells(2, shPlanilla.Columns.Count).value) And shPlanilla.Cells(2, 1).value = "" Then
+        If IsEmpty(shPlanilla.Cells(2, shPlanilla.Columns.Count).Value) And shPlanilla.Cells(2, 1).Value = "" Then
              ' Si la última celda de la fila 2 está vacía Y la primera también, la fila podría estar vacía
-            If shPlanilla.Cells(2, shPlanilla.Columns.Count).End(xlToLeft).Column = 1 And IsEmpty(shPlanilla.Cells(2, 1).value) Then
+            If shPlanilla.Cells(2, shPlanilla.Columns.Count).End(xlToLeft).Column = 1 And IsEmpty(shPlanilla.Cells(2, 1).Value) Then
                 lastProductColPlanilla = 0 ' Indica que la fila está esencialmente vacía o solo datos en col A
             Else
                 lastProductColPlanilla = shPlanilla.Cells(2, shPlanilla.Columns.Count).End(xlToLeft).Column
@@ -284,7 +348,7 @@ Sub Faltantes()
             Debug.Print "No se encontraron códigos de producto en la Fila 2 de 'PLANILLA' a partir de la Columna E."
         Else
             For j_col = 5 To lastProductColPlanilla Step 3 ' Desde Col E, cada 3 columnas
-                productCode = Trim(CStr(shPlanilla.Cells(2, j_col).value))
+                productCode = Trim(CStr(shPlanilla.Cells(2, j_col).Value))
 
                 If Not productCode Then
                     Dim tempSheetNameAttempt As String
@@ -323,20 +387,20 @@ Sub Faltantes()
                     If Not productSheet Is Nothing Then
                         
                         ' CREANDO LOS TITULARES DE CADA HOJA
-                        productSheet.Cells(1, 1).value = productSheet.Name & ": "
+                        productSheet.Cells(1, 1).Value = productSheet.Name & ": "
                         Range(productSheet.Cells(2, 1), productSheet.Cells(2, 4)).Merge
                         productSheet.Cells(2, 1).HorizontalAlignment = xlRight
-                        productSheet.Cells(2, 1).value = "Código: "
+                        productSheet.Cells(2, 1).Value = "Código: "
                         productSheet.Cells(1, 2).HorizontalAlignment = xlRight
-                        productSheet.Cells(2, 5).value = productSheet.Name
+                        productSheet.Cells(2, 5).Value = productSheet.Name
                         Range(productSheet.Cells(3, 1), productSheet.Cells(3, 5)).Merge
                         productSheet.Cells(1, 2).HorizontalAlignment = xlLeft
-                        productSheet.Cells(3, 1).value = Trim(CStr(shPlanilla.Cells(3, j_col).value))
-                        productSheet.Cells(4, 1).value = "TALLE"
-                        productSheet.Cells(4, 2).value = "COLOR"
-                        productSheet.Cells(4, 3).value = "TOTAL"
-                        productSheet.Cells(4, 4).value = "SEPARADOS"
-                        productSheet.Cells(4, 5).value = "FALTANTES"
+                        productSheet.Cells(3, 1).Value = Trim(CStr(shPlanilla.Cells(3, j_col).Value))
+                        productSheet.Cells(4, 1).Value = "TALLE"
+                        productSheet.Cells(4, 2).Value = "COLOR"
+                        productSheet.Cells(4, 3).Value = "TOTAL"
+                        productSheet.Cells(4, 4).Value = "SEPARADOS"
+                        productSheet.Cells(4, 5).Value = "FALTANTES"
                                           
                         ' CREANDO LOS HIPERVINCULOS DE LAS HOJAS HACIA EL RESPECTIVO
                         productSheet.Cells(2, 5).Select
@@ -462,11 +526,11 @@ Sub CalcFal(Producto As String, Col_Talle As Long)
     Set dict = CreateObject("Scripting.Dictionary")
     
     ' Establecer referencias a las hojas
-    Set wsListado = ThisWorkbook.Sheets("LISTADO")
-    Set wsProducto = ThisWorkbook.Sheets(Producto)
+    Set wsListado = ThisWorkbook.Worksheets("LISTADO")
+    Set wsProducto = ThisWorkbook.Worksheets(Producto)
     
     ' Obtener la última fila con datos
-    ultimaFilaListado = wsListado.Cells(wsListado.Rows.Count, 1).End(xlUp).Row
+    ultimaFilaListado = wsListado.Cells(wsListado.Rows.Count, 1).End(xlUp).row
     
     ' Inicializando la primera celda donde se copiará el resumen en FALTANTES
 
@@ -474,11 +538,11 @@ Sub CalcFal(Producto As String, Col_Talle As Long)
     ' PASO 1: AGREGAR DATOS DESDE LA HOJA "LISTADO" (Sin cambios)
     '================================================================
     For i = 5 To ultimaFilaListado - 1
-        Talle = wsListado.Cells(i, Col_Talle).value
-        Color = wsListado.Cells(i, Col_Talle).Offset(0, 1).value
+        Talle = wsListado.Cells(i, Col_Talle).Value
+        Color = wsListado.Cells(i, Col_Talle).Offset(0, 1).Value
         
         'If IsNumeric(wsListado.Cells(i, Col_Talle).Offset(0, 2).value) And Not IsEmpty(Talle) And Talle <> "" Then
-            Cantidad = CLng(wsListado.Cells(i, Col_Talle).Offset(0, 2).value)
+            Cantidad = CLng(wsListado.Cells(i, Col_Talle).Offset(0, 2).Value)
             
             If Cantidad > 0 Then
                 key = Trim(CStr(Talle)) & "|" & Trim(CStr(Color))
@@ -495,7 +559,7 @@ Sub CalcFal(Producto As String, Col_Talle As Long)
                 End If
                 
                 dict(key) = dataArray
-                'Debug.Print "Producto: " & Producto & " | Fila: " & i & " | Talle: " & key & " | Cantidad: " & Cantidad & " | Total: " & dataArray(0) & " | Separados: " & dataArray(1) & " | Faltantes: " & (dataArray(0) - dataArray(1))
+            
             End If
         'End If
     Next i
@@ -573,20 +637,20 @@ Sub CalcFal(Producto As String, Col_Talle As Long)
         ' (Esta sección es idéntica a la versión anterior)
         outputRow = 5
         For i = 1 To dict.Count
-            wsProducto.Cells(outputRow, 1).value = unsortedData(i, 1) ' Talle
-            wsProducto.Cells(outputRow, 2).value = unsortedData(i, 2) ' Color
-            wsProducto.Cells(outputRow, 3).value = unsortedData(i, 3) ' Total
+            wsProducto.Cells(outputRow, 1).Value = unsortedData(i, 1) ' Talle
+            wsProducto.Cells(outputRow, 2).Value = unsortedData(i, 2) ' Color
+            wsProducto.Cells(outputRow, 3).Value = unsortedData(i, 3) ' Total
             
             If unsortedData(i, 4) > 0 Then
-                wsProducto.Cells(outputRow, 4).value = unsortedData(i, 4)
+                wsProducto.Cells(outputRow, 4).Value = unsortedData(i, 4)
             Else
-                wsProducto.Cells(outputRow, 4).value = Empty
+                wsProducto.Cells(outputRow, 4).Value = Empty
             End If
             
             If unsortedData(i, 5) > 0 Then
-                wsProducto.Cells(outputRow, 5).value = unsortedData(i, 5)
+                wsProducto.Cells(outputRow, 5).Value = unsortedData(i, 5)
             Else
-                wsProducto.Cells(outputRow, 5).value = Empty
+                wsProducto.Cells(outputRow, 5).Value = Empty
             End If
             
             outputRow = outputRow + 1
@@ -598,7 +662,7 @@ Sub CalcFal(Producto As String, Col_Talle As Long)
         With wsProducto
             .Range("A3").Font.Size = 14
             .Range("A3:E4").Font.Bold = True
-            .Cells(outputRow, 2).value = "TOTALES"
+            .Cells(outputRow, 2).Value = "TOTALES"
             .Cells(outputRow, 2).Font.Bold = True
             
             .Cells(outputRow, 3).Formula = "=SUM(C5:C" & outputRow - 1 & ")"
@@ -644,7 +708,7 @@ Sub CalcFal(Producto As String, Col_Talle As Long)
         Range("A1:E" & outputRow).Columns.AutoFit
         
     Else
-        wsProducto.Cells(4, 1).value = "No se encontraron pedidos para este producto."
+        wsProducto.Cells(4, 1).Value = "No se encontraron pedidos para este producto."
     End If
     
     ' Liberar memoria
