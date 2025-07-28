@@ -544,7 +544,7 @@ Sub CalcFal(Producto As String, Col_Talle As Long)
         'If IsNumeric(wsListado.Cells(i, Col_Talle).Offset(0, 2).value) And Not IsEmpty(Talle) And Talle <> "" Then
             Cantidad = CLng(wsListado.Cells(i, Col_Talle).Offset(0, 2).Value)
             
-            If Cantidad > 0 Then
+            If Cantidad > 0 And Worksheets("LISTADO").Cells(i, 1).Value = Worksheets("VARIANTES").Range("C2").Value Then
                 key = Trim(CStr(Talle)) & "|" & Trim(CStr(Color))
                 
                 If Not dict.exists(key) Then
@@ -554,7 +554,7 @@ Sub CalcFal(Producto As String, Col_Talle As Long)
                 dataArray = dict(key)
                 dataArray(0) = dataArray(0) + Cantidad
                 
-                If wsListado.Cells(i, Col_Talle).Offset(0, 2).Interior.ColorIndex = naranja Then
+                If wsListado.Cells(i, Col_Talle).Offset(0, 2).Interior.ColorIndex = naranja And Worksheets("LISTADO").Cells(i, 1).Value = Worksheets("VARIANTES").Range("C2").Value Then
                     dataArray(1) = dataArray(1) + Cantidad
                 End If
                 
