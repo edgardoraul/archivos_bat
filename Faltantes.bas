@@ -208,6 +208,7 @@ Sub InsProducto()
      '--- NUEVAS COLUMNAS ---
     ' Restablece solo el color de fondo de la fila a "Sin relleno".
     Selection.Interior.ColorIndex = xlNone
+    
     ' Restablece solo el color de la letra a "Automático" (normalmente negro).
     Selection.Font.ColorIndex = xlAutomatic
     
@@ -452,7 +453,7 @@ SiguienteCodigoProducto:
        .Range("A:E").Columns.AutoFit
     End With
    
-    
+
       
 Faltantes_Cleanup:
     Call proteger ' Tu función
@@ -472,7 +473,7 @@ Faltantes_ErrorHandler:
     MsgBox "Error en Sub Faltantes: " & Err.Number & " - " & Err.Description, vbCritical, "Error en Macro Faltantes"
     Resume Faltantes_Cleanup
 
-    
+   
 End Sub
 
 '========================================================================
@@ -711,9 +712,66 @@ Sub CalcFal(Producto As String, Col_Talle As Long)
         wsProducto.Cells(4, 1).Value = "No se encontraron pedidos para este producto."
     End If
     
+    Call Creditos
+    
     ' Liberar memoria
     Set dict = Nothing
     Set wsListado = Nothing
     Set wsProducto = Nothing
 End Sub
 
+Sub Creditos()
+    ' Calcula totales, faltantes y diferencias en montos
+    Dim F, C As Integer
+    Dim Acumulado As Long
+    Dim formulaString As String
+    Dim formulaStringEntregado As String
+    Dim Listado As Worksheet
+    Dim CantSeparada As Variant
+    Set Listado = ThisWorkbook.Worksheets("LISTADO")
+    
+    Call ultima
+    
+    For F = 5 To ultimaConDatos
+        formulaString = "="
+        formulaStringEntregado = "="
+        
+        For C = 7 To ultimaDerecha - 4 Step 3
+            If Listado.Cells(F, 1).Value = Worksheets("VARIANTES").Range("C3").Value Then
+                GoTo Seguir
+            End If
+            
+            ' Fórmula en Créditos Aprobados
+            formulaString = formulaString & Listado.Cells(F, C).Address & "*" & Listado.Cells(1, C - 1).Address & "+"
+        
+            ' Fórmula en Créditos Entregados
+            Debug.Print Listado.Cells(F, C).Interior.ColorIndex
+            
+            If Listado.Cells(F, C).Interior.ColorIndex = naranja Then
+                CantSeparada = Listado.Cells(F, C).Address
+            Else
+                CantSeparada = 0
+            End If
+            
+            formulaStringEntregado = formulaStringEntregado & CantSeparada & "*" & Listado.Cells(1, C - 1).Address & "+"
+
+Seguir:
+        Next C
+        
+        ' Quitamos el último "+" que sobra al final de la cadena
+        If Len(formulaString) > 1 Then
+            formulaString = Left(formulaString, Len(formulaString) - 1)
+        End If
+        
+        If Len(formulaStringEntregado) > 1 Then
+            formulaStringEntregado = Left(formulaStringEntregado, Len(formulaStringEntregado) - 1)
+        End If
+        
+        ' Asignamos la fórmula completa a la celda de destino una sola vez
+        If Listado.Cells(F, 1).Value = Worksheets("VARIANTES").Range("C2").Value Then
+            Listado.Cells(F, ultimaDerecha - 3).Formula = formulaString
+            Listado.Cells(F, ultimaDerecha - 2).Formula = formulaStringEntregado
+            Listado.Cells(F, ultimaDerecha - 1).Formula = "=" & Listado.Cells(F, ultimaDerecha - 3).Address & "-" & Listado.Cells(F, ultimaDerecha - 2).Address
+        End If
+    Next F
+End Sub
