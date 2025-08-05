@@ -195,7 +195,7 @@ Sub InsProducto()
     Call ultima
     Columns("E:G").Select
     Selection.Insert CopyOrigin:=xlFormatFromRightOrBelow
-    Range(Cells(2, 8), Cells(ultimaConDatos - 1, 10)).Select
+    Range(Cells(2, 8), Cells(ultimaConDatos, 10)).Select
     Selection.Copy
     Range("E2").Activate
     ActiveSheet.Paste
@@ -232,7 +232,7 @@ Sub RemProducto()
     Call Advertencia
     Call NoAlertas
     If Respuesta <> vbYes Then Exit Sub
-    If ultimaDerecha < 8 Then
+    If ultimaDerecha < 12 Then
         MsgBox "No se puede eliminar el último producto."
         Range("E2").Select
         ActiveWorkbook.Save
