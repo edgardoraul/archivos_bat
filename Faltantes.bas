@@ -390,24 +390,32 @@ Sub Faltantes()
                         ' CREANDO LOS TITULARES DE CADA HOJA
                         productSheet.Cells(1, 1).Value = productSheet.Name & ": "
                         Range(productSheet.Cells(2, 1), productSheet.Cells(2, 4)).Merge
-                        productSheet.Cells(2, 1).HorizontalAlignment = xlRight
-                        productSheet.Cells(2, 1).Value = "Código: "
-                        productSheet.Cells(1, 2).HorizontalAlignment = xlRight
-                        productSheet.Cells(2, 5).Value = productSheet.Name
+                        With productSheet
+                            .Cells(2, 1).HorizontalAlignment = xlRight
+                            .Cells(2, 1).Value = "Código: "
+                            .Cells(1, 2).HorizontalAlignment = xlRight
+                            .Cells(2, 5).Value = productSheet.Name
+                            .Cells(1, 2).HorizontalAlignment = xlLeft
+                            .Cells(3, 1).Value = Trim(CStr(shPlanilla.Cells(3, j_col).Value))
+                            .Cells(4, 1).Value = "TALLE"
+                            .Cells(4, 2).Value = "COLOR"
+                            .Cells(4, 3).Value = "TOTAL"
+                            .Cells(4, 4).Value = "SEPARADOS"
+                            .Cells(4, 5).Value = "FALTANTES"
+                        End With
                         Range(productSheet.Cells(3, 1), productSheet.Cells(3, 5)).Merge
-                        productSheet.Cells(1, 2).HorizontalAlignment = xlLeft
-                        productSheet.Cells(3, 1).Value = Trim(CStr(shPlanilla.Cells(3, j_col).Value))
-                        productSheet.Cells(4, 1).Value = "TALLE"
-                        productSheet.Cells(4, 2).Value = "COLOR"
-                        productSheet.Cells(4, 3).Value = "TOTAL"
-                        productSheet.Cells(4, 4).Value = "SEPARADOS"
-                        productSheet.Cells(4, 5).Value = "FALTANTES"
-                                          
+
                         ' CREANDO LOS HIPERVINCULOS DE LAS HOJAS HACIA EL RESPECTIVO
                         productSheet.Cells(2, 5).Select
                         With Selection.Hyperlinks
                             .Add Anchor:=Selection, Address:="", SubAddress:="LISTADO!" & Chr(64 + j_col) & 2
                         End With
+                        
+                        With productSheet
+                            .Range("E2").Font.Size = 24
+                            .Range("E2").Font.Bold = True
+                        End With
+                        
                         
                         ' Calculando los totales y faltantes
                         Call CalcFal(productSheet.Name, j_col)
@@ -448,7 +456,7 @@ SiguienteCodigoProducto:
     
     ' ...COLOCANDO TITULARES Y ENLACES....
     ' MOSTRANDO EL RESUMEN =======================
-    With Sheets("FALTANTES")
+    With Worksheets("FALTANTES")
        .Activate
        .Range("A:E").Columns.AutoFit
     End With
