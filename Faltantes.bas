@@ -100,7 +100,7 @@ Sub Filtrar()
     ActiveSheet.Unprotect pass
     With Range(Cells(4, 1), Cells(4, ultimaDerecha))
         .Locked = False
-        .Interior.Color = xlAutomatic
+        .Interior.Color = xlNone
         .AutoFilter
     End With
 End Sub

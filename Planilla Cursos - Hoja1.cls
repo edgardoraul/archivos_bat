@@ -12,8 +12,6 @@ Private Sub Worksheet_Calculate()
     If Me.AutoFilterMode = False Then Exit Sub
     Call ultima
     Me.AutoFilterMode = False
-    Range(Cells(4, 1), Cells(4, ultimaDerecha)).Interior.ColorIndex = 15
-    
     Range(Cells(4, 1), Cells(4, ultimaDerecha)).Locked = True
     ActiveSheet.Protect pass
 End Sub
