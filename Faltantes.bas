@@ -215,7 +215,7 @@ Sub InsProducto()
     Application.CutCopyMode = False
     Range("E2").Activate
     Range("E2").Value = ""
-    Range(Cells(5, 5), Cells(ultimaConDatos - 1, 7)).Value = ""
+    Range(Cells(5, 5), Cells(ultimaConDatos, 7)).Value = ""
     Range("E2").Select
     Call ultima
     Sheets("LISTADO").Protect pass
