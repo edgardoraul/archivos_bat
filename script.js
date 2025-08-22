@@ -10,6 +10,7 @@
 	* 
 */
 
+
 // Función para modificar los títulos de los productos y mostrar los códigos
 let acumulador = 0;
 let titulares;
@@ -94,10 +95,10 @@ function detectarCargaAjax() {
 
 	function detectarScroll() {
 		// Verificar si el usuario ha llegado al final de la página
-		if (window.innerHeight + window.scrollY >= (document.body.offsetHeight - futer.offsetHeight )) {
+		// if (window.innerHeight + window.scrollY >= (document.body.offsetHeight - futer.offsetHeight )) {
 			completador();
-            ofertor();
-		}
+			ofertor();
+		// }
 	}
 
 	/* IR ARRIBA */
@@ -112,7 +113,6 @@ function detectarCargaAjax() {
 		}
 	})();
 
-	/* Saltos de línea */
 	// Buscar el elemento con la clase especificada
 	let alerta = document.querySelector(".shipping-calculator .shipping-calculator-response .alert-warning");
 
@@ -164,63 +164,68 @@ let precioNegrita;
 let arregloPrecios = [];
 
 function convertirADecimal(texto) {
-    // Buscar el número antes del símbolo %
-    let match = texto.match(/(\d+(?:[.,]\d+)?)\s*%/);
-    if (match) {
-        // match[1] = parte numérica (puede tener coma o punto)
-        let numero = match[1].replace(",", "."); // reemplazar coma por punto
-        numero = numero.replace("$", "");
-        numero = numero.trim();
-        return parseFloat(numero); // convertir a número flotante
-    }
-    return null; // si no encontró nada
+	// Buscar el número antes del símbolo %
+	let match = texto.match(/(\d+(?:[.,]\d+)?)\s*%/);
+	if (match) {
+		// match[1] = parte numérica (puede tener coma o punto)
+		let numero = match[1].replace(",", "."); // reemplazar coma por punto
+		numero = numero.replace("$", "");
+		numero = numero.trim();
+		return parseFloat(numero); // convertir a número flotante
+	}
+	return null; // si no encontró nada
 }
 
 function ofertor(promos) {
-    itemsPromos = document.querySelectorAll(".js-promotion-label-private.item-label.item-label-offer");
+	itemsPromos = document.querySelectorAll(".js-promotion-label-private.item-label.item-label-offer");
 
-    for( i = acumuladorPromos; i < itemsPromos.length; i++ ) {
-        // Obteniendo el porcentaje y convirtiendo a número decimal
-        porcentaje = itemsPromos[i].querySelector("span").innerText;
-        porcentaje = convertirADecimal(porcentaje);
+	for( i = acumuladorPromos; i < itemsPromos.length; i++ ) {
 
-        // Obteniendo el precio tachado
-        precioTachado = itemsPromos[i].parentElement.parentElement.parentElement.parentElement.querySelector(".item-price-container").querySelector(".js-compare-price-display.item-price-compare"); 
-        arregloPrecios[i] = precioTachado;
-        
-        // Mostrando el precio tachado
-        precioTachado.style.setProperty("display", "inline", "important");
+		// Obteniendo el porcentaje y convirtiendo a número decimal
+		porcentaje = itemsPromos[i].querySelector("span").innerText;
+		porcentaje = convertirADecimal(porcentaje);
 
-        // Obteniendo el precio viejo
-        precioViejo = precioTachado.parentElement.parentElement.querySelector(".js-price-display.item-price").innerText;
-        precioNegrita = precioViejo;
-        precioViejo = precioViejo.replace("$", "");
-        precioViejo = precioViejo.replace(".", "");
-        precioViejo = precioViejo.trim();
-        precioViejo = precioViejo.replace(",", ".");
-        precioViejo = parseFloat(precioViejo).toFixed(2);
+		// Eliminando el espacio en blanco entre los elementos
+		itemsPromos[i].parentElement.parentElement.parentElement.parentElement.querySelector(".item-price-container").querySelector(".js-compare-price-display.item-price-compare").nextSibling.remove();
+		
+		// Obteniendo el precio tachado
+		precioTachado = itemsPromos[i].parentElement.parentElement.parentElement.parentElement.querySelector(".item-price-container").querySelector(".js-compare-price-display.item-price-compare"); 
+		arregloPrecios[i] = precioTachado;
 
-        // Generando el nuevo precio
-        precioNuevo = precioViejo - (precioViejo * (porcentaje / 100)).toFixed(2);
-        
-        // Formateando el nuevo precio y el viejo precio
-        precioNuevo = precioNuevo.toLocaleString("es-AR", {
-            style: "currency",
-            currency: "ARS",
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-        precioNuevo = precioNuevo.toString();
+		// Mostrando el precio tachado
+		precioTachado.style.setProperty("display", "inline", "important");
 
-        acumuladorPromos = acumuladorPromos + itemsPromos.length
-        console.log("Precio Viejo: " + precioViejo + " -> Precio Reducido: " + precioNuevo);
+		// Obteniendo el precio viejo
+		precioViejo = precioTachado.parentElement.parentElement.querySelector(".js-price-display.item-price").innerText;
+		precioNegrita = precioViejo;
+		precioViejo = precioViejo.replace("$", "");
+		precioViejo = precioViejo.replace(".", "");
+		precioViejo = precioViejo.trim();
+		precioViejo = precioViejo.replace(",", ".");
+		precioViejo = parseFloat(precioViejo).toFixed(2);
 
-        // Reemplazando el precio en negrita por el nuevo
-        arregloPrecios[i].parentElement.parentElement.querySelector(".js-price-display.item-price").innerText = precioNuevo;
+		// Generando el nuevo precio
+		precioNuevo = precioViejo - (precioViejo * (porcentaje / 100)).toFixed(2);
+		
+		// Formateando el nuevo precio y el viejo precio
+		precioNuevo = precioNuevo.toLocaleString("es-AR", {
+			style: "currency",
+			currency: "ARS",
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2
+		});
+		precioNuevo = precioNuevo.toString();
 
-        // Reemplazando el precio tachado por el original
-        arregloPrecios[i].innerText = precioNegrita;
-    }
+		// Reemplazando el precio en negrita por el nuevo
+		arregloPrecios[i].parentElement.parentElement.querySelector(".js-price-display.item-price").innerText = precioNuevo;
+		
+		// Reemplazando el precio tachado por el original
+		arregloPrecios[i].innerText = precioNegrita.trim();
+
+		// Actualizando el acumulador de promociones
+		acumuladorPromos = itemsPromos.length
+		console.log("Precio Viejo: " + precioNegrita + " -> Precio Reducido: " + precioNuevo, " - Cantidad de Promos: " + acumuladorPromos);
+	}
 }
 document.addEventListener("DOMContentLoaded", ofertor);
 
