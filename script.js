@@ -120,41 +120,12 @@ function detectarCargaAjax() {
 		// Reemplazar cada punto con un punto seguido de un salto de línea (<br />)
 		alerta.innerHTML = alerta.innerHTML.replace(/\./g, '.<br /><br />');
 	}
-
-	// Saldos y ofertas
-	let ancla = document.querySelectorAll(".desktop-nav-item a");
-	ancla.forEach( (e) => {
-		
-		// Verificar si el enlace tiene el texto "Ofertas y Saldos"
-		if (e.textContent.trim() === "Ofertas y Saldos") {
-		
-			// Cambiar el texto del enlace a "Saldos"
-			const elEnlace = e;
-			elEnlace.addEventListener('click', function(ev) {
-				ev.preventDefault();
-				elEnlace.href = "#";
-			
-				const inputSearch = document.getElementsByName('q');
-				const searchForm = document.getElementsByClassName('js-search-container js-search-form')[0];
-			
-				console.log(inputSearch, searchForm);
-				// Insertar directamente el texto deseado
-				
-				inputSearch.forEach((input) => {
-					input.value = 'Saldo';
-				});
-			
-				// Enviar el formulario automáticamente
-				searchForm.submit();
-			});
-		}
-	});
 }
 
 // Ejecutar la función detectarCargaAjax() cuando se carga el DOM
 document.addEventListener("DOMContentLoaded", detectarCargaAjax);
 
-/* PROMOCIONES */
+/*/ PROMOCIONES
 let itemsPromos;
 let porcentaje;
 let acumuladorPromos = 0;
@@ -228,6 +199,6 @@ function ofertor(promos) {
 	}
 }
 document.addEventListener("DOMContentLoaded", ofertor);
-
+*/
 
 // </script>
