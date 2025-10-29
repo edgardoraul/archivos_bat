@@ -35,14 +35,14 @@ Const rutaFinal = "D:\OneDrive\Dragonfish Color y Talle\Articulos\"
 
 
 ' Una función para obtener las rutas de carpetas
-Function OBTENER_RUTA_CARPETA_ARCHIVO(ruta As String) As String
-    Set objeto = New FileSystemObject
-    Set archivo = objeto.GetFile(ruta)
-    OBTENER_RUTA_CARPETA_ARCHIVO = archivo.ParentFolder.Path
-End Function
+'Function OBTENER_RUTA_CARPETA_ARCHIVO(ruta As String) As String
+    'Set objeto = New FileSystemObject
+    'Set archivo = objeto.GetFile(ruta)
+    'OBTENER_RUTA_CARPETA_ARCHIVO = archivo.ParentFolder.Path
+'End Function
 
 
-Sub GeneradorImagenesVariables()
+Function GeneradorImagenesVariables()
 ' PRODUCTO CON VARIENTE DE TALLE ===================
 
 Sheets("Variables").Activate
@@ -80,10 +80,10 @@ For i = 2 To ultimaFila
 Next
 
 ThisWorkbook.Save
-End Sub
+End Function
 
 
-Sub generadorImagenesConColor()
+Function generadorImagenesConColor()
 ' PRODUCTO CON VARIANTE DE COLOR ===================
 
 Sheets("Con Color").Activate
@@ -146,9 +146,9 @@ Next
 Range("A1").Sort Key1:=Range("A1"), Order1:=xlAscending, Header:=xlYes
 ThisWorkbook.Save
 
-End Sub
+End Function
 
-Sub generadorImagenesConTalle()
+Function generadorImagenesConTalle()
 ' PRODUCTO CON VARIANTE DE TALLE ===================
 
 Worksheets("Con Talles").Activate
@@ -202,9 +202,9 @@ Next
 Range("A1").Sort Key1:=Range("A1"), Order1:=xlAscending, Header:=xlYes
 ThisWorkbook.Save
 
-End Sub
+End Function
 
-Sub GeneradorImagenesSimples()
+Function GeneradorImagenesSimples()
 ' PRODUCTO SIMPLE ===================
 
 Sheets("Simples").Activate
@@ -235,7 +235,7 @@ For i = 2 To ultimaFila
 Next
 
 ThisWorkbook.Save
-End Sub
+End Function
 
 
 Sub copiarImgVariables()
@@ -353,7 +353,8 @@ Sub copiarImgVariables()
 Seguir:
     Next
     
-
+Call GeneradorImagenesVariables
+Call GeneradorImagenesSimples
     
 End Sub
 Sub copiarImgColor()
@@ -386,6 +387,22 @@ For i = 2 To ultimaFila
         If Left(xFile, 2) = Cells(i, 4).Value Then
             xCount = xCount + 1
             Cells(i, (8 + xCount)).Value = xFile
+        
+        ElseIf xFile = "1.jpg" Then
+            origen = ruta & codigo & "\" & xFile
+            archivoNuevo = codigo & "'''.jpg"
+            destino = rutaImgRenombradas & archivoNuevo
+            FileCopy origen, destino
+        ElseIf xFile = "2.jpg" Then
+            origen = ruta & codigo & "\" & xFile
+            archivoNuevo = codigo & "'''1.jpg"
+            destino = rutaImgRenombradas & archivoNuevo
+            FileCopy origen, destino
+        ElseIf xFile = "3.jpg" Then
+            origen = ruta & codigo & "\" & xFile
+            archivoNuevo = codigo & "'''2.jpg"
+            destino = rutaImgRenombradas & archivoNuevo
+            FileCopy origen, destino
         End If
         ' Aquí ya cambia de valor
         xFile = Dir()
@@ -400,26 +417,12 @@ For i = 2 To ultimaFila
     
     'Renombrando cada imagen y copiándola al destino
     For e = 1 To cantidadImg
-
-        ' Foto de portada. Una sola.
-        If Cells(i, (8 + e)).Value = "1.jpg" Then
-            archivoAntiguo = Cells(i, (8 + e)).Value
-            origen = ruta & codigo & "\" & archivoAntiguo
-            archivoNuevo = codigo & "'''" & extension
-        
-        ElseIf Cells(i, (8 + e)).Value = "2.jpg" Then
-            archivoAntiguo = Cells(i, (8 + e)).Value
-            origen = ruta & codigo & "\" & archivoAntiguo
-            archivoNuevo = codigo & "'''1" & extension
-        
-        Else
-            ' Fotos de las variantes de color
-            color = Left(Cells(i, (8 + e)).Value, 2)
-            cantidad = Mid(Cells(i, (8 + e)).Value, 3, (Len(Cells(i, (8 + e))) - Len(extension) - 2))
-            archivoAntiguo = color & cantidad & extension
-            origen = ruta & codigo & "\" & archivoAntiguo
-            archivoNuevo = codigo & "'" & color & "''" & cantidad & extension
-        End If
+        ' Fotos de las variantes de color
+        color = Left(Cells(i, (8 + e)).Value, 2)
+        cantidad = Mid(Cells(i, (8 + e)).Value, 3, (Len(Cells(i, (8 + e))) - Len(extension) - 2))
+        archivoAntiguo = color & cantidad & extension
+        origen = ruta & codigo & "\" & archivoAntiguo
+        archivoNuevo = codigo & "'" & color & "''" & cantidad & extension
         
         'Definiendo el destino final del archivo de la imagen
         destino = rutaImgRenombradas & archivoNuevo
@@ -428,7 +431,6 @@ For i = 2 To ultimaFila
         Debug.Print "Fila " & i & " tiene " & cantidadImg & " # " & archivoAntiguo & " -> " & archivoNuevo
                
         FileCopy origen, destino
-        
         Debug.Print origen & " -> " & destino
 Seguir:
     Next
@@ -461,6 +463,23 @@ For i = 2 To ultimaFila
     If xFile = "" Then
         Cells(i, 8).Value = "Sin imágenes"
         GoTo Seguir
+    
+    ' Controles para saber si tiene portada o no; o más de una.
+    ElseIf xFile = "1.jpg" Then
+        origen = ruta & codigo & "\" & xFile
+        archivoNuevo = codigo & "'''.jpg"
+        destino = rutaImgRenombradas & archivoNuevo
+        FileCopy origen, destino
+    ElseIf xFile = "2.jpg" Then
+        origen = ruta & codigo & "\" & xFile
+        archivoNuevo = codigo & "'''1.jpg"
+        destino = rutaImgRenombradas & archivoNuevo
+        FileCopy origen, destino
+    ElseIf xFile = "3.jpg" Then
+        origen = ruta & codigo & "\" & xFile
+        archivoNuevo = codigo & "'''2.jpg"
+        destino = rutaImgRenombradas & archivoNuevo
+        FileCopy origen, destino
     End If
     
     'Averiguando cuántas imágenes hay en la variante
@@ -485,26 +504,13 @@ For i = 2 To ultimaFila
     
     'Renombrando cada imagen y copiándola al destino
     For e = 1 To cantidadImg
+        ' Fotos de las variantes de color
+        color = Left(Cells(i, (8 + e)).Value, 2)
+        cantidad = Mid(Cells(i, (8 + e)).Value, 3, (Len(Cells(i, (8 + e))) - Len(extension) - 2))
+        archivoAntiguo = color & cantidad & extension
+        origen = ruta & codigo & "\" & archivoAntiguo
+        archivoNuevo = codigo & "''" & color & "'" & cantidad & extension
 
-        ' Foto de portada. Una sola.
-        If Cells(i, (8 + e)).Value = "1.jpg" Then
-            archivoAntiguo = Cells(i, (8 + e)).Value
-            origen = ruta & codigo & "\" & archivoAntiguo
-            archivoNuevo = codigo & "'''" & extension
-        
-        ElseIf Cells(i, (8 + e)).Value = "2.jpg" Then
-            archivoAntiguo = Cells(i, (8 + e)).Value
-            origen = ruta & codigo & "\" & archivoAntiguo
-            archivoNuevo = codigo & "'''1" & extension
-        
-        Else
-            ' Fotos de las variantes de color
-            color = Left(Cells(i, (8 + e)).Value, 2)
-            cantidad = Mid(Cells(i, (8 + e)).Value, 3, (Len(Cells(i, (8 + e))) - Len(extension) - 2))
-            archivoAntiguo = color & cantidad & extension
-            origen = ruta & codigo & "\" & archivoAntiguo
-            archivoNuevo = codigo & "''" & color & "'" & cantidad & extension
-        End If
         
         'Definiendo el destino final del archivo de la imagen
         destino = rutaImgRenombradas & archivoNuevo
@@ -561,7 +567,7 @@ Sub CopiarPrimeraImagenComo1jpg()
         If (subcarpeta.Attributes And 2) <> 0 Then GoTo SiguienteSubcarpeta ' 2 = Hidden
         
         ' Verificar si ya existe 1.jpg
-        If FSO.FileExists(subcarpeta.Path & "\1.jpg") Then GoTo SiguienteSubcarpeta
+        'If FSO.FileExists(subcarpeta.Path & "\1.jpg") Then GoTo SiguienteSubcarpeta
         
         ' Buscar primera imagen en la subcarpeta
         encontrado = False

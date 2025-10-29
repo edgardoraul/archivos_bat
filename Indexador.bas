@@ -50,7 +50,7 @@ Function buscarPalabraExacta(palabra As String, fila As Integer)
         If sh.Index < ThisWorkbook.Sheets.Count Then
             
             With sh.UsedRange
-                Set c = .Find(What:=palabra, LookIn:=xlValues, LookAt:=xlPart)
+                Set c = .Find(what:=palabra, LookIn:=xlValues, LookAt:=xlPart)
                 If Not c Is Nothing Then
                     firstAddress = c.Address
                     

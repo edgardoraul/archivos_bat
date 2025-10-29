@@ -452,6 +452,8 @@ Dim meli As Boolean
 
 carpeta = ActiveWorkbook.Path
 rutaFormula = "'" & carpeta & "\..\" & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
+'rutaFormula = carpeta & "\..\" & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
+
 
 ' Nueva hoja con nombre Depósito
 ultima = Sheets("Planilla").Cells(Rows.Count, 2).End(xlUp).Row - 1
