@@ -1,5 +1,21 @@
 Attribute VB_Name = "CTACTE"
 Option Explicit
+Public Const clave As String = "Rerda2024"
+
+Sub bucleRotular()
+    ' Va rotulando por bucle
+    Dim fila As Byte
+    fila = 2
+    Range("v2").Activate
+    Do
+        Cells(fila, 22).Activate
+        If Cells(fila, 22) <> "" Then
+            Call Rotulador
+        End If
+        fila = fila + 1
+    Loop Until fila = 35
+    'Range("v2").Activate
+End Sub
 Sub Rotulador()
     Sheets("Planilla").Select
 
@@ -17,11 +33,7 @@ Sub Rotulador()
 
     fecha = Format(Date, "yyyy-mm-dd")
     
-     ' Controlar quién es el vendedor
-    
-    'If Range("T2").Value = "" Then
-    'Cells(
-    'If Cells(2, Columns.Count).End(xlToLeft).Column).Value = "" Then
+    ' Controlar quién es el vendedor
     If Cells(2, Cells(1, Columns.Count).End(xlToLeft).Column).Value = "" Then
         MsgBox ("¿Y qué viajante, vendedor o sucursal sos vos?")
         Range("T2").Select
@@ -255,7 +267,7 @@ Function Rotulo_Correo_Argentino(apellidoNombre, rotulo, fecha)
     End If
     
     ' Generando el archivo pdf
-    rotulo.ExportAsFixedFormat Type:=xlTypePDF, fileName:= _
+    rotulo.ExportAsFixedFormat Type:=xlTypePDF, Filename:= _
         ruta & nombreCarpeta & UCase(nombre) & ".pdf", _
         OpenAfterPublish:=True
     Sheets("Planilla").Activate
@@ -264,7 +276,7 @@ End Function
 Function Validar_CP(cp)
 ' Valida si el código postal es correcto, existe o no.
 
-    codigoNis = Sheets("Sucursales").Range("F1576:F5000").Find(what:=cp, LookIn:=xlValues, SearchOrder:=xlByRows, LookAt:=xlWhole).Offset(0, -5)
+    codigoNis = Sheets("Sucursales").Range("F1576:F5000").Find(what:=cp, LookIn:=xlValues, searchorder:=xlByRows, LookAt:=xlWhole).Offset(0, -5)
     
     If codigoNis = "" Then
         ' Todo salió mal
@@ -285,9 +297,9 @@ Sub marcar()
     filas = Selection.Rows.Count - 1
     
     If Selection.Row > 1 And (Selection.Row + filas) < 35 Then
-        ActiveSheet.Unprotect "Rerda"
+        ActiveSheet.Unprotect Password:=clave
         Selection.Interior.color = RGB(rojo, verde, azul)
-        ActiveSheet.Protect "Rerda"
+        ActiveSheet.Protect Password:=clave
     ElseIf Selection.Row = 1 Or (Selection.Row + filas) > 34 Then
         ' NADA
         MsgBox "La 1° fila de títulos no se selecciona.", vbCritical, "¡Guarda!"
@@ -301,9 +313,9 @@ Sub desmarcar()
     If Selection.Row = 1 Then
         MsgBox "La 1° fila de títulos no se selecciona.", vbCritical, "¡Guarda!"
     Else
-        ActiveSheet.Unprotect "Rerda"
+        ActiveSheet.Unprotect Password:=clave
         Selection.Interior.ColorIndex = xlNone
-        ActiveSheet.Protect "Rerda"
+        ActiveSheet.Protect Password:=clave
     End If
 End Sub
 ' Sirve para controlar si corresponde o no una factura proforma
@@ -442,6 +454,7 @@ Workbooks.Open ruta
 
 ' Borra el contenido
 For i = 13 To 32
+    Cells(i, 3).Activate
     Cells(i, 3) = ""
     Cells(i, 10) = ""
 Next i
@@ -450,7 +463,7 @@ Next i
     
     ' Si hay más de 20, se genera un nuevo archivo.
     For i = 2 To 34
-        If planillaGeneradora.Worksheets("Planilla").Cells(i, 2) <> "" Then
+        If planillaGeneradora.Worksheets("Planilla").Cells(i, 2).Value <> "" And planillaGeneradora.Worksheets("Planilla").Cells(i, 22).Value <> "RETIRO EN LOCAL" Then
             ' Datos del nombre/apellido y demás
             Cells(comienzo + e, 3).Value = UCase(planillaGeneradora.Worksheets("Planilla").Cells(i, 2).Value) & " - DNI/CUIT: " & planillaGeneradora.Worksheets("Planilla").Cells(i, 12).Value & " - CP " & planillaGeneradora.Worksheets("Planilla").Cells(i, 19).Value & " - " & planillaGeneradora.Worksheets("Planilla").Cells(i, 21).Value
             
@@ -481,29 +494,15 @@ Sub deposito()
 Dim ruta As String
 Dim ultima As Byte
 Dim i As Byte
-Dim NombreDeArchivo As String
-Dim ExisteArchivo As String
 Dim nombre As String
-Dim nombreCarpeta As String
 
 ' Variables necesarias. Un nivel más arriba
-nombreCarpeta = ThisWorkbook.Path & "\..\"
 ultima = 34
-ruta = "'" & nombreCarpeta & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
-
-NombreDeArchivo = nombreCarpeta & "Stock.XLS"
-ExisteArchivo = Dir(NombreDeArchivo)
-
-' Comprueba si existe el archivo Stock.XLS
-If ExisteArchivo = "" Then
-    MsgBox "El archivo Stock.XLS debe estar en la misma carpeta que esta planilla"
-    Exit Sub
-End If
-
+ruta = "LINCE!$A$2:$G$10000"
 Sheets("Depósito").Activate
 
 ' Reemplaza la que hubiere
-
+Range("A2", "G34").ClearContents
 
 
 ' Creando las columnas
@@ -520,15 +519,18 @@ For i = 2 To ultima
     ' Cliente
     Cells(i, 1).Value = Sheets("Planilla").Cells(i, 2).Value
     
+    ' Código
+    Cells(i, 3).Value = Sheets("Planilla").Cells(i, 3).Value
+    
     ' Descripción. Sólo si hay código
     If Sheets("Planilla").Cells(i, 3).Value = "" Then
-        Cells(i, 2).ClearContents
+        
+        GoTo SALIENDO_SUB
     Else
-        Cells(i, 2).Value = "=VLOOKUP(C" & i & "," & ruta & ", 2, FALSE)"
+        Cells(i, 2).Value = "=VLOOKUP(C" & i & "," & ruta & ", 3, FALSE)"
     End If
     
-    ' Código
-    Cells(i, 3).Value = "'" & Sheets("Planilla").Cells(i, 3).Value
+   
     
     ' Color
     Cells(i, 4).Value = Sheets("Planilla").Cells(i, 6).Value
@@ -543,10 +545,11 @@ For i = 2 To ultima
     If Cells(i, 3) = "" Then
         Cells(i, 7).Value = ""
     Else
-        Cells(i, 7).Formula = "=VLOOKUP(C" & i & "," & ruta & ", 3, FALSE)"
+        Cells(i, 7).Formula = "=VLOOKUP(C" & i & "," & ruta & ", 4, FALSE)"
     End If
 Next i
 
+SALIENDO_SUB:
 ' Ordenando alfabéticamente esta columna de ubicación
 With Range("A1:G1")
     .AutoFilter
@@ -637,7 +640,7 @@ archivoCtaCte = Year(Date) & ". CTACTE.xlsx"
 
 ' Control si existe de antes
 If Dir(carpetaActual & "\..\" & archivoCtaCte, vbNormal) = "" Then
-    Workbooks.Add.SaveAs fileName:=(carpetaActual & "\..\" & archivoCtaCte)
+    Workbooks.Add.SaveAs Filename:=(carpetaActual & "\..\" & archivoCtaCte)
 Else
     ' Workbooks.Open (carpetaActual & "\..\" & archivoCtaCte)
     MsgBox "Ya está creada la planilla de las cuentas corrientes de antes." & vbNewLine & "Esperá al año que viene."
@@ -686,6 +689,7 @@ With ActiveSheet
 End With
 
 End Function
+
 
 Sub CTACTE()
 ' CARGA DATOS DE LA PLANILLA EN EL ARCHIVO DE LAS CUENTAS CORRIENTES
@@ -745,7 +749,7 @@ For i = 2 To 34
             End If
             
             ' Fecha
-            .Cells(ultimaFila, 2).Value = Workbooks(planillaVentas).Sheets("Planilla").Cells(i, 1).Value
+            .Cells(ultimaFila, 2).Value = Mid(Workbooks(planillaVentas).Name, InStrRev(Workbooks(planillaVentas).Name, ".") - 10, 10)
             
             ' DNI
             .Cells(ultimaFila, 3).Value = Workbooks(planillaVentas).Sheets("Planilla").Cells(i, 12).Value
@@ -761,12 +765,16 @@ For i = 2 To 34
             
             ' Importe total de la factura
             .Cells(ultimaFila, 7).Value = CCur(Workbooks(planillaVentas).Sheets("Planilla").Cells(i, 9).Value)
+            ' Formato Contabilidad Argentina
+            .Cells(ultimaFila, 7).NumberFormatLocal = """$"" * #.##0,00_ ;""$"" * -#.##0,00_ ;""$"" * ""-""??_ ;_ @"
             
             ' Cantidad de Cuotas
             .Cells(ultimaFila, 8).Value = Workbooks(planillaVentas).Sheets("Planilla").Cells(i, 14).Value
             
             ' Importe de la cuota
             .Cells(ultimaFila, 9).Value = CCur(Cells(ultimaFila, 7).Value / Cells(ultimaFila, 8).Value)
+            ' Formato Contabilidad Argentina
+            .Cells(ultimaFila, 9).NumberFormatLocal = """$"" * #.##0,00_ ;""$"" * -#.##0,00_ ;""$"" * ""-""??_ ;_ @"
             
             ' Teléfono
             .Cells(ultimaFila, 10).Value = Workbooks(planillaVentas).Sheets("Planilla").Cells(i, 18).Value
@@ -830,7 +838,7 @@ carpetaActual = planillaVentas.Path
 
 nombreArchivo = Len(planillaVentas.Name)
 ultimaFila = planillaVentas.Sheets("Depósito").Cells(Rows.Count, 2).End(xlUp).Row - 1
-server = "\\SER-DF\d\A Remitar TXT\"
+server = "\\SER-DF\D\A Remitar TXT\"
 carpetaDestino = planillaVentas.Sheets("Planilla").Cells(2, Columns.Count).End(xlToLeft).Value & "\"
 Debug.Print nombreArchivo; ultimaFila; carpetaDestino
 
@@ -848,15 +856,12 @@ limite = 30
 For fila = 2 To ultimaFila
     
     ' 1º) Stock
-    'planillaVentas.Sheets("Depósito").Cells(fila, 6).Value = "'" & txtTemporal.Sheets(1).Cells(fila - 1, 1).Value
     txtTemporal.Sheets(1).Cells(fila - 1, 1).Value = planillaVentas.Sheets("Depósito").Cells(fila, 6).Value
     
     ' 2º Codigo
-    'planillaVentas.Sheets("Depósito").Cells(fila, 3).Value = "'" & txtTemporal.Sheets(1).Cells(fila - 1, 2).Value
     txtTemporal.Sheets(1).Cells(fila - 1, 2).Value = "'" & planillaVentas.Sheets("Depósito").Cells(fila, 3).Value
     
     ' 3° Color
-    'planillaVentas.Sheets("Depósito").Cells(fila, 4).Value = "'" & Left(txtTemporal.Sheets(1).Cells(fila - 1, 3).Value, InStr(txtTemporal.Sheets(1).Cells(fila - 1, 3).Value, "."))
     largo = InStr(planillaVentas.Sheets("Depósito").Cells(fila, 4).Value, ".")
     If largo > 1 Then
         largo = largo - 1
@@ -864,7 +869,6 @@ For fila = 2 To ultimaFila
     txtTemporal.Sheets(1).Cells(fila - 1, 3).Value = "'" & Left(planillaVentas.Sheets("Depósito").Cells(fila, 4).Value, largo)
     
     ' 4° Talle
-    'planillaVentas.Sheets("Depósito").Cells(fila, 3).Value = "'" & txtTemporal.Sheets(1).Cells(fila - 1, 4).Value
     txtTemporal.Sheets(1).Cells(fila - 1, 4).Value = "'" & planillaVentas.Sheets("Depósito").Cells(fila, 5).Value
 Next fila
 
@@ -914,7 +918,7 @@ tope = i * limite
             & "!" & Cells(fila, 3).Value _
             & "!" & Cells(fila, 4).Value _
             & vbNewLine
-            Debug.Print "Archivo N°: " & i, "Fila N° :" & fila
+            Debug.Print "Archivo N°: " & i, " - Fila N°: " & fila
     Next fila
     
     ' Si es mayor a uno, se van nombrando incrementalmente
