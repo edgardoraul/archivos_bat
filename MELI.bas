@@ -22,6 +22,7 @@ End If
 ' Creando las hojas nuevas
 Cells.Select
 Cells.ClearFormats
+Cells.Font.Size = 11
 ActiveWorkbook.Sheets.Add(after:=ActiveWorkbook _
     .Worksheets(ActiveWorkbook.Worksheets.Count)).Name = "Planilla"
 Application.Worksheets(1).Select
@@ -119,24 +120,52 @@ Loop
 ' Bucle. Debe coincidir el largo del arreglo con el fin del bucle
 For i = 0 To largo
     Cells.Replace what:=cadenaOriginal(i), Replacement:="", LookAt:=xlPart, _
-        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        searchorder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
 Next
 
 ' ============================================================
 ' FORMATEANDO LA TABLA PARA DEJARLA BONITA
 
+' Mini título
+Range("H1").Value = "Cant"
+Dim Codigucho As Range
+Dim TextoOriginal As String
+
+
 ' Formateando las columnas
-Columns("A").ColumnWidth = 9.5
-Columns("B").ColumnWidth = 16.5
-Columns("C").ColumnWidth = 23.71
-Columns("D").ColumnWidth = 40.14
-Columns("E").ColumnWidth = 10.29
+Columns("A").ColumnWidth = 11
+Columns("A").Hidden = True
+Columns("B").ColumnWidth = 19
+Columns("C").ColumnWidth = 27
+Columns("D").ColumnWidth = 45
+Columns("E").ColumnWidth = 11
 Columns("F").ColumnWidth = 10.86
 Columns("G").ColumnWidth = 6
-Columns("H").ColumnWidth = 9.3
+Columns("H").ColumnWidth = 5
 Columns("I").ColumnWidth = 10.7
 Columns("J").ColumnWidth = 10.7
+Columns("J").Hidden = True
+
+' Cambiando de lugar las columnas
+' 1. Cortar Columna E y moverla después de la C (posición temporal)
+Columns("E").Cut
+Columns("D").Insert Shift:=xlToRight
+
+
+' Formateando el dato del código
+For i = 2 To ultima
+    Set Codigucho = Worksheets("Planilla").Cells(i, 4)
+    TextoOriginal = CStr(Codigucho.Value)
+    With Codigucho
+        .HorizontalAlignment = xlLeft
+        .NumberFormat = "@"
+        .Value = TextoOriginal
+        .Font.color = vbWhite
+        .Characters(Start:=1, Length:=7).Font.ColorIndex = xlAutomatic
+    End With
+Next i
+
 
 ' Formateando los encabezados
 Rows("1").RowHeight = 25.5
@@ -464,48 +493,63 @@ ActiveWorkbook.Sheets("Depósito").Activate
 With Sheets("Depósito")
     ' Limpia la hoja, por las dudas, de todo contenido y formato
     .Cells.Clear
+    .Cells.Select
+    .Cells.ClearFormats
+    .Cells.Font.Size = 11
     .Cells(1, 1).Value = "Nº Venta"
     .Cells(1, 2).Value = "Cliente"
-    .Cells(1, 3).Value = "Descripción"
-    .Cells(1, 4).Value = "Código"
+    .Cells(1, 3).Value = "Código"
+    .Cells(1, 4).Value = "Descripción"
     .Cells(1, 5).Value = "Color"
     .Cells(1, 6).Value = "Talle"
-    .Cells(1, 7).Value = "Cantidad"
+    .Cells(1, 7).Value = "Cant"
     .Cells(1, 8).Value = "Ubicación"
+End With
+
+' Ocultando columnas al pede
+With Worksheets("Depósito")
+    .Columns("A").Hidden = True
+    .Columns("B").Hidden = True
 End With
 
 ' Completando los datos
 For i = 2 To ultima
     ' Venta
-    If Sheets(1).Cells(i, 2).Value = "" Then
+    If Worksheets("Planilla").Cells(i, 2).Value = "" Then
         Cells(i, 1).Value = ""
     Else
-        Cells(i, 1).Value = "'" & Sheets(1).Cells(i, 2).Value
+        Cells(i, 1).Value = "'" & Worksheets("Planilla").Cells(i, 2).Value
     End If
     
     ' Cliente
-    Cells(i, 2).Value = Sheets(1).Cells(i, 3).Value
+    Cells(i, 2).Value = Worksheets("Planilla").Cells(i, 3).Value
     
     ' Descripción
-    Cells(i, 3).Value = "=VLOOKUP(LEFT(D" & i & ", 7)," & rutaFormula & ",2,FALSE)"
+    Cells(i, 4).Value = "=VLOOKUP(LEFT(C" & i & ", 7)," & rutaFormula & ",2,FALSE)"
+    
+    ' Reemplazando la descripción por las fórmulas en Planilla
+    Worksheets("Planilla").Cells(i, 5).Value = "=VLOOKUP(LEFT(D" & i & ", 7)," & rutaFormula & ",2,FALSE)"
     
     ' Código
-    Cells(i, 4).Value = "'" & Sheets(1).Cells(i, 5).Value
+    Cells(i, 3).Value = "'" & Worksheets("Planilla").Cells(i, 4).Value
+    Cells(i, 3).Font.color = vbWhite
+    Cells(i, 3).Characters(Start:=1, Length:=7).Font.ColorIndex = xlAutomatic
+    Cells(i, 3).HorizontalAlignment = xlLeft
     
     ' Color
-    Cells(i, 5).Value = Sheets(1).Cells(i, 6).Value
+    Cells(i, 5).Value = Worksheets("Planilla").Cells(i, 6).Value
     
     ' Talle
-    Cells(i, 6).Value = Sheets(1).Cells(i, 7).Value
+    Cells(i, 6).Value = Worksheets("Planilla").Cells(i, 7).Value
     
     ' Cantidad
-    Cells(i, 7).Value = Sheets(1).Cells(i, 8).Value
+    Cells(i, 7).Value = Worksheets("Planilla").Cells(i, 8).Value
        
     ' La ubicación. Si está en planta baja agregar esta aclaración
     If Sheets(1).Cells(i, 9).Value = "planta baja" Then
         Cells(i, 8).Value = "10. PLANTA BAJA"
     Else
-        Cells(i, 8).Formula = "=VLOOKUP(LEFT(D" & i & ", 7)," & rutaFormula & ",3,FALSE)"
+        Cells(i, 8).Formula = "=VLOOKUP(LEFT(C" & i & ", 7)," & rutaFormula & ",3,FALSE)"
     End If
     
 Next i
@@ -515,7 +559,7 @@ With Range("A1:H1")
     .AutoFilter
     .Rows("1").RowHeight = 27
     .Font.Bold = True
-    .Font.Size = 12
+    .Font.Size = 13.5
     .HorizontalAlignment = xlCenter
     .VerticalAlignment = xlCenter
 End With
@@ -527,6 +571,8 @@ End With
 
 With Range("A1").CurrentRegion
     .Columns.AutoFit
+    .Columns("A").Hidden = True
+    .Columns("B").Hidden = True
 End With
 
 ' Colocando totales de productos y dando formato
@@ -536,19 +582,16 @@ Cells(ultima + 1, 7).Value = "=SUM(G2:G" & ultima & ")"
 Range(Cells(ultima + 1, 6), Cells(ultima + 1, 7)).Select
 With Selection
     .Font.Bold = True
-    .Font.Size = 15
+    .Font.Size = 16
     .HorizontalAlignment = xlRight
     .VerticalAlignment = xlBottom
 End With
 
 
-' Colocando el total de rótulos a imprimir
-Cells(ultima + 1, 2).Value = "ROTULOS:"
-Cells(ultima + 1, 3).Value = "=COUNTA(A2:A" & ultima & ")"
 Range(Cells(ultima + 1, 2), Cells(ultima + 1, 3)).Select
 With Selection
     .Font.Bold = True
-    .Font.Size = 15
+    .Font.Size = 16
     .VerticalAlignment = xlBottom
     .HorizontalAlignment = xlRight
 End With
@@ -560,7 +603,7 @@ End With
 
 ' Formato de impresión
 With ActiveSheet.PageSetup
-    .Orientation = xlLandscape
+    .Orientation = xlPortrait
     .PaperSize = xlPaperA4
     .LeftMargin = Application.CentimetersToPoints(0.64)
     .RightMargin = Application.CentimetersToPoints(0.64)
@@ -665,7 +708,7 @@ Sub exportarTxt(carpeta As String, planillaActual As Workbook)
 ' GENERA UN ARCHIVO DE TEXTO PARA IMPORTAR AL D.F.
 ' Variable temporal
 
-Dim fila As Byte
+Dim Fila As Byte
 Dim codigo As String
 Dim Equivalencia As Workbook
 Dim camino As String
@@ -689,7 +732,7 @@ Dim resto As Byte
 Dim cantArchivos As Byte
 Dim ruta As Range
 
-Set ruta = Equivalencia.Sheets(1).Range("A1:G10000")
+Set ruta = Equivalencia.Worksheets(1).Range("A1:G10000")
 ultimaFila = planillaActual.Sheets("Planilla").Cells(Rows.Count, 2).End(xlUp).Row - 1
 nombreArchivo = planillaActual.Name
 server = "\\SER-DF\D\A Remitar TXT"
@@ -704,23 +747,23 @@ Call CrearHoja(planillaActual, txt)
 planillaActual.Sheets(txt).Cells.Clear
 
 ' Completa planilla para exportar
-For fila = 1 To ultimaFila - 1
+For Fila = 1 To ultimaFila - 1
     With planillaActual.Sheets(txt)
         ' 1º) Stock
-        .Cells(fila, 1).Value = "'" & planillaActual.Sheets("Depósito").Cells(fila + 1, 7).Value
+        .Cells(Fila, 1).Value = "'" & planillaActual.Worksheets("Depósito").Cells(Fila + 1, 7).Value
     
         ' 2º Codigo
-        codigo = "" & planillaActual.Sheets("Depósito").Cells(fila + 1, 4).Value & ""
-        .Cells(fila, 2).Value = Left(codigo, 7)
+        codigo = "" & planillaActual.Worksheets("Depósito").Cells(Fila + 1, 3).Value & ""
+        .Cells(Fila, 2).Value = Left(codigo, 7)
 
         ' 3° Color
         On Error Resume Next
-        .Cells(fila, 3) = "'" & Application.WorksheetFunction.VLookup(codigo, ruta, 4, False)
+        .Cells(Fila, 3) = "'" & Application.WorksheetFunction.VLookup(codigo, ruta, 4, False)
         
         ' 4° Talle
-        .Cells(fila, 4) = "'" & Application.WorksheetFunction.VLookup(codigo, ruta, 6, False)
+        .Cells(Fila, 4) = "'" & Application.WorksheetFunction.VLookup(codigo, ruta, 6, False)
     End With
-Next fila
+Next Fila
 
 ' Ajuste ultima Fila - HARDCODEO ESTO PARA PROBAR
 ultimaFila = ultimaFila - 1
@@ -735,16 +778,16 @@ Debug.Print "Archivos a importar: " & cantArchivos
 Equivalencia.Close False
 
 ' Generación del txt
-Call generarTxt(fila, ultimaFila, "", cantArchivos, planillaActual, carpetaDestino, limite, resto, server, txt)
+Call generarTxt(Fila, ultimaFila, "", cantArchivos, planillaActual, carpetaDestino, limite, resto, server, txt)
 planillaActual.Sheets("Depósito").Activate
 End Sub
 
-Function generarTxt(fila, ultimaFila, textoArchivo, cantArchivos, archivoFuente, carpetaDestino, limite, resto, server, hoja)
+Function generarTxt(Fila, ultimaFila, textoArchivo, cantArchivos, archivoFuente, carpetaDestino, limite, resto, server, hoja)
 Dim rutaArchivo As String
 Dim nombreArchivo As String
 Dim i As Byte
 Dim tope As Byte
-fila = 0
+Fila = 0
 
 
 ' Generación del txt
@@ -754,17 +797,17 @@ tope = i * limite
         tope = ultimaFila
     End If
     
-    For fila = (limite * (i - 1)) + 1 To tope
+    For Fila = (limite * (i - 1)) + 1 To tope
         archivoFuente.Sheets(hoja).Activate
-        Cells(fila, 1).Activate
+        Cells(Fila, 1).Activate
         textoArchivo = textoArchivo _
-            & Cells(fila, 1).Value _
-            & "+" & archivoFuente.Sheets(hoja).Cells(fila, 2).Value _
-            & "!" & archivoFuente.Sheets(hoja).Cells(fila, 3).Value _
-            & "!" & archivoFuente.Sheets(hoja).Cells(fila, 4).Value _
+            & Cells(Fila, 1).Value _
+            & "+" & archivoFuente.Sheets(hoja).Cells(Fila, 2).Value _
+            & "!" & archivoFuente.Sheets(hoja).Cells(Fila, 3).Value _
+            & "!" & archivoFuente.Sheets(hoja).Cells(Fila, 4).Value _
             & vbNewLine
-            Debug.Print "Archivo N°: " & i, "Fila N° :" & fila
-    Next fila
+            Debug.Print "Archivo N°: " & i, "Fila N° :" & Fila
+    Next Fila
     
     ' Si es mayor a uno, se van nombrando incrementalmente
     If cantArchivos > 1 Then

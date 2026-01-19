@@ -2,29 +2,40 @@ Attribute VB_Name = "WebReformada"
 Option Explicit
 Public ruta As String
 
-Sub CorreoArgentino(packar As Workbook, VentaWeb As Workbook)
-' GENERADOR DE HOJA DEL CORREO ARGENTINO
+Function PintarFila(Hojilla As String, Fila As Integer, DesdeColumna As Integer, HastaColumna As Integer)
+    ' Pinta filas impares
+    If Fila Mod 2 <> 0 Then
+        Worksheets(Hojilla).Range(Cells(Fila, DesdeColumna), Cells(Fila, HastaColumna)).Interior.color = RGB(220, 220, 220)
+    End If
+End Function
 
-' Variables necesarias
+'Sub CorreoArgentino(packar As Workbook, VentaWeb As Workbook)
+Sub CorreoArgentino()
+
+' GENERADOR DE HOJA DEL CORREO ARGENTINO
+Dim VentaWeb As Workbook
+Dim packar As Workbook
 Dim nombreArchivoCorreo As String
 Dim ruta As String
 Dim nombreCarpeta As String
 Dim i As Byte
 Dim e As Byte
 Dim comienzo As Byte
+Dim ultima As Integer
+
+Set VentaWeb = ActiveWorkbook
+ultima = VentaWeb.Worksheets("ventas").Cells(Rows.Count, 2).End(xlUp).Row - 1
+Debug.Print ultima
 
 e = 0
 comienzo = 13
 
+
+ruta = VentaWeb.Path
+
+Workbooks.Open ruta & "\..\CorreoArgentino.xlsm"
+Set packar = ActiveWorkbook
 nombreArchivoCorreo = packar.Name
-
-
-'ruta = planillaGeneradora.Path & "\..\" & nombreArchivoCorreo
-ruta = packar.Path & "\" & nombreArchivoCorreo
-
-
-' Abrir el archivo
-'Workbooks.Open ruta
 
 ' Borra el contenido
 For i = 13 To 32
@@ -38,7 +49,7 @@ Next i
 ' Copia contenido: Denominación - DNI/CUIT: - CP: - Provincia - Vendedor/Viajante
     
     ' Si hay más de 20, se genera un nuevo archivo.
-    For i = 2 To 34
+    For i = 2 To ultima
         If VentaWeb.Worksheets("ventas").Cells(i, 1).Value <> "" And VentaWeb.Worksheets("ventas").Cells(i, 13).Value <> "RETIRO EN LOCAL" Then
             ' Datos del nombre/apellido y demás
             packar.Worksheets("Correo Argentino").Cells(comienzo + e, 3).Value = UCase(VentaWeb.Worksheets("ventas").Cells(i, 2).Value) & " - DNI/CUIT: " & VentaWeb.Worksheets("ventas").Cells(i, 7).Value & " - CP " & VentaWeb.Worksheets("ventas").Cells(i, 11).Value & " - " & VentaWeb.Worksheets("ventas").Cells(i, 12).Value
@@ -48,6 +59,7 @@ Next i
         
             ' Incrementamos en 1 el contador "e"
             e = e + 1
+            Debug.Print e
         End If
         
         
@@ -64,10 +76,13 @@ Next i
 End Sub
 
 
-Function generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
+Function generarRoutuloRetiro(ruta As String, nombre As String, telefono As String, dni As String, fecha As String, Venta As String)
+    Dim numVenta As Worksheet
+    Set numVenta = Worksheets(Venta)
+    
     ' GENERA PESTAÑAS CON ROTULOS PARA RETIRO EN LOCAL
     ' Enmarcando
-    ActiveSheet.Range("A1:H21").Select
+    numVenta.Range("A1:H21").Select
     With Selection
         .Borders(xlEdgeLeft).LineStyle = xlContinuous
         .Borders(xlEdgeRight).LineStyle = xlContinuous
@@ -76,7 +91,7 @@ Function generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
     End With
     
     ' Formato de impresión
-    With ActiveSheet.PageSetup
+    With numVenta.PageSetup
         .Orientation = xlPortrait
         .PaperSize = xlPaperA4
         .LeftMargin = Application.CentimetersToPoints(0.64)
@@ -87,7 +102,7 @@ Function generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
         .FooterMargin = Application.CentimetersToPoints(0.76)
         .CenterHorizontally = True
         .CenterVertically = False
-        .PrintArea = ActiveSheet.Range("A1:H21")
+        .PrintArea = "$A$1:$H$21"
         .Zoom = False
         .FitToPagesTall = 1
         .FitToPagesWide = 1
@@ -95,10 +110,11 @@ Function generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
     
    
     ' Dando un alto a la fila
-    ActiveSheet.Range("A2:A2").RowHeight = 30
+    numVenta.Range("A2:A2").RowHeight = 30
     
      ' Insertando la imagen
-    ActiveSheet.Pictures.Insert(ruta & "..\logo.png").Select
+    'On Error Resume Next
+    numVenta.Pictures.Insert(ruta & "..\logo.png").Select
     
     ' Centrando el logo
     With Selection
@@ -108,17 +124,17 @@ Function generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
     
    
     ' Leyenda de retiro
-    Range("A4:H6").Select
+    numVenta.Range("A4:H6").Select
     With Selection
         .Merge
         .Font.Size = 30
         .Font.Bold = True
         .HorizontalAlignment = xlCenter
     End With
-    Range("A4").Value = "RETIRA EN ENTREPISO"
+    numVenta.Range("A4").Value = "RETIRA EN ENTREPISO"
     
     ' Nombre del cliente, en mayúsculas
-    Range("A9:H10").Select
+    numVenta.Range("A9:H10").Select
     With Selection
         .Merge
         .Font.Size = 25
@@ -126,67 +142,75 @@ Function generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
         .HorizontalAlignment = xlCenter
         .Interior.color = RGB(220, 220, 220)
     End With
-    Range("A9").Value = UCase(nombre)
+    numVenta.Range("A9").Value = UCase(nombre)
     
     ' dni/cuit del cliente
-    Range("a12").Value = "DNI/CUIT:"
-    Range("a12").HorizontalAlignment = xlRight
-    Range("a12:b12").Font.Bold = True
-    Range("a12:b12").Font.Size = 13
-    Range("b12").Value = "'" & dni
+    With numVenta
+        .Range("A12").Value = "DNI/CUIT:"
+        .Range("A12").HorizontalAlignment = xlRight
+        .Range("A12:B12").Font.Bold = True
+        .Range("A12:B12").Font.Size = 13
+        .Range("B12").Value = "'" & dni
+    End With
+    
+    
     
     ' Teléfono del cliente
-    Range("a14:d14").Select
+    numVenta.Range("a14:d14").Select
     With Selection
         .Font.Bold = True
     End With
-    Range("a14").Value = "TELEFONO:"
-    Range("a14").HorizontalAlignment = xlRight
-    Range("b14").HorizontalAlignment = xlLeft
-    Range("b14").Value = telefono
+    
+    With numVenta
+        .Range("a14").Value = "TELEFONO:"
+        .Range("a14").HorizontalAlignment = xlRight
+        .Range("b14").HorizontalAlignment = xlLeft
+        .Range("b14").Value = telefono
+    End With
+    
     
     ' FIRMA
-    Range("A20").Select
+    numVenta.Range("A20").Select
     With Selection
         .Value = "FIRMA:"
         .HorizontalAlignment = xlRight
         .Font.Bold = True
     End With
-    Range("b20:d20").Borders(xlEdgeBottom).LineStyle = xlContinuous
+    numVenta.Range("b20:d20").Borders(xlEdgeBottom).LineStyle = xlContinuous
     
     ' FECHA
-    Range("f20").Select
+    numVenta.Range("f20").Select
     With Selection
         .Value = "FECHA RETIRO:"
         .HorizontalAlignment = xlRight
         .Font.Bold = True
     End With
-    Range("g20:h20").Borders(xlEdgeBottom).LineStyle = xlContinuous
+    numVenta.Range("g20:h20").Borders(xlEdgeBottom).LineStyle = xlContinuous
     
     ' FECHA ELABORACIÓN
-    With Range("F12")
+    With numVenta.Range("F12")
         .Value = "FECHA DE ELABORACIÓN:"
         .HorizontalAlignment = xlRight
     End With
     
-    With Range("G12")
+    With numVenta.Range("G12")
         .Value = "'" & fecha
         .HorizontalAlignment = xlLeft
     End With
     
-    Range("F12:H12").Font.Bold = True
+    numVenta.Range("F12:H12").Font.Bold = True
     
     ' NUMERO DE VENTA
-    Range("f14").Select
+    numVenta.Range("f14").Select
     With Selection
         .Value = "N° DE VENTA WEB:"
         .Font.Bold = True
         .HorizontalAlignment = xlRight
     End With
     
-    Range("g14").Select
+    numVenta.Range("g14").Select
     With Selection
-        .Value = numVenta
+        .Value = Venta
         .HorizontalAlignment = xlLeft
         .Font.Bold = True
         .Font.Size = 15
@@ -209,11 +233,13 @@ Range("E:E").HorizontalAlignment = xlCenter
 Cells(ultima + 1, 5).HorizontalAlignment = xlRight
 
 ' Acomoda el texto de las celdas con datos
-Range("B:B").ColumnWidth = 40
-Range("C:C").ColumnWidth = 50
-Range("A:A").ColumnWidth = 7
-Range("E:E").ColumnWidth = 12
+Columns("B").ColumnWidth = 40
+Columns("D").ColumnWidth = 50
+Columns("E").ColumnWidth = 14
 'Range(Cells(2, 1), Cells(ultima, 11)).WrapText = True
+
+' Ocultando columnas
+Columns("G:H").Hidden = True
 
 ' Ajusta automáticamente la altura de las filas
 Range(Cells(2, 1), Cells(ultima, 11)).Rows.AutoFit
@@ -287,29 +313,29 @@ Range(Cells(ultima, 1), Cells(ultima, 13)).Select
     End With
 
 ' Colocando totales de productos y dando formato
-Cells(ultima + 1, 5).Value = "TOTALES:"
+Cells(ultima + 1, 3).Value = "TOTALES:"
 Cells(ultima + 1, 6).Select
 Cells(ultima + 1, 6).Value = "=SUM(F2:F" & ultima & ")"
-Range(Cells(ultima + 1, 5), Cells(ultima + 1, 6)).Select
+Range(Cells(ultima + 1, 3), Cells(ultima + 1, 6)).Select
     With Selection
         .Font.Bold = True
         .Font.Size = 15
         .HorizontalAlignment = xlRight
         .VerticalAlignment = xlBottom
     End With
-Cells(ultima + 1, 6).Borders.LineStyle = xlContinuous
+
 
 ' Colocando el total de rótulos a imprimir
-Cells(ultima + 1, 2).Value = "ROTULOS:"
-Cells(ultima + 1, 3).Value = "=COUNTA(A2:A" & ultima & ")"
-Range(Cells(ultima + 1, 2), Cells(ultima + 1, 3)).Select
+Cells(ultima + 1, 2).Value = "ROTULOS"
+Cells(ultima + 1, 1).Value = "=COUNTA(A2:A" & ultima & ")"
+Range(Cells(ultima + 1, 1), Cells(ultima + 1, 2)).Select
 With Selection
     .Font.Bold = True
     .Font.Size = 15
     .VerticalAlignment = xlBottom
     .HorizontalAlignment = xlRight
 End With
-Cells(ultima + 1, 3).HorizontalAlignment = xlLeft
+Cells(ultima + 1, 2).HorizontalAlignment = xlLeft
 
 ' Colocando un borde superior
 For i = 3 To ultima
@@ -323,6 +349,7 @@ Next i
 
 ' Autofit para la última columna
 Range("J:M").EntireColumn.AutoFit
+Range("A:E").EntireColumn.AutoFit
 
 ' Ajustar el contenido
 With Range("C:E").EntireColumn
@@ -330,6 +357,9 @@ With Range("C:E").EntireColumn
     .ShrinkToFit = True
 End With
 
+' Moviendo la columna del código
+Columns("D").Cut
+Columns("C").Insert Shift:=xlToRight
 
 End Function
 
@@ -397,10 +427,9 @@ Loop
 nombreArchivo = "Ventas Web " & parteNumero & ". " & fecha & ".xlsx"
 nombre = ruta & nombreArchivo
 
-Sheets("ventas").Range("A1").Select
-'ActiveWorkbook.SaveAs fileName:=nombre, FileFormat:=xlOpenXMLStrictWorkbook, ConflictResolution:=xlUserResolution, AddToMru:=True, Local:=True
+Worksheets("ventas").Range("A1").Select
 ActiveWorkbook.SaveAs Filename:=nombre, FileFormat:=xlOpenXMLWorkbook
-Sheets(1).Name = "ventas"
+Worksheets(1).Name = "ventas"
 ActiveWorkbook.Save
 Application.ThisWorkbook.Save
 
@@ -408,7 +437,7 @@ End Function
 
 
 ' Sirve para controlar si corresponde o no una factura proforma
-Function proforma(apellidoNombre, direccion, provincia, codigoPostal, ciudad, telefono, fecha, RotulosCorreo, VentaWeb, ultimaFila)
+Function proforma(apellidoNombre, direccion, provincia, codigoPostal, ciudad, telefono, fecha, RotulosCorreo, VentaWeb, ultimaFila, ruta)
     Dim acumulador As Byte
     Dim cantidad As Byte
     Dim precio As Double
@@ -494,7 +523,7 @@ Function proforma(apellidoNombre, direccion, provincia, codigoPostal, ciudad, te
         Loop While VentaWeb.Worksheets("ventas").Cells(acumulador + 2, 1).Value = "" And VentaWeb.Worksheets("ventas").Cells(acumulador + 2, 2).Value <> "ROTULOS"
                 
         ' Imprimiendo el rótulo
-        Call Rotulo_Correo_Argentino("Factura Proforma - " & apellidoNombre, RotulosCorreo.Worksheets("Proforma"), fecha)
+        Call Rotulo_Correo_Argentino("Factura Proforma - " & apellidoNombre, RotulosCorreo.Worksheets("Proforma"), fecha, ruta)
     End If
 End Function
 
@@ -502,7 +531,7 @@ End Function
 
 Sub bucleRotular()
     ' Va rotulando por bucle
-    Dim fila As Integer
+    Dim Fila As Integer
     Dim ultimaFila As Integer
     Dim RotulosCorreo As Workbook
     Dim VentaWeb As Workbook
@@ -518,19 +547,19 @@ Sub bucleRotular()
     Debug.Print RotulosCorreo.Name
     
     ultimaFila = VentaWeb.Worksheets("ventas").Cells(Rows.Count, 2).End(xlUp).Row - 1
-    fila = 2
+    Fila = 2
     VentaWeb.Worksheets("ventas").Activate
     VentaWeb.Worksheets("ventas").Range("M2").Activate
     
-    For fila = 2 To ultimaFila
-        If VentaWeb.Worksheets("ventas").Cells(fila, 13) <> "" Then
-            Call Rotulador(VentaWeb, RotulosCorreo, fila, ultimaFila)
+    For Fila = 2 To ultimaFila
+        If VentaWeb.Worksheets("ventas").Cells(Fila, 13) <> "" Then
+            Call Rotulador(VentaWeb, RotulosCorreo, Fila, ultimaFila, ruta)
         End If
-    Next fila
+    Next Fila
     
     
 End Sub
-Function Rotulador(VentaWeb As Workbook, RotulosCorreo As Workbook, fila As Integer, ultimaFila As Integer)
+Function Rotulador(VentaWeb As Workbook, RotulosCorreo As Workbook, Fila As Integer, ultimaFila As Integer, ruta As String)
     
     ' Declaración de Variables y su tipo de dato
     Dim Rotulos As Workbook
@@ -551,23 +580,23 @@ Function Rotulador(VentaWeb As Workbook, RotulosCorreo As Workbook, fila As Inte
     
     
     With VentaWeb.Worksheets("ventas")
-        apellidoNombre = .Cells(fila, 2).Value
-        dniCuit = .Cells(fila, 7).Value
-        direccion = .Cells(fila, 14).Value & " " & .Cells(fila, 15).Value
-        codigoPostal = .Cells(fila, 11).Value
-        ciudad = .Cells(fila, 10).Value
-        provincia = .Cells(fila, 12).Value
-        telefono = .Cells(fila, 8).Value
+        apellidoNombre = .Cells(Fila, 2).Value
+        dniCuit = .Cells(Fila, 7).Value
+        direccion = .Cells(Fila, 14).Value & " " & .Cells(Fila, 15).Value
+        codigoPostal = .Cells(Fila, 11).Value
+        ciudad = .Cells(Fila, 10).Value
+        provincia = .Cells(Fila, 12).Value
+        telefono = .Cells(Fila, 8).Value
     End With
     
    
     ' SI ES A DOMICILIO -----------
-    If VentaWeb.Worksheets("ventas").Cells(fila, 13).Value = "Correo Argentino Clasico - Envio a domicilio" Then
+    If VentaWeb.Worksheets("ventas").Cells(Fila, 13).Value = "Correo Argentino Clasico - Envio a domicilio" Then
         
         ' Colocar los datos
         With RotulosCorreo.Worksheets("A Domicilio")
             ' Colocando el número de Venta
-            .Range("D7").Value = "Web Nº #" & VentaWeb.Worksheets("ventas").Cells(fila, 1).Value
+            .Range("D7").Value = "Web Nº #" & VentaWeb.Worksheets("ventas").Cells(Fila, 1).Value
             .Range("C16").Value = UCase(apellidoNombre)
             .Range("P15").Value = dniCuit
             .Range("C18").Value = direccion
@@ -578,20 +607,20 @@ Function Rotulador(VentaWeb As Workbook, RotulosCorreo As Workbook, fila As Inte
         End With
         
         ' Generar Proforma
-        Call proforma(apellidoNombre, direccion, provincia, codigoPostal, ciudad, telefono, fecha, RotulosCorreo, VentaWeb, ultimaFila)
+        Call proforma(apellidoNombre, direccion, provincia, codigoPostal, ciudad, telefono, fecha, RotulosCorreo, VentaWeb, ultimaFila, ruta)
         
         ' Generar rotulo
-        Call Rotulo_Correo_Argentino(apellidoNombre, RotulosCorreo.Worksheets("A Domicilio"), fecha)
+        Call Rotulo_Correo_Argentino(apellidoNombre, RotulosCorreo.Worksheets("A Domicilio"), fecha, ruta)
         
 
     ' SI ES A RETIRAR EN SUCURSAL ----------------
-    ElseIf VentaWeb.Worksheets("ventas").Cells(fila, 13).Value = "Punto de retiro" Then
+    ElseIf VentaWeb.Worksheets("ventas").Cells(Fila, 13).Value = "Punto de retiro" Then
         
         ' Colocar los datos
         With RotulosCorreo.Worksheets("A Sucursal")
             .Range("C16").Value = UCase(apellidoNombre)
             .Range("R16").Value = dniCuit
-            .Range("E7").Value = "Web Nº #" & VentaWeb.Worksheets("ventas").Cells(fila, 1).Value
+            .Range("E7").Value = "Web Nº #" & VentaWeb.Worksheets("ventas").Cells(Fila, 1).Value
         End With
         
         ' Validando si existe o no el dato.
@@ -604,6 +633,9 @@ Function Rotulador(VentaWeb As Workbook, RotulosCorreo As Workbook, fila As Inte
             MsgBox ("El código postal " & codigoPostal & " no corresponde con ninguna sucursal del Correo. Intentá con otro. ")
             RotulosCorreo.Worksheets("Sucursales").Select
             MsgBox ("Buscá aquí un código postal de sucursal disponible")
+            
+            ' Marcar advertencia
+            VentaWeb.Worksheets("ventas").Cells(Fila, 9).Value = "Buscar CP"
             Exit Function
         End If
         
@@ -614,10 +646,10 @@ Function Rotulador(VentaWeb As Workbook, RotulosCorreo As Workbook, fila As Inte
         End With
         
         ' Generar Proforma
-        Call proforma(apellidoNombre, "Retiro en Sucursal del Correo Argentino Cód. NIS " & codigoNis, provincia, codigoPostal, ciudad, telefono, fecha, RotulosCorreo, VentaWeb, ultimaFila)
+        Call proforma(apellidoNombre, "Retiro en Sucursal del Correo Argentino Cód. NIS " & codigoNis, provincia, codigoPostal, ciudad, telefono, fecha, RotulosCorreo, VentaWeb, ultimaFila, ruta)
         
         ' Generar rotulo
-        Call Rotulo_Correo_Argentino(apellidoNombre, RotulosCorreo.Worksheets("A Sucursal"), fecha)
+        Call Rotulo_Correo_Argentino(apellidoNombre, RotulosCorreo.Worksheets("A Sucursal"), fecha, ruta)
     
     Else
         ' Rascarse las bolas
@@ -628,23 +660,19 @@ Function Rotulador(VentaWeb As Workbook, RotulosCorreo As Workbook, fila As Inte
 End Function
 
 
-Function Rotulo_Correo_Argentino(apellidoNombre, rotulo, fecha)
+Function Rotulo_Correo_Argentino(apellidoNombre, rotulo, fecha, ruta)
 '
 ' Rotulos Macro
 ' Guarda los rótulos en pdf
 '
 ' Acceso directo: CTRL+MAY+Ñ
-'   Guarda antes de crear el archivo
-    ThisWorkbook.Save
     
     ' Declaración de Variables y su tipo de datos
     Dim nombre As String
-    Dim ruta As String
     Dim nombreCarpeta As String
 
     ' Variables necesarias
     nombre = fecha & ". " & apellidoNombre
-    ruta = ThisWorkbook.Path
     nombreCarpeta = "\Rotulos\"
     
     ' Comprobando si existe o no la carpeta
@@ -658,7 +686,7 @@ Function Rotulo_Correo_Argentino(apellidoNombre, rotulo, fecha)
     rotulo.ExportAsFixedFormat Type:=xlTypePDF, Filename:= _
         ruta & nombreCarpeta & UCase(nombre) & ".pdf", _
         OpenAfterPublish:=True
-    '.Worksheets("ventas").Activate
+
 End Function
 
 Function Validar_CP(cp)
@@ -700,6 +728,8 @@ Dim nombreArchivo As String
 Dim VentaWeb As Workbook
 Dim RotulosCorreo As Workbook
 
+
+
 ' Sirve para averiguar el nombre de la computadora actual
 Dim ws As Object
 Set ws = CreateObject("WScript.network")
@@ -720,6 +750,7 @@ fecha = Day(Date) & "-" & Month(Date) & "-" & Year(Date)
 
 ' Guardando el archivo con nombre específico
 ActiveSheet.Name = "ventas"
+Cells.Font.Size = 11
 Call GuardarArchivo(fecha, ruta, nombreArchivo)
 Range("A1").Activate
 ultima = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).Row
@@ -739,7 +770,7 @@ Range("B:K, P:T, X:X, Z:AE, AG:AG, AI:AN").EntireColumn.Delete
 Range("C:E").EntireColumn.Insert
 Range("H:H").EntireColumn.Copy
 Range("C:C").PasteSpecial
-Range("A1").Value = "Núm. Venta"
+Range("A1").Value = "Venta"
 Range("F:F").Select
 Selection.NumberFormat = "General"
 Range("G:G").Select
@@ -785,7 +816,6 @@ Range("L:L").EntireColumn.Delete
 
 ' Purgando los teléfonos
 For i = 2 To ultima
-    ' Columna de los teléfonos
     Cells(i, 8).Value = Right(Cells(i, 8).Value, 10)
 Next i
 
@@ -794,13 +824,13 @@ Range("I:I").EntireColumn.Insert
 Range("I1:I1").Value = "Detalles"
 
 ' Dando formato
-For i = 2 To ultima
+'For i = 2 To ultima
     ' Columna de las ubicaciones de productos
-    With Cells(i, 9)
-        .WrapText = False
-        .ShrinkToFit = True
-    End With
-Next i
+    'With Cells(i, 9)
+        '.WrapText = False
+        '.ShrinkToFit = True
+    'End With
+'Next i
 
 ' Limpiando el contenido de "(sin color)" y "(sin talle)"
 ' Con comas y doble paréntesis
@@ -841,7 +871,7 @@ Range("D1").Value = "Código"
 Range("E1").Value = "Variante"
 
 
-'Borra cosas innecesarias
+' Borra cosas innecesarias
 Do While ActiveCell.Value <> ""
     If ActiveCell.Offset(0, 1) = "" Then
         ActiveCell.Value = ""
@@ -853,10 +883,20 @@ Loop
 ' DANDO FORMATO A TODA LA PLANILLA
 Call formato(ultima, i)
 
+' Agrandando columna de los códigos
+Columns("C").ColumnWidth = 8
+Range(Cells(2, 3), Cells(ultima - 1, 3)).WrapText = False
+
+' Coloreando filas impares
+For i = 3 To ultima - 1
+    Call PintarFila("ventas", i, 1, 9)
+Next i
+
 
 ' GENERANDO LOS ROTULOS DE RETIRO
+Dim HojaRetiroLocal As String
 For i = 2 To ultima
-    If Worksheets(1).Cells(i, 13).Value = "Retiras en Rerda Mendoza" Or Worksheets(1).Cells(i, 13).Value = "Rerda S.A. - Sastrería Militar" Or Worksheets(1).Cells(i, 13).Value = "Local Rerda" Then
+    If Worksheets("ventas").Cells(i, 13).Value = "Retiras en Rerda Mendoza" Or Worksheets(1).Cells(i, 13).Value = "Rerda S.A. - Sastrería Militar" Or Worksheets(1).Cells(i, 13).Value = "Local Rerda" Then
         
         ' Se coloca la leyenda en la celda
         Debug.Print Cells(i, 9).Value
@@ -872,19 +912,20 @@ For i = 2 To ultima
         Rotulos = Rotulos + 1
         
         ' Se agrega una pestaña para el respectivo rótulo
-        ActiveWorkbook.Sheets.Add(after:=ActiveWorkbook.Worksheets(1)).Name = "Venta N° " & Cells(i, 1).Value
+        HojaRetiroLocal = "Venta Nº " & numVenta
+        ActiveWorkbook.Worksheets.Add(after:=ActiveWorkbook.Worksheets("ventas")).Name = HojaRetiroLocal
         
         ' Se genera el rótulo respectivo
-        Call generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
+        Call generarRoutuloRetiro(ruta, nombre, telefono, dni, fecha, HojaRetiroLocal)
         
     End If
-    Worksheets(1).Activate
+    Worksheets("ventas").Activate
 Next i
 
 'Posicionando al principio
-Sheets.Add(after:=Worksheets(1)).Name = "Depósito"
-Sheets.Add(after:=Sheets("Depósito")).Name = "Exportar TXT"
-Worksheets(1).Activate
+Worksheets.Add(after:=Worksheets("ventas")).Name = "Depósito"
+Worksheets.Add(after:=Sheets("Depósito")).Name = "Exportar TXT"
+Worksheets("ventas").Activate
 Range("A1").Activate
 
 ' Definiendo este archivo
@@ -914,9 +955,7 @@ ruta = ruta & "..\"
 'Call bucleRotular
 
 ' Generando una planilla de informe para el Correo Argentino
-Workbooks.Open ruta & "CorreoArgentino.xlsm"
-Set packar = ActiveWorkbook
-Call CorreoArgentino(packar, VentaWeb)
+
 
 ' Posicionando al principio
 planilla.Worksheets("ventas").Activate
@@ -929,7 +968,7 @@ Sub deposito()
 Dim ruta As String
 Dim nombreArchivo As String
 Dim ultima As Byte
-Dim i As Byte
+Dim i As Integer
 Dim enrutacion As String
 Dim web As Boolean
 enrutacion = ActiveWorkbook.Path & "\..\"
@@ -958,25 +997,29 @@ Cells(1, 7).Value = "Ubicación"
 ' Completando los datos
 For i = 2 To ultima
     ' Venta
-    Cells(i, 1).Value = Sheets(1).Cells(i, 1).Value
+    Worksheets("Depósito").Cells(i, 1).Value = Worksheets("ventas").Cells(i, 1).Value
     
     ' Cliente
-    Cells(i, 2).Value = Sheets(1).Cells(i, 2).Value
+    Worksheets("Depósito").Cells(i, 2).Value = Worksheets("ventas").Cells(i, 2).Value
     
     ' Descripción
-    Cells(i, 3).Value = "=VLOOKUP(D" & i & "," & ruta & ",2,FALSE)"
+    Worksheets("Depósito").Cells(i, 3).Value = "=VLOOKUP(D" & i & "," & ruta & ",2,FALSE)"
+    
+    ' Reemplazo de la descripción en pestaña "ventas"
+    Worksheets("ventas").Cells(i, 3).Value = "'" & Worksheets("ventas").Cells(i, 3).Value
+    Worksheets("ventas").Cells(i, 4).Value = "=VLOOKUP(C" & i & "," & ruta & ",2,FALSE)"
     
     ' Código
-    Cells(i, 4).Value = "'" & Sheets(1).Cells(i, 4).Value
+    Worksheets("Depósito").Cells(i, 4).Value = "'" & Worksheets("ventas").Cells(i, 3).Value
     
     ' Variante
-    Cells(i, 5).Value = Sheets(1).Cells(i, 5).Value
+    Worksheets("Depósito").Cells(i, 5).Value = Worksheets("ventas").Cells(i, 5).Value
     
     ' Cantidad
-    Cells(i, 6).Value = Sheets(1).Cells(i, 6).Value
+    Worksheets("Depósito").Cells(i, 6).Value = Worksheets("ventas").Cells(i, 6).Value
         
-    ' La ubiación
-    Cells(i, 7).Formula = "=VLOOKUP(D" & i & "," & ruta & ",3,FALSE)"
+    ' La ubiCación
+    Worksheets("Depósito").Cells(i, 7).Formula = "=VLOOKUP(D" & i & "," & ruta & ",3,FALSE)"
 Next i
 
 ' Ordenando alfabéticamente esta columna de ubicación
@@ -998,6 +1041,13 @@ With Range("A1").CurrentRegion
     .Columns.AutoFit
 End With
 
+' Moviendo la columna del código
+Columns("D").Cut
+Columns("C").Insert Shift:=xlToRight
+
+' Ocultando columnas
+Columns("A:B").Hidden = True
+
 ' Colocando totales de productos y dando formato
 Cells(ultima + 1, 5).Value = "TOTALES:"
 Cells(ultima + 1, 6).Select
@@ -1010,26 +1060,19 @@ With Selection
     .VerticalAlignment = xlBottom
 End With
 
-
-' Colocando el total de rótulos a imprimir
-Cells(ultima + 1, 2).Value = "ROTULOS:"
-Cells(ultima + 1, 3).Value = "=COUNTA(A2:A" & ultima & ")"
-Range(Cells(ultima + 1, 2), Cells(ultima + 1, 3)).Select
-With Selection
-    .Font.Bold = True
-    .Font.Size = 15
-    .VerticalAlignment = xlBottom
-    .HorizontalAlignment = xlRight
-End With
-Cells(ultima + 1, 3).HorizontalAlignment = xlLeft
-
+' Colocando bordes
 With Range("A1").CurrentRegion
     .Borders.LineStyle = xlContinuous
 End With
 
+' Coloreando filas impares
+For i = 3 To ultima
+    Call PintarFila("Depósito", i, 3, 7)
+Next i
+
 ' Formato de impresión
 With ActiveSheet.PageSetup
-    .Orientation = xlLandscape
+    .Orientation = xlPortrait
     .PaperSize = xlPaperA4
     .LeftMargin = Application.CentimetersToPoints(0.64)
     .RightMargin = Application.CentimetersToPoints(0.64)
@@ -1048,7 +1091,7 @@ With ActiveSheet.PageSetup
     '.CenterHeader = vbNewLine & vbNewLine & "&B&20&F" & vbNewLine & "SOLO PARA USO EN DEPOSITO"
 End With
 Call exportarTxt
-Worksheets(1).Activate
+Worksheets("ventas").Activate
 Range("A1").Activate
 
 End Sub
@@ -1073,7 +1116,7 @@ Sub exportarTxt()
 
 ' GENERA UN ARCHIVO DE TEXTO PARA IMPORTAR AL D.F.
 
-Dim fila As Long, columna As Long
+Dim Fila As Long, columna As Long
 Dim textoArchivo As String
 Dim server As String
 
@@ -1090,14 +1133,14 @@ Dim RangoVariante As Range
 
 
 Dim matrixCodColor As Object
-ultimaFila = Sheets("Depósito").Cells(Rows.Count, 2).End(xlUp).Row - 1
+ultimaFila = Worksheets("Depósito").Cells(Rows.Count, 6).End(xlUp).Row - 1
 nombreArchivo = Len(ActiveWorkbook.Name)
 server = "\\SER-DF\D\A Remitar TXT"
 carpetaDestino = "\WEB\"
 Set matrixCodColor = CreateObject("Scripting.Dictionary")
 limite = 30
 
-Sheets("Exportar TXT").Activate
+Worksheets("Exportar TXT").Activate
 
 matrixCodColor.Add "01", "PITON GRIS"
 matrixCodColor.Add "02", "PITON BEIGE"
@@ -1131,23 +1174,18 @@ matrixCodColor.Add "ABR", "ABROJO"
 matrixCodColor.Add "ESTAMP", "ESTAMP"
 matrixCodColor.Add "REF", "REFLECTIVO"
 
-' Recorre la colección
-'For Each item In matrixCodColor
-    'Debug.Print item & ": " & matrixCodColor(item)
-'Next item
-
 ' Limpiar la hoja
-Sheets("Exportar TXT").Cells.Clear
+Worksheets("Exportar TXT").Cells.Clear
 
 ' Separación de talles y colores ==========
 ' Datos fuentes
-Sheets("Depósito").Activate
-Sheets("Depósito").Range(Cells(2, 5), Cells(ultimaFila, 5)).Select
-Set RangoVariante = Sheets("Depósito").Range(Cells(2, 5), Cells(ultimaFila, 5))
+Worksheets("Depósito").Activate
+Worksheets("Depósito").Range(Cells(2, 5), Cells(ultimaFila, 5)).Select
+Set RangoVariante = Worksheets("Depósito").Range(Cells(2, 5), Cells(ultimaFila, 5))
 Selection.Copy
-Sheets("Exportar TXT").Range("C1").PasteSpecial xlPasteValues
+Worksheets("Exportar TXT").Range("C1").PasteSpecial xlPasteValues
 Application.CutCopyMode = False
-Sheets("Exportar TXT").Activate
+Worksheets("Exportar TXT").Activate
 
 ' Separar en columnas
 ' Comprobar si hay datos en el rango "Variante" antes de procesar
@@ -1165,23 +1203,23 @@ End If
 Range("A1").Activate
 
 ' Acomodar los datos del 1° el color y 2° el talle
-For fila = 1 To ultimaFila
-    Cells(fila, 3).Select
+For Fila = 1 To ultimaFila
+    Cells(Fila, 3).Select
     ' Recorre el diccionario buscando coincidencia
     For Each item In matrixCodColor
-        If matrixCodColor(item) = Cells(fila, 3).Value Then
-            Cells(fila, 3).Value = "'" & item
+        If matrixCodColor(item) = Cells(Fila, 3).Value Then
+            Cells(Fila, 3).Value = "'" & item
             GoTo proximaFila
-        ElseIf Cells(fila, 3).Value = "" Then
+        ElseIf Cells(Fila, 3).Value = "" Then
             GoTo proximaFila
         End If
     Next item
 
 ' Traslandando el talle a la siguiente columna
-Cells(fila, 4).Value = Cells(fila, 3).Value
-Cells(fila, 3).Value = ""
+Cells(Fila, 4).Value = Cells(Fila, 3).Value
+Cells(Fila, 3).Value = ""
 proximaFila:
-Next fila
+Next Fila
 
 ' Borrar espacios en blanco
 Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="", LookAt:=xlPart, searchorder:= _
@@ -1189,15 +1227,15 @@ Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="",
 
 
 ' Completa planilla para exportar
-For fila = 1 To ultimaFila - 1
+For Fila = 1 To ultimaFila - 1
     
     ' 1º) Stock
-    Cells(fila, 1).Value = "'" & Sheets("Depósito").Cells(fila + 1, 6).Value
+    Cells(Fila, 1).Value = "'" & Worksheets("Depósito").Cells(Fila + 1, 6).Value
     
     ' 2º Codigo
-    Cells(fila, 2).Value = "'" & Sheets("Depósito").Cells(fila + 1, 4).Value
+    Cells(Fila, 2).Value = "'" & Worksheets("Depósito").Cells(Fila + 1, 3).Value
     
-Next fila
+Next Fila
 
 ' Ajuste ultima Fila - HARDCODEO ESTO PARA PROBAR
 ultimaFila = ultimaFila - 1
@@ -1210,15 +1248,15 @@ Debug.Print "Archivos a importar: " & cantArchivos
 
 
 ' Generación del txt
-Call generarTxt(fila, ultimaFila, "", cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+Call generarTxt(Fila, ultimaFila, "", cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
 
 End Sub
 
-Function generarTxt(fila, ultimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+Function generarTxt(Fila, ultimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
 Dim rutaArchivo As String
 Dim i As Byte
 Dim tope As Byte
-fila = 0
+Fila = 0
 
 
 ' Generación del txt
@@ -1228,16 +1266,16 @@ tope = i * limite
         tope = ultimaFila
     End If
     
-    For fila = (limite * (i - 1)) + 1 To tope
-        Cells(fila, 1).Activate
+    For Fila = (limite * (i - 1)) + 1 To tope
+        Cells(Fila, 1).Activate
         textoArchivo = textoArchivo _
-            & Cells(fila, 1).Value _
-            & "+" & Cells(fila, 2).Value _
-            & "!" & Cells(fila, 3).Value _
-            & "!" & Cells(fila, 4).Value _
+            & Cells(Fila, 1).Value _
+            & "+" & Cells(Fila, 2).Value _
+            & "!" & Cells(Fila, 3).Value _
+            & "!" & Cells(Fila, 4).Value _
             & vbNewLine
-            Debug.Print "Archivo N°: " & i, "Fila N° :" & fila
-    Next fila
+            Debug.Print "Archivo N°: " & i, "Fila N° :" & Fila
+    Next Fila
     
     ' Si es mayor a uno, se van nombrando incrementalmente
     If cantArchivos > 1 Then
