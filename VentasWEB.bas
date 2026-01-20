@@ -797,14 +797,14 @@ Dim RangoVariante As Range
 
 
 Dim matrixCodColor As Object
-ultimaFila = Sheets("Depósito").Cells(Rows.Count, 2).End(xlUp).Row - 1
+ultimaFila = Worksheets("Depósito").Cells(Rows.Count, 2).End(xlUp).Row - 1
 nombreArchivo = Len(ActiveWorkbook.Name)
 server = "\\SER-DF\D\A Remitar TXT"
 carpetaDestino = "\WEB\"
 Set matrixCodColor = CreateObject("Scripting.Dictionary")
 limite = 30
 
-Sheets("Exportar TXT").Activate
+Worksheets("Exportar TXT").Activate
 
 matrixCodColor.Add "01", "PITON GRIS"
 matrixCodColor.Add "02", "PITON BEIGE"
@@ -844,22 +844,22 @@ matrixCodColor.Add "REF", "REFLECTIVO"
 'Next item
 
 ' Limpiar la hoja
-Sheets("Exportar TXT").Cells.Clear
+Worksheets("Exportar TXT").Cells.Clear
 
 ' Separación de talles y colores ==========
 ' Datos fuentes
-Sheets("Depósito").Activate
-Sheets("Depósito").Range(Cells(2, 5), Cells(ultimaFila, 5)).Select
-Set RangoVariante = Sheets("Depósito").Range(Cells(2, 5), Cells(ultimaFila, 5))
+Worksheets("Depósito").Activate
+Worksheets("Depósito").Range(Cells(2, 3), Cells(ultimaFila, 3)).Select
+Set RangoVariante = Worksheets("Depósito").Range(Cells(2, 3), Cells(ultimaFila, 3))
 Selection.Copy
-Sheets("Exportar TXT").Range("C1").PasteSpecial xlPasteValues
+Worksheets("Exportar TXT").Range("C1").PasteSpecial xlPasteValues
 Application.CutCopyMode = False
-Sheets("Exportar TXT").Activate
+Worksheets("Exportar TXT").Activate
 
 ' Separar en columnas
 ' Comprobar si hay datos en el rango "Variante" antes de procesar
 If Application.WorksheetFunction.CountA(RangoVariante) > 0 Then
-    Sheets("Exportar TXT").Range(Cells(1, 3), Cells(ultimaFila + 1, 3)).TextToColumns _
+    Worksheets("Exportar TXT").Range(Cells(1, 3), Cells(ultimaFila + 1, 3)).TextToColumns _
         Destination:=Range(Cells(1, 3), Cells(ultimaFila + 1, 3)), _
         DataType:=xlDelimited, _
         ConsecutiveDelimiter:=True, _
@@ -869,29 +869,29 @@ If Application.WorksheetFunction.CountA(RangoVariante) > 0 Then
 End If
 
 
-Range("A1").Activate
+Worksheets("Exportar TXT").Range("A1").Activate
 
 ' Acomodar los datos del 1° el color y 2° el talle
 For Fila = 1 To ultimaFila
-    Cells(Fila, 3).Select
+    Worksheets("Exportar TXT").Cells(Fila, 3).Select
     ' Recorre el diccionario buscando coincidencia
     For Each item In matrixCodColor
         If matrixCodColor(item) = Cells(Fila, 3).Value Then
-            Cells(Fila, 3).Value = "'" & item
+            Worksheets("Exportar TXT").Cells(Fila, 3).Value = "'" & item
             GoTo proximaFila
-        ElseIf Cells(Fila, 3).Value = "" Then
+        ElseIf Worksheets("Exportar TXT").Cells(Fila, 3).Value = "" Then
             GoTo proximaFila
         End If
     Next item
 
 ' Traslandando el talle a la siguiente columna
-Cells(Fila, 4).Value = Cells(Fila, 3).Value
-Cells(Fila, 3).Value = ""
+Worksheets("Exportar TXT").Cells(Fila, 4).Value = Cells(Fila, 3).Value
+Worksheets("Exportar TXT").Cells(Fila, 3).Value = ""
 proximaFila:
 Next Fila
 
 ' Borrar espacios en blanco
-Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="", LookAt:=xlPart, searchorder:= _
+Worksheets("Exportar TXT").Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 
 
@@ -899,10 +899,10 @@ Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="",
 For Fila = 1 To ultimaFila - 1
     
     ' 1º) Stock
-    Cells(Fila, 1).Value = "'" & Sheets("Depósito").Cells(Fila + 1, 6).Value
+    Worksheets("Exportar TXT").Cells(Fila, 1).Value = "'" & Worksheets("Depósito").Cells(Fila + 1, 4).Value
     
     ' 2º Codigo
-    Cells(Fila, 2).Value = "'" & Sheets("Depósito").Cells(Fila + 1, 4).Value
+    Worksheets("Exportar TXT").Cells(Fila, 2).Value = "'" & Worksheets("Depósito").Cells(Fila + 1, 1).Value
     
 Next Fila
 
