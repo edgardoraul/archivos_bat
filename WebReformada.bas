@@ -5,7 +5,7 @@ Public ruta As String
 Function PintarFila(Hojilla As String, Fila As Integer, DesdeColumna As Integer, HastaColumna As Integer)
     ' Pinta filas impares
     If Fila Mod 2 <> 0 Then
-        Worksheets(Hojilla).Range(Cells(Fila, DesdeColumna), Cells(Fila, HastaColumna)).Interior.color = RGB(220, 220, 220)
+        Worksheets(Hojilla).Range(Cells(Fila, DesdeColumna), Cells(Fila, HastaColumna)).Interior.color = RGB(240, 240, 240)
     End If
 End Function
 
@@ -50,7 +50,7 @@ Next i
     
     ' Si hay más de 20, se genera un nuevo archivo.
     For i = 2 To ultima
-        If VentaWeb.Worksheets("ventas").Cells(i, 1).Value <> "" And VentaWeb.Worksheets("ventas").Cells(i, 13).Value <> "RETIRO EN LOCAL" Then
+        If VentaWeb.Worksheets("ventas").Cells(i, 1).Value <> "" And VentaWeb.Worksheets("ventas").Cells(i, 9).Value <> "Retira en Local" Then
             ' Datos del nombre/apellido y demás
             packar.Worksheets("Correo Argentino").Cells(comienzo + e, 3).Value = UCase(VentaWeb.Worksheets("ventas").Cells(i, 2).Value) & " - DNI/CUIT: " & VentaWeb.Worksheets("ventas").Cells(i, 7).Value & " - CP " & VentaWeb.Worksheets("ventas").Cells(i, 11).Value & " - " & VentaWeb.Worksheets("ventas").Cells(i, 12).Value
             
@@ -62,8 +62,6 @@ Next i
             Debug.Print e
         End If
         
-        
-    
     
         If e > 20 Then
             packar.Save

@@ -1,6 +1,11 @@
 Attribute VB_Name = "VentasWEB"
 Option Explicit
-
+Function PintarFila(Hojilla As String, Fila As Integer, DesdeColumna As Integer, HastaColumna As Integer)
+    ' Pinta filas impares
+    If Fila Mod 2 <> 0 Then
+        Worksheets(Hojilla).Range(Cells(Fila, DesdeColumna), Cells(Fila, HastaColumna)).Interior.color = RGB(240, 240, 240)
+    End If
+End Function
 
 Function correo(numVenta, nombre, ultima, i, packar, planilla)
     ' GENERA UN LISTADO DE VENTAS Y N° GUIAS PARA EL CORREO
@@ -185,11 +190,13 @@ Range("E:E").HorizontalAlignment = xlCenter
 Cells(ultima + 1, 5).HorizontalAlignment = xlRight
 
 ' Acomoda el texto de las celdas con datos
-Range("B:B").ColumnWidth = 40
-Range("C:C").ColumnWidth = 50
-Range("A:A").ColumnWidth = 7
-Range("E:E").ColumnWidth = 12
-'Range(Cells(2, 1), Cells(ultima, 11)).WrapText = True
+Columns("A").ColumnWidth = 6
+Columns("B").ColumnWidth = 40
+Columns("C").ColumnWidth = 8
+Columns("E").ColumnWidth = 12
+
+' Ocultando columnas innecesarias
+Columns("G:H").Hidden = True
 
 ' Ajusta automáticamente la altura de las filas
 Range(Cells(2, 1), Cells(ultima, 11)).Rows.AutoFit
@@ -219,7 +226,7 @@ End With
     
 End Function
 
-Function formato(ultima, i)
+Function formato(ultima As Integer, i As Integer)
 ' DA FORMATO A LA TABLA DE EXCEL PARA QUE SE VEA BONITA
 
 Range("A1").CurrentRegion.Select
@@ -276,16 +283,16 @@ Range(Cells(ultima + 1, 5), Cells(ultima + 1, 6)).Select
 Cells(ultima + 1, 6).Borders.LineStyle = xlContinuous
 
 ' Colocando el total de rótulos a imprimir
-Cells(ultima + 1, 2).Value = "ROTULOS:"
-Cells(ultima + 1, 3).Value = "=COUNTA(A2:A" & ultima & ")"
-Range(Cells(ultima + 1, 2), Cells(ultima + 1, 3)).Select
+Cells(ultima + 1, 2).Value = "ROTULOS"
+Cells(ultima + 1, 1).Value = "=COUNTA(A2:A" & ultima & ")"
+Range(Cells(ultima + 1, 1), Cells(ultima + 1, 2)).Select
 With Selection
     .Font.Bold = True
     .Font.Size = 15
     .VerticalAlignment = xlBottom
     .HorizontalAlignment = xlRight
 End With
-Cells(ultima + 1, 3).HorizontalAlignment = xlLeft
+Cells(ultima + 1, 2).HorizontalAlignment = xlLeft
 
 ' Colocando un borde superior
 For i = 3 To ultima
@@ -295,14 +302,18 @@ For i = 3 To ultima
             .Borders(xlEdgeTop).LineStyle = xlContinuous
         End With
     End If
+    
+    ' Color de fondo a las celdas
+    Call PintarFila("ventas", i, 1, 9)
 Next i
 
 ' Autofit para la última columna
 Range("J:M").EntireColumn.AutoFit
 
 ' Ajustar el contenido
-With Range("C:E").EntireColumn
-    .WrapText = True
+With Columns("B:E").EntireColumn
+    '.ShrinkToFit = True
+    .WrapText = False
     .ShrinkToFit = True
 End With
 
@@ -375,7 +386,7 @@ nombre = ruta & nombreArchivo
 
 Sheets("ventas").Range("A1").Select
 'ActiveWorkbook.SaveAs fileName:=nombre, FileFormat:=xlOpenXMLStrictWorkbook, ConflictResolution:=xlUserResolution, AddToMru:=True, Local:=True
-ActiveWorkbook.SaveAs fileName:=nombre, FileFormat:=xlOpenXMLWorkbook
+ActiveWorkbook.SaveAs Filename:=nombre, FileFormat:=xlOpenXMLWorkbook
 Sheets(1).Name = "ventas"
 ActiveWorkbook.Save
 Application.ThisWorkbook.Save
@@ -403,7 +414,7 @@ Dim packar As Object
 Dim ultima As Integer
 Dim fecha As String
 Dim i As Integer
-Dim rotulos As Integer
+Dim Rotulos As Integer
 Dim ruta As String
 Dim img As String
 Dim nombreArchivo As String
@@ -422,7 +433,7 @@ Else
 End If
 Debug.Print "Se guardan los archivos en: " & ruta
 
-rotulos = 0
+Rotulos = 0
 fecha = Day(Date) & "-" & Month(Date) & "-" & Year(Date)
 
 
@@ -439,11 +450,12 @@ Range("B:K, P:T, X:X, Z:AE, AG:AG, AI:AN").EntireColumn.Delete
 Range("C:E").EntireColumn.Insert
 Range("H:H").EntireColumn.Copy
 Range("C:C").PasteSpecial
-Range("A1").Value = "Núm. Venta"
+Range("A1").Value = "Venta"
 Range("F:F").Select
 Selection.NumberFormat = "General"
 Range("G:G").Select
 Selection.NumberFormat = "0"
+Range("F1").Value = "Cant"
 
 ' CORRIGIENDO NOMBRE DE CLIENTES
 For i = 2 To ultima
@@ -482,7 +494,6 @@ Range("L:L").EntireColumn.Delete
 
 ' Purgando los teléfonos
 For i = 2 To ultima
-    ' Columna de los teléfonos
     Cells(i, 8).Value = Right(Cells(i, 8).Value, 10)
 Next i
 
@@ -491,37 +502,38 @@ Range("I:I").EntireColumn.Insert
 Range("I1:I1").Value = "Detalles"
 
 ' Dando formato
-For i = 2 To ultima
+'For i = 2 To ultima
     ' Columna de las ubicaciones de productos
     With Cells(i, 9)
-        .WrapText = False
-        .ShrinkToFit = True
+        'Activate
+        '.WrapText = False
+        '.ShrinkToFit = True
     End With
-Next i
+'Next i
 
 ' Limpiando el contenido de "(sin color)" y "(sin talle)"
 ' Con comas y doble paréntesis
-Cells.Replace what:="((Sin Color)), ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+Cells.Replace what:="((Sin Color)), ", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
-Cells.Replace what:="((Sin Talle)), ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+Cells.Replace what:="((Sin Talle)), ", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 
 ' Doble paréntesis
-Cells.Replace what:="((Sin Color))", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+Cells.Replace what:="((Sin Color))", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
-Cells.Replace what:="((Sin Talle))", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+Cells.Replace what:="((Sin Talle))", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 
 ' Con comas
-Cells.Replace what:="(Sin Color), ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+Cells.Replace what:="(Sin Color), ", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
-Cells.Replace what:="(Sin Talle), ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+Cells.Replace what:="(Sin Talle), ", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 
 ' Simples
-Cells.Replace what:="(Sin Color)", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+Cells.Replace what:="(Sin Color)", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
-Cells.Replace what:="(Sin Talle)", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+Cells.Replace what:="(Sin Talle)", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 
 
@@ -532,7 +544,7 @@ Selection.TextToColumns Destination:=Range("C1"), DataType:=xlDelimited, _
         Semicolon:=False, Comma:=False, Space:=False, Other:=True, OtherChar _
         :="(", FieldInfo:=Array(Array(1, 1), Array(2, 1)), TrailingMinusNumbers:=True
 Range("A2").Activate
-Cells.Replace what:=")", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+Cells.Replace what:=")", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 Range("D1").Value = "Código"
 Range("E1").Value = "Variante"
@@ -546,6 +558,10 @@ Do While ActiveCell.Value <> ""
     End If
     ActiveCell.Offset(1, 0).Activate
 Loop
+
+' Moviendo la columna del código
+Columns("D").Cut
+Columns("C").Insert Shift:=xlToRight
 
 ' DANDO FORMATO A TODA LA PLANILLA
 Call formato(ultima, i)
@@ -566,7 +582,7 @@ For i = 2 To ultima
         numVenta = Cells(i, 1).Value
         
         ' Contador de rótulos a imprimir
-        rotulos = rotulos + 1
+        Rotulos = Rotulos + 1
         
         ' Se agrega una pestaña para el respectivo rótulo
         ActiveWorkbook.Sheets.Add(after:=ActiveWorkbook.Worksheets(1)).Name = "Venta N° " & Cells(i, 1).Value
@@ -593,9 +609,9 @@ Call formatPrint(ultima, i)
 
 
 ' Dando un aviso condicional sólo si hay rótulos, se lo contrario, no.
-If rotulos > 0 Then
-    MsgBox ("Tenés " & rotulos & " rótulos de retiro en local, para imprimir." & VBA.vbNewLine & "Aquí abajo en las pestañas.")
-End If
+If Rotulos > 0 Then
+    MsgBox ("Tenés " & Rotulos & " rótulos de retiro en local, para imprimir." & VBA.vbNewLine & "Aquí abajo en las pestañas.")
+ End If
 
 
 ' Generando una planilla sólo para dpto. DEPOSITO
@@ -623,7 +639,7 @@ Attribute deposito.VB_ProcData.VB_Invoke_Func = "S\n14"
 Dim ruta As String
 Dim nombreArchivo As String
 Dim ultima As Byte
-Dim i As Byte
+Dim i As Integer
 Dim enrutacion As String
 Dim web As Boolean
 enrutacion = ActiveWorkbook.Path & "\..\"
@@ -639,42 +655,48 @@ Call CrearHoja("Depósito")
 
 
 ' Creando las columnas
-Sheets("Depósito").Activate
-Sheets("Depósito").Cells.Clear
-Cells(1, 1).Value = "Nº Venta"
-Cells(1, 2).Value = "Cliente"
-Cells(1, 3).Value = "Descripción"
-Cells(1, 4).Value = "Código"
-Cells(1, 5).Value = "Variante"
-Cells(1, 6).Value = "Cantidad"
-Cells(1, 7).Value = "Ubicación"
+With Worksheets("Depósito")
+    .Activate
+    .Cells.Clear
+    .Cells(1, 1).Value = "Código"
+    .Cells(1, 2).Value = "Descripción"
+    .Cells(1, 3).Value = "Variante"
+    .Cells(1, 4).Value = "Cantidad"
+    .Cells(1, 5).Value = "Ubicación"
+End With
+
 
 ' Completando los datos
 For i = 2 To ultima
-    ' Venta
-    Cells(i, 1).Value = Sheets(1).Cells(i, 1).Value
+    With Worksheets("Depósito")
     
-    ' Cliente
-    Cells(i, 2).Value = Sheets(1).Cells(i, 2).Value
-    
-    ' Descripción
-    Cells(i, 3).Value = "=VLOOKUP(D" & i & "," & ruta & ",2,FALSE)"
-    
-    ' Código
-    Cells(i, 4).Value = "'" & Sheets(1).Cells(i, 4).Value
-    
-    ' Variante
-    Cells(i, 5).Value = Sheets(1).Cells(i, 5).Value
-    
-    ' Cantidad
-    Cells(i, 6).Value = Sheets(1).Cells(i, 6).Value
+        ' Código
+        .Cells(i, 1).Value = "'" & Worksheets("ventas").Cells(i, 3).Value
+ 
+        ' Descripción
+        .Cells(i, 2).Value = "=VLOOKUP(A" & i & "," & ruta & ",2,FALSE)"
+
+        ' Variante
+        .Cells(i, 3).Value = Worksheets("ventas").Cells(i, 5).Value
         
-    ' La ubiación
-    Cells(i, 7).Formula = "=VLOOKUP(D" & i & "," & ruta & ",3,FALSE)"
+        ' Cantidad
+        .Cells(i, 4).Value = Worksheets("ventas").Cells(i, 6).Value
+            
+        ' La ubiación
+        .Cells(i, 5).Formula = "=VLOOKUP(A" & i & "," & ruta & ",3,FALSE)"
+    
+    End With
+    
+    ' Descripción en "ventas"
+    Worksheets("ventas").Cells(i, 3).Value = "'" & Worksheets("ventas").Cells(i, 3).Value
+    Worksheets("ventas").Cells(i, 4).Value = "=VLOOKUP(C" & i & "," & ruta & ",2,FALSE)"
+    
+    ' Coloreando celdas
+    Call PintarFila("Depósito", i, 1, 5)
 Next i
 
 ' Ordenando alfabéticamente esta columna de ubicación
-With Range("A1:G1")
+With Worksheets("Depósito").Range("A1:E1")
     .AutoFilter
     .Rows("1").RowHeight = 27
     .Font.Bold = True
@@ -683,7 +705,7 @@ With Range("A1:G1")
     .VerticalAlignment = xlCenter
 End With
 
-Range("A1").CurrentRegion.Sort Key1:=Range("G1"), Order1:=xlAscending, Header:=xlGuess
+Worksheets("Depósito").Range("A1").CurrentRegion.Sort Key1:=Range("E1"), Order1:=xlAscending, Header:=xlGuess
 With Selection
     .AutoFilter
 End With
@@ -693,10 +715,13 @@ With Range("A1").CurrentRegion
 End With
 
 ' Colocando totales de productos y dando formato
-Cells(ultima + 1, 5).Value = "TOTALES:"
-Cells(ultima + 1, 6).Select
-Cells(ultima + 1, 6).Value = "=SUM(F2:F" & ultima & ")"
-Range(Cells(ultima + 1, 5), Cells(ultima + 1, 6)).Select
+With Worksheets("Depósito")
+    .Cells(ultima + 1, 2).Value = "TOTALES:"
+    '.Cells(ultima + 1, 2).Select
+    .Cells(ultima + 1, 4).Value = "=SUM(D2:D" & ultima & ")"
+    .Range(Cells(ultima + 1, 2), Cells(ultima + 1, 4)).Select
+End With
+
 With Selection
     .Font.Bold = True
     .Font.Size = 15
@@ -705,25 +730,13 @@ With Selection
 End With
 
 
-' Colocando el total de rótulos a imprimir
-Cells(ultima + 1, 2).Value = "ROTULOS:"
-Cells(ultima + 1, 3).Value = "=COUNTA(A2:A" & ultima & ")"
-Range(Cells(ultima + 1, 2), Cells(ultima + 1, 3)).Select
-With Selection
-    .Font.Bold = True
-    .Font.Size = 15
-    .VerticalAlignment = xlBottom
-    .HorizontalAlignment = xlRight
-End With
-Cells(ultima + 1, 3).HorizontalAlignment = xlLeft
-
-With Range("A1").CurrentRegion
+With Worksheets("Depósito").Range("A1").CurrentRegion
     .Borders.LineStyle = xlContinuous
 End With
 
 ' Formato de impresión
 With ActiveSheet.PageSetup
-    .Orientation = xlLandscape
+    .Orientation = xlPortrait
     .PaperSize = xlPaperA4
     .LeftMargin = Application.CentimetersToPoints(0.64)
     .RightMargin = Application.CentimetersToPoints(0.64)
@@ -733,7 +746,7 @@ With ActiveSheet.PageSetup
     .FooterMargin = Application.CentimetersToPoints(0.76)
     .CenterHorizontally = True
     .CenterVertically = False
-    .PrintArea = ActiveSheet.Range("A1:G" & ultima + 1).Address
+    .PrintArea = ActiveSheet.Range("A1:E" & ultima + 1).Address
     .Zoom = False
     .FitToPagesTall = 1
     .FitToPagesWide = 1
@@ -742,8 +755,8 @@ With ActiveSheet.PageSetup
     '.CenterHeader = vbNewLine & vbNewLine & "&B&20&F" & vbNewLine & "SOLO PARA USO EN DEPOSITO"
 End With
 Call exportarTxt
-Worksheets(1).Activate
-Range("A1").Activate
+Worksheets("ventas").Activate
+Worksheets("ventas").Range("A1").Activate
 
 End Sub
 
@@ -767,7 +780,7 @@ Sub exportarTxt()
 
 ' GENERA UN ARCHIVO DE TEXTO PARA IMPORTAR AL D.F.
 
-Dim fila As Long, columna As Long
+Dim Fila As Long, columna As Long
 Dim textoArchivo As String
 Dim server As String
 
@@ -776,7 +789,7 @@ Dim carpetaDestino As String
 Dim nombreArchivo As String
 Dim limite As Byte
 Dim item As Variant
-Dim i As Byte
+Dim i As Integer
 Dim ultimaFila As Byte
 Dim resto As Byte
 Dim cantArchivos As Byte
@@ -859,39 +872,39 @@ End If
 Range("A1").Activate
 
 ' Acomodar los datos del 1° el color y 2° el talle
-For fila = 1 To ultimaFila
-    Cells(fila, 3).Select
+For Fila = 1 To ultimaFila
+    Cells(Fila, 3).Select
     ' Recorre el diccionario buscando coincidencia
     For Each item In matrixCodColor
-        If matrixCodColor(item) = Cells(fila, 3).Value Then
-            Cells(fila, 3).Value = "'" & item
+        If matrixCodColor(item) = Cells(Fila, 3).Value Then
+            Cells(Fila, 3).Value = "'" & item
             GoTo proximaFila
-        ElseIf Cells(fila, 3).Value = "" Then
+        ElseIf Cells(Fila, 3).Value = "" Then
             GoTo proximaFila
         End If
     Next item
 
 ' Traslandando el talle a la siguiente columna
-Cells(fila, 4).Value = Cells(fila, 3).Value
-Cells(fila, 3).Value = ""
+Cells(Fila, 4).Value = Cells(Fila, 3).Value
+Cells(Fila, 3).Value = ""
 proximaFila:
-Next fila
+Next Fila
 
 ' Borrar espacios en blanco
-Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="", LookAt:=xlPart, SearchOrder:= _
+Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 
 
 ' Completa planilla para exportar
-For fila = 1 To ultimaFila - 1
+For Fila = 1 To ultimaFila - 1
     
     ' 1º) Stock
-    Cells(fila, 1).Value = "'" & Sheets("Depósito").Cells(fila + 1, 6).Value
+    Cells(Fila, 1).Value = "'" & Sheets("Depósito").Cells(Fila + 1, 6).Value
     
     ' 2º Codigo
-    Cells(fila, 2).Value = "'" & Sheets("Depósito").Cells(fila + 1, 4).Value
+    Cells(Fila, 2).Value = "'" & Sheets("Depósito").Cells(Fila + 1, 4).Value
     
-Next fila
+Next Fila
 
 ' Ajuste ultima Fila - HARDCODEO ESTO PARA PROBAR
 ultimaFila = ultimaFila - 1
@@ -904,15 +917,15 @@ Debug.Print "Archivos a importar: " & cantArchivos
 
 
 ' Generación del txt
-Call generarTxt(fila, ultimaFila, "", cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+Call generarTxt(Fila, ultimaFila, "", cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
 
 End Sub
 
-Function generarTxt(fila, ultimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+Function generarTxt(Fila, ultimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
 Dim rutaArchivo As String
-Dim i As Byte
+Dim i As Integer
 Dim tope As Byte
-fila = 0
+Fila = 0
 
 
 ' Generación del txt
@@ -922,16 +935,16 @@ tope = i * limite
         tope = ultimaFila
     End If
     
-    For fila = (limite * (i - 1)) + 1 To tope
-        Cells(fila, 1).Activate
+    For Fila = (limite * (i - 1)) + 1 To tope
+        Cells(Fila, 1).Activate
         textoArchivo = textoArchivo _
-            & Cells(fila, 1).Value _
-            & "+" & Cells(fila, 2).Value _
-            & "!" & Cells(fila, 3).Value _
-            & "!" & Cells(fila, 4).Value _
+            & Cells(Fila, 1).Value _
+            & "+" & Cells(Fila, 2).Value _
+            & "!" & Cells(Fila, 3).Value _
+            & "!" & Cells(Fila, 4).Value _
             & vbNewLine
-            Debug.Print "Archivo N°: " & i, "Fila N° :" & fila
-    Next fila
+            Debug.Print "Archivo N°: " & i, "Fila N° :" & Fila
+    Next Fila
     
     ' Si es mayor a uno, se van nombrando incrementalmente
     If cantArchivos > 1 Then

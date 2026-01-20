@@ -1,6 +1,20 @@
 Attribute VB_Name = "MELI"
 Option Explicit
 
+Function PintarFila(Hojilla As String, Fila As Integer, DesdeColumna As Integer, HastaColumna As Integer)
+    Dim TextoOriginal As String
+    
+    ' Pinta filas impares
+    If Fila Mod 2 <> 0 Then
+        Worksheets(Hojilla).Range(Cells(Fila, DesdeColumna), Cells(Fila, HastaColumna)).Interior.color = RGB(240, 240, 240)
+        
+        ' Formateando el dato del código
+        Worksheets(Hojilla).Cells(Fila, 4).Font.color = RGB(240, 240, 240)
+        Worksheets(Hojilla).Cells(Fila, 4).Characters(Start:=1, Length:=7).Font.ColorIndex = xlAutomatic
+
+    End If
+End Function
+
 Sub AA_MELI()
 Attribute AA_MELI.VB_Description = "Crea las planillas para MercadoLibre."
 Attribute AA_MELI.VB_ProcData.VB_Invoke_Func = "K\n14"
@@ -263,6 +277,10 @@ Do While ultima - contador > 1
             .Borders(xlEdgeTop).LineStyle = xlContinuous
         End With
     End If
+    
+    ' Pintando la fila
+    Call PintarFila("Planilla", ultima - contador, 1, 9)
+    
     contador = contador + 1
 Loop
 
@@ -475,7 +493,7 @@ Attribute depositoMeli.VB_ProcData.VB_Invoke_Func = "D\n14"
 
 Dim rutaFormula As String
 Dim carpeta As String
-Dim i As Byte
+Dim i As Integer
 Dim ultima As Byte
 Dim meli As Boolean
 
@@ -622,7 +640,12 @@ With ActiveSheet.PageSetup
     '.CenterHeader = vbNewLine & vbNewLine & vbNewLine & "&B&20&F" & vbNewLine & "SOLO PARA USO EN DEPOSITO"
 End With
 
-Sheets("Planilla").Activate
+' Colorear filas
+For i = 2 To ultima
+    Call PintarFila("Depósito", i, 1, 8)
+Next i
+
+Worksheets("Planilla").Activate
 
 ' Genera TXT. Comprueba de qué cuenta es.
 Dim cuenta As Byte
