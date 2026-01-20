@@ -154,7 +154,7 @@ Columns("B").ColumnWidth = 19
 Columns("C").ColumnWidth = 27
 Columns("D").ColumnWidth = 45
 Columns("E").ColumnWidth = 11
-Columns("F").ColumnWidth = 10.86
+Columns("F").ColumnWidth = 15
 Columns("G").ColumnWidth = 6
 Columns("H").ColumnWidth = 5
 Columns("I").ColumnWidth = 10.7
@@ -503,12 +503,12 @@ rutaFormula = "'" & carpeta & "\..\" & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
 
 
 ' Nueva hoja con nombre Depósito
-ultima = Sheets("Planilla").Cells(Rows.Count, 2).End(xlUp).Row - 1
+ultima = Worksheets("Planilla").Cells(Rows.Count, 2).End(xlUp).Row - 1
 Call CrearHoja(ActiveWorkbook, "Depósito")
-ActiveWorkbook.Sheets("Depósito").Activate
+ActiveWorkbook.Worksheets("Depósito").Activate
 
 ' Creando las columnas
-With Sheets("Depósito")
+With Worksheets("Depósito")
     ' Limpia la hoja, por las dudas, de todo contenido y formato
     .Cells.Clear
     .Cells.Select
@@ -532,48 +532,51 @@ End With
 
 ' Completando los datos
 For i = 2 To ultima
-    ' Venta
-    If Worksheets("Planilla").Cells(i, 2).Value = "" Then
-        Cells(i, 1).Value = ""
-    Else
-        Cells(i, 1).Value = "'" & Worksheets("Planilla").Cells(i, 2).Value
-    End If
+    With Worksheets("Depósito")
+
+        ' Venta
+        If .Cells(i, 2).Value = "" Then
+            .Cells(i, 1).Value = ""
+        Else
+            .Cells(i, 1).Value = "'" & Worksheets("Planilla").Cells(i, 2).Value
+        End If
+        
+        ' Cliente
+        .Cells(i, 2).Value = Worksheets("Planilla").Cells(i, 3).Value
+        
+        ' Descripción
+        .Cells(i, 4).Value = "=VLOOKUP(LEFT(C" & i & ", 7)," & rutaFormula & ",2,FALSE)"
+        
+        ' Reemplazando la descripción por las fórmulas en Planilla
+        Worksheets("Planilla").Cells(i, 5).Value = "=VLOOKUP(LEFT(D" & i & ", 7)," & rutaFormula & ",2,FALSE)"
+        
+        ' Código
+        .Cells(i, 3).Value = "'" & Worksheets("Planilla").Cells(i, 4).Value
+        .Cells(i, 3).Font.color = vbWhite
+        .Cells(i, 3).Characters(Start:=1, Length:=7).Font.ColorIndex = xlAutomatic
+        .Cells(i, 3).HorizontalAlignment = xlLeft
+        
+        ' Color
+        .Cells(i, 5).Value = Worksheets("Planilla").Cells(i, 6).Value
+        
+        ' Talle
+        .Cells(i, 6).Value = Worksheets("Planilla").Cells(i, 7).Value
+        
+        ' Cantidad
+        .Cells(i, 7).Value = Worksheets("Planilla").Cells(i, 8).Value
+           
+        ' La ubicación. Si está en planta baja agregar esta aclaración
+        If Worksheets("Planilla").Cells(i, 9).Value = "planta baja" Then
+            .Cells(i, 8).Value = "10. PLANTA BAJA"
+        Else
+            .Cells(i, 8).Formula = "=VLOOKUP(LEFT(C" & i & ", 7)," & rutaFormula & ",3,FALSE)"
+        End If
     
-    ' Cliente
-    Cells(i, 2).Value = Worksheets("Planilla").Cells(i, 3).Value
-    
-    ' Descripción
-    Cells(i, 4).Value = "=VLOOKUP(LEFT(C" & i & ", 7)," & rutaFormula & ",2,FALSE)"
-    
-    ' Reemplazando la descripción por las fórmulas en Planilla
-    Worksheets("Planilla").Cells(i, 5).Value = "=VLOOKUP(LEFT(D" & i & ", 7)," & rutaFormula & ",2,FALSE)"
-    
-    ' Código
-    Cells(i, 3).Value = "'" & Worksheets("Planilla").Cells(i, 4).Value
-    Cells(i, 3).Font.color = vbWhite
-    Cells(i, 3).Characters(Start:=1, Length:=7).Font.ColorIndex = xlAutomatic
-    Cells(i, 3).HorizontalAlignment = xlLeft
-    
-    ' Color
-    Cells(i, 5).Value = Worksheets("Planilla").Cells(i, 6).Value
-    
-    ' Talle
-    Cells(i, 6).Value = Worksheets("Planilla").Cells(i, 7).Value
-    
-    ' Cantidad
-    Cells(i, 7).Value = Worksheets("Planilla").Cells(i, 8).Value
-       
-    ' La ubicación. Si está en planta baja agregar esta aclaración
-    If Sheets(1).Cells(i, 9).Value = "planta baja" Then
-        Cells(i, 8).Value = "10. PLANTA BAJA"
-    Else
-        Cells(i, 8).Formula = "=VLOOKUP(LEFT(C" & i & ", 7)," & rutaFormula & ",3,FALSE)"
-    End If
-    
+    End With
 Next i
 
 ' Ordenando alfabéticamente esta columna de ubicación
-With Range("A1:H1")
+With Worksheets("Depósito").Range("A1:H1")
     .AutoFilter
     .Rows("1").RowHeight = 27
     .Font.Bold = True
@@ -582,22 +585,26 @@ With Range("A1:H1")
     .VerticalAlignment = xlCenter
 End With
 
-Range("A1").CurrentRegion.Sort Key1:=Range("H1"), Order1:=xlAscending, Header:=xlGuess
+Worksheets("Depósito").Range("A1").CurrentRegion.Sort Key1:=Range("H1"), Order1:=xlAscending, Header:=xlGuess
 With Selection
     .AutoFilter
 End With
 
-With Range("A1").CurrentRegion
+With Worksheets("Depósito").Range("A1").CurrentRegion
     .Columns.AutoFit
+    .Columns("E").ColumnWidth = 30
     .Columns("A").Hidden = True
     .Columns("B").Hidden = True
 End With
 
 ' Colocando totales de productos y dando formato
-Cells(ultima + 1, 6).Value = "TOTALES:"
-Cells(ultima + 1, 7).Select
-Cells(ultima + 1, 7).Value = "=SUM(G2:G" & ultima & ")"
-Range(Cells(ultima + 1, 6), Cells(ultima + 1, 7)).Select
+With Worksheets("Depósito")
+    .Cells(ultima + 1, 6).Value = "TOTALES:"
+    .Cells(ultima + 1, 7).Select
+    .Cells(ultima + 1, 7).Value = "=SUM(G2:G" & ultima & ")"
+    .Range(Cells(ultima + 1, 6), Cells(ultima + 1, 7)).Select
+End With
+
 With Selection
     .Font.Bold = True
     .Font.Size = 16
@@ -606,16 +613,7 @@ With Selection
 End With
 
 
-Range(Cells(ultima + 1, 2), Cells(ultima + 1, 3)).Select
-With Selection
-    .Font.Bold = True
-    .Font.Size = 16
-    .VerticalAlignment = xlBottom
-    .HorizontalAlignment = xlRight
-End With
-Cells(ultima + 1, 3).HorizontalAlignment = xlLeft
-
-With Range("A1").CurrentRegion
+With Worksheets("Depósito").Range(Cells(1, 3), Cells(ultima, 8))
     .Borders.LineStyle = xlContinuous
 End With
 
@@ -678,14 +676,14 @@ Function correo(ruta, i, ultima)
     Set packar = ActiveWorkbook
     
     ' CONTROL DE FECHAS
-    If packar.Sheets(1).Range("A1").Value <> hoy Then
-        packar.Sheets(1).Range("A1").Value = Date
+    If packar.Worksheets(1).Range("A1").Value <> hoy Then
+        packar.Worksheets(1).Range("A1").Value = Date
         continuacion = 7
         
         ' Borrando el contenido viejo
-        packar.Sheets(1).Range("A9:C39").ClearContents
+        packar.Worksheets(1).Range("A9:C39").ClearContents
     Else
-        continuacion = packar.Sheets(1).Cells(39, 1).End(xlUp).Row - 1
+        continuacion = packar.Worksheets(1).Cells(39, 1).End(xlUp).Row - 1
         Debug.Print continuacion
     End If
      
@@ -693,17 +691,19 @@ Function correo(ruta, i, ultima)
     ' Completando la información
     For i = 2 To ultima
         ' Asignando el valor a cada N° vta.
-        numVenta = planilla.Sheets(1).Cells(i, 2).Value
-        Cliente = planilla.Sheets(1).Cells(i, 3).Value
-        tn = planilla.Sheets(1).Cells(i, 11).Value
+        numVenta = planilla.Worksheets(1).Cells(i, 2).Value
+        Cliente = planilla.Worksheets(1).Cells(i, 3).Value
+        tn = planilla.Worksheets(1).Cells(i, 11).Value
         
         ' Recorremos la planilla del Correo
         ' Controlamos que el número de venta esté completo
         ' y además que NO SEA un retiro en Local
-        If numVenta <> "" And planilla.Sheets(1).Cells(i, 9).Value <> "Retira en Local" Then
-            packar.Sheets(1).Cells(i + continuacion, 1).Value = "'" & numVenta
-            packar.Sheets(1).Cells(i + continuacion, 2).Value = Cliente
-            packar.Sheets(1).Cells(i + continuacion, 3).Value = tn
+        If numVenta <> "" And planilla.Worksheets(1).Cells(i, 9).Value <> "Retira en Local" Then
+            With packar.Worksheets(1)
+                .Cells(i + continuacion, 1).Value = "'" & numVenta
+                .Cells(i + continuacion, 2).Value = Cliente
+                .Cells(i + continuacion, 3).Value = tn
+            End With
         End If
     Next i
 End Function
@@ -756,7 +756,7 @@ Dim cantArchivos As Byte
 Dim ruta As Range
 
 Set ruta = Equivalencia.Worksheets(1).Range("A1:G10000")
-ultimaFila = planillaActual.Sheets("Planilla").Cells(Rows.Count, 2).End(xlUp).Row - 1
+ultimaFila = planillaActual.Worksheets("Planilla").Cells(Rows.Count, 2).End(xlUp).Row - 1
 nombreArchivo = planillaActual.Name
 server = "\\SER-DF\D\A Remitar TXT"
 carpetaDestino = "\" & carpeta & "\"
@@ -767,11 +767,11 @@ Debug.Print nombreArchivo
 Call CrearHoja(planillaActual, txt)
 
 ' Limpiar la hoja
-planillaActual.Sheets(txt).Cells.Clear
+planillaActual.Worksheets(txt).Cells.Clear
 
 ' Completa planilla para exportar
 For Fila = 1 To ultimaFila - 1
-    With planillaActual.Sheets(txt)
+    With planillaActual.Worksheets(txt)
         ' 1º) Stock
         .Cells(Fila, 1).Value = "'" & planillaActual.Worksheets("Depósito").Cells(Fila + 1, 7).Value
     
@@ -787,6 +787,31 @@ For Fila = 1 To ultimaFila - 1
         .Cells(Fila, 4) = "'" & Application.WorksheetFunction.VLookup(codigo, ruta, 6, False)
     End With
 Next Fila
+
+' Corrección de "Depósito" ==========
+For Fila = 2 To ultimaFila
+    With planillaActual.Worksheets("Depósito")
+        ' Corrección del Color
+        .Cells(Fila, 5).Activate
+        .Cells(Fila, 3).Activate
+        .Cells(Fila, 5).Value = Application.WorksheetFunction.VLookup(.Cells(Fila, 3).Value, ruta, 4, False) & ". " & Application.WorksheetFunction.VLookup(.Cells(Fila, 3).Value, ruta, 5, False)
+        
+        ' Corrección del Talle
+        .Cells(Fila, 6).Value = "'" & Application.WorksheetFunction.VLookup(.Cells(Fila, 3).Value, ruta, 6, False)
+    End With
+Next Fila
+
+' Corrección de "Planilla" =========
+For Fila = 2 To ultimaFila
+    With planillaActual.Worksheets("Planilla")
+        ' Corrección del Color
+        .Cells(Fila, 6).Value = Application.WorksheetFunction.VLookup(.Cells(Fila, 4).Value, ruta, 4, False) & ". " & Application.WorksheetFunction.VLookup(.Cells(Fila, 4).Value, ruta, 5, False)
+        
+        ' Corrección del Talle
+        .Cells(Fila, 7).Value = "'" & Application.WorksheetFunction.VLookup(.Cells(Fila, 4).Value, ruta, 6, False)
+    End With
+Next Fila
+
 
 ' Ajuste ultima Fila - HARDCODEO ESTO PARA PROBAR
 ultimaFila = ultimaFila - 1
