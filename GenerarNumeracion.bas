@@ -22,7 +22,7 @@ Sub GenerarPaginacionExacta()
     Application.ScreenUpdating = False
     
     ' Configuración de fuente
-    With Cells.Font
+    With ActiveSheet.Cells.Font
         .Name = "Arial"
         .Size = 10
     End With
@@ -31,22 +31,31 @@ Sub GenerarPaginacionExacta()
     For i = inicio To fin
         ' Formato de 8 dígitos
         numFormateado = "'" & Format(i, "00000000")
-        Cells(fila, 8).Value = numFormateado
-        Cells(fila, 8).HorizontalAlignment = xlRight
         
-        ' Insertar salto de página después de cada número
-        If i < fin Then
-            ActiveSheet.HPageBreaks.Add Before:=Cells(fila + 1, 1)
-        End If
+        With ActiveSheet
+            .Cells(fila, 8).Value = numFormateado
+            .Cells(fila, 8).HorizontalAlignment = xlRight
+            
+            ' Insertar salto de página después de cada número
+            If i < fin Then
+                .HPageBreaks.Add Before:=Cells(fila + 1, 1)
+            End If
+        End With
+        
         fila = fila + 1
+
     Next i
     
     ' Configuración de página (Márgenes en Centímetros)
     With ActiveSheet.PageSetup
         .PaperSize = xlPaperA4
-        ' 1.5 cm de margen superior y derecho
-        .TopMargin = Application.CentimetersToPoints(1.05)
+        
+        ' 1.2 cm de margen superior para que se imprima entre las líneas
+        .TopMargin = Application.CentimetersToPoints(1.2)
+        
+        ' 0,5 cm para que no llegue al borde
         .RightMargin = Application.CentimetersToPoints(0.5)
+        
         ' Márgenes restantes mínimos para no desplazar el número
         .LeftMargin = Application.CentimetersToPoints(2)
         .BottomMargin = Application.CentimetersToPoints(2)
