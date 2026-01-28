@@ -780,7 +780,7 @@ Sub exportarTxt()
 
 ' GENERA UN ARCHIVO DE TEXTO PARA IMPORTAR AL D.F.
 
-Dim Fila As Long, columna As Long
+Dim Fila As Long, Columna As Long
 Dim textoArchivo As String
 Dim server As String
 

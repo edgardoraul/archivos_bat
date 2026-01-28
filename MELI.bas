@@ -592,7 +592,7 @@ End With
 
 With Worksheets("Depósito").Range("A1").CurrentRegion
     .Columns.AutoFit
-    .Columns("E").ColumnWidth = 30
+    .Columns("E").ColumnWidth = 15
     .Columns("A").Hidden = True
     .Columns("B").Hidden = True
 End With
@@ -755,6 +755,7 @@ Dim resto As Byte
 Dim cantArchivos As Byte
 Dim ruta As Range
 
+
 Set ruta = Equivalencia.Worksheets(1).Range("A1:G10000")
 ultimaFila = planillaActual.Worksheets("Planilla").Cells(Rows.Count, 2).End(xlUp).Row - 1
 nombreArchivo = planillaActual.Name
@@ -793,8 +794,11 @@ For Fila = 2 To ultimaFila
     With planillaActual.Worksheets("Depósito")
         ' Corrección del Color
         .Cells(Fila, 5).Activate
-        .Cells(Fila, 3).Activate
-        .Cells(Fila, 5).Value = Application.WorksheetFunction.VLookup(.Cells(Fila, 3).Value, ruta, 4, False) & ". " & Application.WorksheetFunction.VLookup(.Cells(Fila, 3).Value, ruta, 5, False)
+        If Application.WorksheetFunction.VLookup(.Cells(Fila, 3).Value, ruta, 4, False) Is Nothing Then
+            .Cells(Fila, 5).Value = ""
+        Else
+            .Cells(Fila, 5).Value = Application.WorksheetFunction.VLookup(.Cells(Fila, 3).Value, ruta, 4, False) & ". " & Application.WorksheetFunction.VLookup(.Cells(Fila, 3).Value, ruta, 5, False)
+        End If
         
         ' Corrección del Talle
         .Cells(Fila, 6).Value = "'" & Application.WorksheetFunction.VLookup(.Cells(Fila, 3).Value, ruta, 6, False)
@@ -805,10 +809,15 @@ Next Fila
 For Fila = 2 To ultimaFila
     With planillaActual.Worksheets("Planilla")
         ' Corrección del Color
-        .Cells(Fila, 6).Value = Application.WorksheetFunction.VLookup(.Cells(Fila, 4).Value, ruta, 4, False) & ". " & Application.WorksheetFunction.VLookup(.Cells(Fila, 4).Value, ruta, 5, False)
+        If Application.WorksheetFunction.VLookup(.Cells(Fila, 4).Value, ruta, 4, False) Is Nothing Then
+            .Cells(Fila, 6).Value = ""
+        Else
+            .Cells(Fila, 6).Value = Application.WorksheetFunction.VLookup(.Cells(Fila, 4).Value, ruta, 4, False) & ". " & Application.WorksheetFunction.VLookup(.Cells(Fila, 4).Value, ruta, 5, False)
+        End If
         
         ' Corrección del Talle
         .Cells(Fila, 7).Value = "'" & Application.WorksheetFunction.VLookup(.Cells(Fila, 4).Value, ruta, 6, False)
+
     End With
 Next Fila
 
@@ -829,6 +838,18 @@ Equivalencia.Close False
 Call generarTxt(Fila, ultimaFila, "", cantArchivos, planillaActual, carpetaDestino, limite, resto, server, txt)
 planillaActual.Sheets("Depósito").Activate
 End Sub
+
+Function BuscarEquivalencia(hoja, codigo, Fila, ruta, Columna)
+    ' BUSCA LAS EQUIVALENCIAS DE TALLES Y COLORES EN BASE AL CODIGO
+    ' Usamos Application.VLookup (sin WorksheetFunction) para que no detenga la macro ante un error
+    Resultado = Application.VLookup(codigo, ruta, Columna, False)
+    
+    If IsError(Resultado) Then
+        hoja.Cells(Fila, Columna) = "SIN EQUIVALENCIA"
+    Else
+        hoja.Cells(Fila, Columna) = "'" & Resultado
+    End If
+End Function
 
 Function generarTxt(Fila, ultimaFila, textoArchivo, cantArchivos, archivoFuente, carpetaDestino, limite, resto, server, hoja)
 Dim rutaArchivo As String

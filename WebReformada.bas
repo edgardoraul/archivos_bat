@@ -224,7 +224,7 @@ Dim filasTotales As Integer
 filasTotales = ultima + 1
 
 ' Formatea la última columna que NO saldrá impresa, sólo para acomodar, nada más
-Range("D:K").Columns.AutoFit
+Range("A:I").Columns.AutoFit
 
 ' Centrando el contenido
 Range("E:E").HorizontalAlignment = xlCenter
@@ -488,7 +488,7 @@ Function proforma(apellidoNombre, direccion, provincia, codigoPostal, ciudad, te
         ' Bucle que recorre la venta
         Do
             With VentaWeb.Worksheets("ventas")
-                sku = .Cells(acumulador + 2, 4).Value
+                sku = .Cells(acumulador + 2, 3).Value
                 cantidad = .Cells(acumulador + 2, 6).Value
                 color = .Cells(acumulador + 2, 5).Value
                 talle = .Cells(acumulador + 2, 5).Value
@@ -973,7 +973,7 @@ enrutacion = ActiveWorkbook.Path & "\..\"
 Debug.Print enrutacion
 
 ruta = "'" & enrutacion & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
-ultima = Worksheets(1).Cells(Rows.Count, 2).End(xlUp).Row - 1
+ultima = Worksheets("ventas").Cells(Rows.Count, 2).End(xlUp).Row - 1
 web = False
 
 
@@ -982,43 +982,47 @@ Call CrearHoja("Depósito")
 
 
 ' Creando las columnas
-Sheets("Depósito").Activate
-Sheets("Depósito").Cells.Clear
-Cells(1, 1).Value = "Nº Venta"
-Cells(1, 2).Value = "Cliente"
-Cells(1, 3).Value = "Descripción"
-Cells(1, 4).Value = "Código"
-Cells(1, 5).Value = "Variante"
-Cells(1, 6).Value = "Cantidad"
-Cells(1, 7).Value = "Ubicación"
+With Worksheets("Depósito")
+    .Activate
+    .Cells.Clear
+    .Cells(1, 1).Value = "Nº Venta"
+    .Cells(1, 2).Value = "Cliente"
+    .Cells(1, 3).Value = "Descripción"
+    .Cells(1, 4).Value = "Código"
+    .Cells(1, 5).Value = "Variante"
+    .Cells(1, 6).Value = "Cantidad"
+    .Cells(1, 7).Value = "Ubicación"
+End With
 
 ' Completando los datos
-For i = 2 To ultima
-    ' Venta
-    Worksheets("Depósito").Cells(i, 1).Value = Worksheets("ventas").Cells(i, 1).Value
-    
-    ' Cliente
-    Worksheets("Depósito").Cells(i, 2).Value = Worksheets("ventas").Cells(i, 2).Value
-    
-    ' Descripción
-    Worksheets("Depósito").Cells(i, 3).Value = "=VLOOKUP(D" & i & "," & ruta & ",2,FALSE)"
-    
-    ' Reemplazo de la descripción en pestaña "ventas"
-    Worksheets("ventas").Cells(i, 3).Value = "'" & Worksheets("ventas").Cells(i, 3).Value
-    Worksheets("ventas").Cells(i, 4).Value = "=VLOOKUP(C" & i & "," & ruta & ",2,FALSE)"
-    
-    ' Código
-    Worksheets("Depósito").Cells(i, 4).Value = "'" & Worksheets("ventas").Cells(i, 3).Value
-    
-    ' Variante
-    Worksheets("Depósito").Cells(i, 5).Value = Worksheets("ventas").Cells(i, 5).Value
-    
-    ' Cantidad
-    Worksheets("Depósito").Cells(i, 6).Value = Worksheets("ventas").Cells(i, 6).Value
+With Worksheets("Depósito")
+    For i = 2 To ultima
+        ' Venta
+        .Cells(i, 1).Value = Worksheets("ventas").Cells(i, 1).Value
         
-    ' La ubiCación
-    Worksheets("Depósito").Cells(i, 7).Formula = "=VLOOKUP(D" & i & "," & ruta & ",3,FALSE)"
-Next i
+        ' Cliente
+        .Cells(i, 2).Value = Worksheets("ventas").Cells(i, 2).Value
+        
+        ' Descripción
+        .Cells(i, 3).Value = "=VLOOKUP(D" & i & "," & ruta & ",2,FALSE)"
+        
+        ' Reemplazo de la descripción en pestaña "ventas"
+        Worksheets("ventas").Cells(i, 3).Value = "'" & Worksheets("ventas").Cells(i, 3).Value
+        Worksheets("ventas").Cells(i, 4).Value = "=VLOOKUP(C" & i & "," & ruta & ",2,FALSE)"
+        
+        ' Código
+        .Cells(i, 4).Value = "'" & Worksheets("ventas").Cells(i, 3).Value
+        
+        ' Variante
+        .Cells(i, 5).Value = Worksheets("ventas").Cells(i, 5).Value
+        
+        ' Cantidad
+        .Cells(i, 6).Value = Worksheets("ventas").Cells(i, 6).Value
+            
+        ' La ubiCación
+        .Cells(i, 7).Formula = "=VLOOKUP(D" & i & "," & ruta & ",3,FALSE)"
+    Next i
+End With
 
 ' Ordenando alfabéticamente esta columna de ubicación
 With Range("A1:G1")
@@ -1114,7 +1118,7 @@ Sub exportarTxt()
 
 ' GENERA UN ARCHIVO DE TEXTO PARA IMPORTAR AL D.F.
 
-Dim Fila As Long, columna As Long
+Dim Fila As Long, Columna As Long
 Dim textoArchivo As String
 Dim server As String
 
