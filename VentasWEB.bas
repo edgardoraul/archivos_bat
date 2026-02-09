@@ -1,9 +1,9 @@
 Attribute VB_Name = "VentasWEB"
 Option Explicit
-Function PintarFila(Hojilla As String, Fila As Integer, DesdeColumna As Integer, HastaColumna As Integer)
+Function PintarFila(Hojilla As String, fila As Integer, DesdeColumna As Integer, HastaColumna As Integer)
     ' Pinta filas impares
-    If Fila Mod 2 <> 0 Then
-        Worksheets(Hojilla).Range(Cells(Fila, DesdeColumna), Cells(Fila, HastaColumna)).Interior.color = RGB(240, 240, 240)
+    If fila Mod 2 <> 0 Then
+        Worksheets(Hojilla).Range(Cells(fila, DesdeColumna), Cells(fila, HastaColumna)).Interior.color = RGB(240, 240, 240)
     End If
 End Function
 
@@ -661,7 +661,7 @@ With Worksheets("Depósito")
     .Cells(1, 1).Value = "Código"
     .Cells(1, 2).Value = "Descripción"
     .Cells(1, 3).Value = "Variante"
-    .Cells(1, 4).Value = "Cantidad"
+    .Cells(1, 4).Value = "Cant"
     .Cells(1, 5).Value = "Ubicación"
 End With
 
@@ -682,17 +682,16 @@ For i = 2 To ultima
         ' Cantidad
         .Cells(i, 4).Value = Worksheets("ventas").Cells(i, 6).Value
             
-        ' La ubiación
+        ' La ubicación
         .Cells(i, 5).Formula = "=VLOOKUP(A" & i & "," & ruta & ",3,FALSE)"
     
     End With
     
     ' Descripción en "ventas"
-    Worksheets("ventas").Cells(i, 3).Value = "'" & Worksheets("ventas").Cells(i, 3).Value
-    Worksheets("ventas").Cells(i, 4).Value = "=VLOOKUP(C" & i & "," & ruta & ",2,FALSE)"
-    
-    ' Coloreando celdas
-    Call PintarFila("Depósito", i, 1, 5)
+    With Worksheets("ventas")
+        .Cells(i, 3).Value = "'" & Worksheets("ventas").Cells(i, 3).Value
+        .Cells(i, 4).Value = "=VLOOKUP(C" & i & "," & ruta & ",2,FALSE)"
+    End With
 Next i
 
 ' Ordenando alfabéticamente esta columna de ubicación
@@ -700,7 +699,6 @@ With Worksheets("Depósito").Range("A1:E1")
     .AutoFilter
     .Rows("1").RowHeight = 27
     .Font.Bold = True
-    .Font.Size = 12
     .HorizontalAlignment = xlCenter
     .VerticalAlignment = xlCenter
 End With
@@ -711,13 +709,18 @@ With Selection
 End With
 
 With Range("A1").CurrentRegion
+    .Font.Size = 12
     .Columns.AutoFit
 End With
 
+For i = 2 To ultima
+    ' Coloreando celdas
+    Call PintarFila("Depósito", i, 1, 5)
+Next i
+
 ' Colocando totales de productos y dando formato
 With Worksheets("Depósito")
-    .Cells(ultima + 1, 2).Value = "TOTALES:"
-    '.Cells(ultima + 1, 2).Select
+    .Cells(ultima + 1, 3).Value = "TOTALES:"
     .Cells(ultima + 1, 4).Value = "=SUM(D2:D" & ultima & ")"
     .Range(Cells(ultima + 1, 2), Cells(ultima + 1, 4)).Select
 End With
@@ -730,7 +733,8 @@ With Selection
 End With
 
 
-With Worksheets("Depósito").Range("A1").CurrentRegion
+With Worksheets("Depósito").Range(Cells(1, 1), Cells(ultima, 5))
+    .Rows.RowHeight = 17
     .Borders.LineStyle = xlContinuous
 End With
 
@@ -780,7 +784,7 @@ Sub exportarTxt()
 
 ' GENERA UN ARCHIVO DE TEXTO PARA IMPORTAR AL D.F.
 
-Dim Fila As Long, Columna As Long
+Dim fila As Long, columna As Long
 Dim textoArchivo As String
 Dim server As String
 
@@ -872,23 +876,23 @@ End If
 Worksheets("Exportar TXT").Range("A1").Activate
 
 ' Acomodar los datos del 1° el color y 2° el talle
-For Fila = 1 To ultimaFila
-    Worksheets("Exportar TXT").Cells(Fila, 3).Select
+For fila = 1 To ultimaFila
+    Worksheets("Exportar TXT").Cells(fila, 3).Select
     ' Recorre el diccionario buscando coincidencia
     For Each item In matrixCodColor
-        If matrixCodColor(item) = Cells(Fila, 3).Value Then
-            Worksheets("Exportar TXT").Cells(Fila, 3).Value = "'" & item
+        If matrixCodColor(item) = Cells(fila, 3).Value Then
+            Worksheets("Exportar TXT").Cells(fila, 3).Value = "'" & item
             GoTo proximaFila
-        ElseIf Worksheets("Exportar TXT").Cells(Fila, 3).Value = "" Then
+        ElseIf Worksheets("Exportar TXT").Cells(fila, 3).Value = "" Then
             GoTo proximaFila
         End If
     Next item
 
 ' Traslandando el talle a la siguiente columna
-Worksheets("Exportar TXT").Cells(Fila, 4).Value = Cells(Fila, 3).Value
-Worksheets("Exportar TXT").Cells(Fila, 3).Value = ""
+Worksheets("Exportar TXT").Cells(fila, 4).Value = Cells(fila, 3).Value
+Worksheets("Exportar TXT").Cells(fila, 3).Value = ""
 proximaFila:
-Next Fila
+Next fila
 
 ' Borrar espacios en blanco
 Worksheets("Exportar TXT").Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="", LookAt:=xlPart, searchorder:= _
@@ -896,15 +900,15 @@ Worksheets("Exportar TXT").Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace 
 
 
 ' Completa planilla para exportar
-For Fila = 1 To ultimaFila - 1
+For fila = 1 To ultimaFila - 1
     
     ' 1º) Stock
-    Worksheets("Exportar TXT").Cells(Fila, 1).Value = "'" & Worksheets("Depósito").Cells(Fila + 1, 4).Value
+    Worksheets("Exportar TXT").Cells(fila, 1).Value = "'" & Worksheets("Depósito").Cells(fila + 1, 4).Value
     
     ' 2º Codigo
-    Worksheets("Exportar TXT").Cells(Fila, 2).Value = "'" & Worksheets("Depósito").Cells(Fila + 1, 1).Value
+    Worksheets("Exportar TXT").Cells(fila, 2).Value = "'" & Worksheets("Depósito").Cells(fila + 1, 1).Value
     
-Next Fila
+Next fila
 
 ' Ajuste ultima Fila - HARDCODEO ESTO PARA PROBAR
 ultimaFila = ultimaFila - 1
@@ -912,20 +916,25 @@ ultimaFila = ultimaFila - 1
 ' Si se pasa del tope (30 líneas), serán "n" archivos con 30 líneas y otro con el resto
 ' de items que quedaron fuera. Sería el resto de una división, el módulo.
 resto = ultimaFila Mod limite
-cantArchivos = Int(ultimaFila / limite) + 1
+If resto = 0 Then
+    cantArchivos = Int(ultimaFila / limite)
+Else
+    cantArchivos = Int(ultimaFila / limite) + 1
+End If
+
 Debug.Print "Archivos a importar: " & cantArchivos
 
 
 ' Generación del txt
-Call generarTxt(Fila, ultimaFila, "", cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+Call generarTxt(fila, ultimaFila, "", cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
 
 End Sub
 
-Function generarTxt(Fila, ultimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+Function generarTxt(fila, ultimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
 Dim rutaArchivo As String
 Dim i As Integer
 Dim tope As Byte
-Fila = 0
+fila = 0
 
 
 ' Generación del txt
@@ -934,17 +943,19 @@ tope = i * limite
     If i = cantArchivos Then
         tope = ultimaFila
     End If
-    
-    For Fila = (limite * (i - 1)) + 1 To tope
-        Cells(Fila, 1).Activate
+
+    For fila = (limite * (i - 1)) + 1 To tope
+        Cells(fila, 1).Activate
+
         textoArchivo = textoArchivo _
-            & Cells(Fila, 1).Value _
-            & "+" & Cells(Fila, 2).Value _
-            & "!" & Cells(Fila, 3).Value _
-            & "!" & Cells(Fila, 4).Value _
+            & Cells(fila, 1).Value _
+            & "+" & Cells(fila, 2).Value _
+            & "!" & Cells(fila, 3).Value _
+            & "!" & Cells(fila, 4).Value _
             & vbNewLine
-            Debug.Print "Archivo N°: " & i, "Fila N° :" & Fila
-    Next Fila
+            Debug.Print "Archivo N°: " & i, "Fila N° :" & fila
+            
+    Next fila
     
     ' Si es mayor a uno, se van nombrando incrementalmente
     If cantArchivos > 1 Then
@@ -963,6 +974,8 @@ tope = i * limite
     Close #1
     
     MsgBox "Datos exportados con éxito a " & rutaArchivo, vbInformation, "Cargar detalle desde txt"
+    
+    textoArchivo = ""
 Next i
 
 

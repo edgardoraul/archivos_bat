@@ -2,10 +2,10 @@ Attribute VB_Name = "WebReformada"
 Option Explicit
 Public ruta As String
 
-Function PintarFila(Hojilla As String, Fila As Integer, DesdeColumna As Integer, HastaColumna As Integer)
+Function PintarFila(Hojilla As String, fila As Integer, DesdeColumna As Integer, HastaColumna As Integer)
     ' Pinta filas impares
-    If Fila Mod 2 <> 0 Then
-        Worksheets(Hojilla).Range(Cells(Fila, DesdeColumna), Cells(Fila, HastaColumna)).Interior.color = RGB(240, 240, 240)
+    If fila Mod 2 <> 0 Then
+        Worksheets(Hojilla).Range(Cells(fila, DesdeColumna), Cells(fila, HastaColumna)).Interior.color = RGB(240, 240, 240)
     End If
 End Function
 
@@ -529,7 +529,7 @@ End Function
 
 Sub bucleRotular()
     ' Va rotulando por bucle
-    Dim Fila As Integer
+    Dim fila As Integer
     Dim ultimaFila As Integer
     Dim RotulosCorreo As Workbook
     Dim VentaWeb As Workbook
@@ -545,19 +545,19 @@ Sub bucleRotular()
     Debug.Print RotulosCorreo.Name
     
     ultimaFila = VentaWeb.Worksheets("ventas").Cells(Rows.Count, 2).End(xlUp).Row - 1
-    Fila = 2
+    fila = 2
     VentaWeb.Worksheets("ventas").Activate
     VentaWeb.Worksheets("ventas").Range("M2").Activate
     
-    For Fila = 2 To ultimaFila
-        If VentaWeb.Worksheets("ventas").Cells(Fila, 13) <> "" Then
-            Call Rotulador(VentaWeb, RotulosCorreo, Fila, ultimaFila, ruta)
+    For fila = 2 To ultimaFila
+        If VentaWeb.Worksheets("ventas").Cells(fila, 13) <> "" Then
+            Call Rotulador(VentaWeb, RotulosCorreo, fila, ultimaFila, ruta)
         End If
-    Next Fila
+    Next fila
     
     
 End Sub
-Function Rotulador(VentaWeb As Workbook, RotulosCorreo As Workbook, Fila As Integer, ultimaFila As Integer, ruta As String)
+Function Rotulador(VentaWeb As Workbook, RotulosCorreo As Workbook, fila As Integer, ultimaFila As Integer, ruta As String)
     
     ' Declaración de Variables y su tipo de dato
     Dim Rotulos As Workbook
@@ -578,23 +578,23 @@ Function Rotulador(VentaWeb As Workbook, RotulosCorreo As Workbook, Fila As Inte
     
     
     With VentaWeb.Worksheets("ventas")
-        apellidoNombre = .Cells(Fila, 2).Value
-        dniCuit = .Cells(Fila, 7).Value
-        direccion = .Cells(Fila, 14).Value & " " & .Cells(Fila, 15).Value
-        codigoPostal = .Cells(Fila, 11).Value
-        ciudad = .Cells(Fila, 10).Value
-        provincia = .Cells(Fila, 12).Value
-        telefono = .Cells(Fila, 8).Value
+        apellidoNombre = .Cells(fila, 2).Value
+        dniCuit = .Cells(fila, 7).Value
+        direccion = .Cells(fila, 14).Value & " " & .Cells(fila, 15).Value
+        codigoPostal = .Cells(fila, 11).Value
+        ciudad = .Cells(fila, 10).Value
+        provincia = .Cells(fila, 12).Value
+        telefono = .Cells(fila, 8).Value
     End With
     
    
     ' SI ES A DOMICILIO -----------
-    If VentaWeb.Worksheets("ventas").Cells(Fila, 13).Value = "Correo Argentino Clasico - Envio a domicilio" Then
+    If VentaWeb.Worksheets("ventas").Cells(fila, 13).Value = "Correo Argentino Clasico - Envio a domicilio" Then
         
         ' Colocar los datos
         With RotulosCorreo.Worksheets("A Domicilio")
             ' Colocando el número de Venta
-            .Range("D7").Value = "Web Nº #" & VentaWeb.Worksheets("ventas").Cells(Fila, 1).Value
+            .Range("D7").Value = "Web Nº #" & VentaWeb.Worksheets("ventas").Cells(fila, 1).Value
             .Range("C16").Value = UCase(apellidoNombre)
             .Range("P15").Value = dniCuit
             .Range("C18").Value = direccion
@@ -612,13 +612,13 @@ Function Rotulador(VentaWeb As Workbook, RotulosCorreo As Workbook, Fila As Inte
         
 
     ' SI ES A RETIRAR EN SUCURSAL ----------------
-    ElseIf VentaWeb.Worksheets("ventas").Cells(Fila, 13).Value = "Punto de retiro" Then
+    ElseIf VentaWeb.Worksheets("ventas").Cells(fila, 13).Value = "Punto de retiro" Then
         
         ' Colocar los datos
         With RotulosCorreo.Worksheets("A Sucursal")
             .Range("C16").Value = UCase(apellidoNombre)
             .Range("R16").Value = dniCuit
-            .Range("E7").Value = "Web Nº #" & VentaWeb.Worksheets("ventas").Cells(Fila, 1).Value
+            .Range("E7").Value = "Web Nº #" & VentaWeb.Worksheets("ventas").Cells(fila, 1).Value
         End With
         
         ' Validando si existe o no el dato.
@@ -633,7 +633,7 @@ Function Rotulador(VentaWeb As Workbook, RotulosCorreo As Workbook, Fila As Inte
             MsgBox ("Buscá aquí un código postal de sucursal disponible")
             
             ' Marcar advertencia
-            VentaWeb.Worksheets("ventas").Cells(Fila, 9).Value = "Buscar CP"
+            VentaWeb.Worksheets("ventas").Cells(fila, 9).Value = "Buscar CP"
             Exit Function
         End If
         
@@ -1118,7 +1118,7 @@ Sub exportarTxt()
 
 ' GENERA UN ARCHIVO DE TEXTO PARA IMPORTAR AL D.F.
 
-Dim Fila As Long, Columna As Long
+Dim fila As Long, columna As Long
 Dim textoArchivo As String
 Dim server As String
 
@@ -1205,23 +1205,23 @@ End If
 Range("A1").Activate
 
 ' Acomodar los datos del 1° el color y 2° el talle
-For Fila = 1 To ultimaFila
-    Cells(Fila, 3).Select
+For fila = 1 To ultimaFila
+    Cells(fila, 3).Select
     ' Recorre el diccionario buscando coincidencia
     For Each item In matrixCodColor
-        If matrixCodColor(item) = Cells(Fila, 3).Value Then
-            Cells(Fila, 3).Value = "'" & item
+        If matrixCodColor(item) = Cells(fila, 3).Value Then
+            Cells(fila, 3).Value = "'" & item
             GoTo proximaFila
-        ElseIf Cells(Fila, 3).Value = "" Then
+        ElseIf Cells(fila, 3).Value = "" Then
             GoTo proximaFila
         End If
     Next item
 
 ' Traslandando el talle a la siguiente columna
-Cells(Fila, 4).Value = Cells(Fila, 3).Value
-Cells(Fila, 3).Value = ""
+Cells(fila, 4).Value = Cells(fila, 3).Value
+Cells(fila, 3).Value = ""
 proximaFila:
-Next Fila
+Next fila
 
 ' Borrar espacios en blanco
 Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="", LookAt:=xlPart, searchorder:= _
@@ -1229,15 +1229,15 @@ Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="",
 
 
 ' Completa planilla para exportar
-For Fila = 1 To ultimaFila - 1
+For fila = 1 To ultimaFila - 1
     
     ' 1º) Stock
-    Cells(Fila, 1).Value = "'" & Worksheets("Depósito").Cells(Fila + 1, 6).Value
+    Cells(fila, 1).Value = "'" & Worksheets("Depósito").Cells(fila + 1, 6).Value
     
     ' 2º Codigo
-    Cells(Fila, 2).Value = "'" & Worksheets("Depósito").Cells(Fila + 1, 3).Value
+    Cells(fila, 2).Value = "'" & Worksheets("Depósito").Cells(fila + 1, 3).Value
     
-Next Fila
+Next fila
 
 ' Ajuste ultima Fila - HARDCODEO ESTO PARA PROBAR
 ultimaFila = ultimaFila - 1
@@ -1245,20 +1245,25 @@ ultimaFila = ultimaFila - 1
 ' Si se pasa del tope (30 líneas), serán "n" archivos con 30 líneas y otro con el resto
 ' de items que quedaron fuera. Sería el resto de una división, el módulo.
 resto = ultimaFila Mod limite
-cantArchivos = Int(ultimaFila / limite) + 1
+If resto = 0 Then
+    cantArchivos = Int(ultimaFila / limite)
+Else
+    cantArchivos = Int(ultimaFila / limite) + 1
+End If
+
 Debug.Print "Archivos a importar: " & cantArchivos
 
 
 ' Generación del txt
-Call generarTxt(Fila, ultimaFila, "", cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+Call generarTxt(fila, ultimaFila, "", cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
 
 End Sub
 
-Function generarTxt(Fila, ultimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+Function generarTxt(fila, ultimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
 Dim rutaArchivo As String
 Dim i As Byte
 Dim tope As Byte
-Fila = 0
+fila = 0
 
 
 ' Generación del txt
@@ -1268,16 +1273,16 @@ tope = i * limite
         tope = ultimaFila
     End If
     
-    For Fila = (limite * (i - 1)) + 1 To tope
-        Cells(Fila, 1).Activate
+    For fila = (limite * (i - 1)) + 1 To tope
+        Cells(fila, 1).Activate
         textoArchivo = textoArchivo _
-            & Cells(Fila, 1).Value _
-            & "+" & Cells(Fila, 2).Value _
-            & "!" & Cells(Fila, 3).Value _
-            & "!" & Cells(Fila, 4).Value _
+            & Cells(fila, 1).Value _
+            & "+" & Cells(fila, 2).Value _
+            & "!" & Cells(fila, 3).Value _
+            & "!" & Cells(fila, 4).Value _
             & vbNewLine
-            Debug.Print "Archivo N°: " & i, "Fila N° :" & Fila
-    Next Fila
+            Debug.Print "Archivo N°: " & i, "Fila N° :" & fila
+    Next fila
     
     ' Si es mayor a uno, se van nombrando incrementalmente
     If cantArchivos > 1 Then
@@ -1296,6 +1301,7 @@ tope = i * limite
     Close #1
     
     MsgBox "Datos exportados con éxito a " & rutaArchivo, vbInformation, "Cargar detalle desde txt"
+    textoArchivo = ""
 Next i
 
 

@@ -1,16 +1,16 @@
 Attribute VB_Name = "MELI"
 Option Explicit
 
-Function PintarFila(Hojilla As String, Fila As Integer, DesdeColumna As Integer, HastaColumna As Integer)
+Function PintarFila(Hojilla As String, fila As Integer, DesdeColumna As Integer, HastaColumna As Integer)
     Dim TextoOriginal As String
     
     ' Pinta filas impares
-    If Fila Mod 2 <> 0 Then
-        Worksheets(Hojilla).Range(Cells(Fila, DesdeColumna), Cells(Fila, HastaColumna)).Interior.color = RGB(240, 240, 240)
+    If fila Mod 2 <> 0 Then
+        Worksheets(Hojilla).Range(Cells(fila, DesdeColumna), Cells(fila, HastaColumna)).Interior.color = RGB(240, 240, 240)
         
         ' Formateando el dato del código
-        Worksheets(Hojilla).Cells(Fila, 4).Font.color = RGB(240, 240, 240)
-        Worksheets(Hojilla).Cells(Fila, 4).Characters(Start:=1, Length:=7).Font.ColorIndex = xlAutomatic
+        Worksheets(Hojilla).Cells(fila, 4).Font.color = RGB(240, 240, 240)
+        Worksheets(Hojilla).Cells(fila, 4).Characters(Start:=1, Length:=7).Font.ColorIndex = xlAutomatic
 
     End If
 End Function
@@ -505,11 +505,11 @@ rutaFormula = "'" & carpeta & "\..\" & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
 ' Nueva hoja con nombre Depósito
 ultima = Worksheets("Planilla").Cells(Rows.Count, 2).End(xlUp).Row - 1
 Call CrearHoja(ActiveWorkbook, "Depósito")
-ActiveWorkbook.Worksheets("Depósito").Activate
 
 ' Creando las columnas
 With Worksheets("Depósito")
     ' Limpia la hoja, por las dudas, de todo contenido y formato
+    .Activate
     .Cells.Clear
     .Cells.Select
     .Cells.ClearFormats
@@ -545,7 +545,7 @@ For i = 2 To ultima
         .Cells(i, 2).Value = Worksheets("Planilla").Cells(i, 3).Value
         
         ' Descripción
-        .Cells(i, 4).Value = "=VLOOKUP(LEFT(C" & i & ", 7)," & rutaFormula & ",2,FALSE)"
+        .Cells(i, 4).Value = "=VLOOKUP(LEFT(C" & i & ", 7)," & rutaFormula & ", 2, FALSE)"
         
         ' Reemplazando la descripción por las fórmulas en Planilla
         Worksheets("Planilla").Cells(i, 5).Value = "=VLOOKUP(LEFT(D" & i & ", 7)," & rutaFormula & ",2,FALSE)"
@@ -725,101 +725,111 @@ Function CrearHoja(archivo As Workbook, nombreHoja As String) As Boolean
 End Function
 
 
-
 Sub exportarTxt(carpeta As String, planillaActual As Workbook)
 
 ' GENERA UN ARCHIVO DE TEXTO PARA IMPORTAR AL D.F.
-' Variable temporal
-
-Dim Fila As Byte
+Dim fila As Long
 Dim codigo As String
 Dim Equivalencia As Workbook
 Dim camino As String
-camino = planillaActual.Path & "\..\Equivalencia.XLS"
-Set Equivalencia = Workbooks.Open(camino, False, True)
-
-
-
 Dim textoArchivo As String
 Dim server As String
 Dim txt As String
-txt = "Exportar TXT"
 Dim carpetaDestino As String
-
 Dim nombreArchivo As String
-Dim limite As Byte
+Dim limite As Long
 Dim item As Variant
-Dim i As Byte
-Dim ultimaFila As Byte
-Dim resto As Byte
-Dim cantArchivos As Byte
-Dim ruta As Range
+Dim i As Long
+Dim ultimaFila As Long
+Dim resto As Integer
+Dim cantArchivos As Long
+Dim ruta As Variant
 
 
-Set ruta = Equivalencia.Worksheets(1).Range("A1:G10000")
+camino = planillaActual.Path & "\..\Equivalencia.XLS"
+Set Equivalencia = Workbooks.Open(camino, False, True)
+txt = "Exportar TXT"
+
 ultimaFila = planillaActual.Worksheets("Planilla").Cells(Rows.Count, 2).End(xlUp).Row - 1
 nombreArchivo = planillaActual.Name
 server = "\\SER-DF\D\A Remitar TXT"
 carpetaDestino = "\" & carpeta & "\"
 limite = ultimaFila
-Debug.Print nombreArchivo
 
 ' Crea la hoja
 Call CrearHoja(planillaActual, txt)
 
+
+
+
 ' Limpiar la hoja
 planillaActual.Worksheets(txt).Cells.Clear
+Set ruta = Equivalencia.Sheets(1).Range("A1:G10000")
+
+
 
 ' Completa planilla para exportar
-For Fila = 1 To ultimaFila - 1
+For fila = 1 To ultimaFila - 1
     With planillaActual.Worksheets(txt)
         ' 1º) Stock
-        .Cells(Fila, 1).Value = "'" & planillaActual.Worksheets("Depósito").Cells(Fila + 1, 7).Value
-    
+        .Cells(fila, 1).Value = "'" & planillaActual.Worksheets("Depósito").Cells(fila + 1, 7).Value
+
         ' 2º Codigo
-        codigo = "" & planillaActual.Worksheets("Depósito").Cells(Fila + 1, 3).Value & ""
-        .Cells(Fila, 2).Value = Left(codigo, 7)
+        codigo = planillaActual.Worksheets("Depósito").Cells(fila + 1, 3).Value
+        planillaActual.Worksheets(txt).Activate
+        .Cells(fila, 2).Activate
+        .Cells(fila, 2).Value = Left(codigo, 7)
 
         ' 3° Color
         On Error Resume Next
-        .Cells(Fila, 3) = "'" & Application.WorksheetFunction.VLookup(codigo, ruta, 4, False)
+        .Cells(fila, 3).Value = "'" & Application.VLookup(planillaActual.Worksheets("Depósito").Cells(fila + 1, 3).Value, ruta, 4, False)
+        'If .Cells(fila, 3).Value = "." Then
+            ' .Cells(fila, 3).ClearContents
+        'End If
         
         ' 4° Talle
-        .Cells(Fila, 4) = "'" & Application.WorksheetFunction.VLookup(codigo, ruta, 6, False)
+        .Cells(fila, 4).Value = "'" & Application.VLookup(planillaActual.Worksheets("Depósito").Cells(fila + 1, 3).Value, ruta, 6, False)
+
     End With
-Next Fila
+Next fila
+
 
 ' Corrección de "Depósito" ==========
-For Fila = 2 To ultimaFila
+For fila = 2 To ultimaFila
     With planillaActual.Worksheets("Depósito")
+
         ' Corrección del Color
-        .Cells(Fila, 5).Activate
-        If Application.WorksheetFunction.VLookup(.Cells(Fila, 3).Value, ruta, 4, False) Is Nothing Then
-            .Cells(Fila, 5).Value = ""
-        Else
-            .Cells(Fila, 5).Value = Application.WorksheetFunction.VLookup(.Cells(Fila, 3).Value, ruta, 4, False) & ". " & Application.WorksheetFunction.VLookup(.Cells(Fila, 3).Value, ruta, 5, False)
+        planillaActual.Worksheets("Depósito").Activate
+        .Cells(fila, 5).Activate
+        .Cells(fila, 5).Value = Application.VLookup(.Cells(fila, 3).Value, ruta, 4, False) & ". " & Application.VLookup(.Cells(fila, 3).Value, ruta, 5, False)
+        If .Cells(fila, 5) = ". " Then
+            .Cells(fila, 5).ClearContents
         End If
-        
+
         ' Corrección del Talle
-        .Cells(Fila, 6).Value = "'" & Application.WorksheetFunction.VLookup(.Cells(Fila, 3).Value, ruta, 6, False)
+        .Cells(fila, 6).Value = "'" & Application.VLookup(.Cells(fila, 3).Value, ruta, 6, False)
     End With
-Next Fila
+Next fila
+
 
 ' Corrección de "Planilla" =========
-For Fila = 2 To ultimaFila
+For fila = 2 To ultimaFila
     With planillaActual.Worksheets("Planilla")
+        .Activate
+        .Cells(fila, 6).Activate
+
         ' Corrección del Color
-        If Application.WorksheetFunction.VLookup(.Cells(Fila, 4).Value, ruta, 4, False) Is Nothing Then
-            .Cells(Fila, 6).Value = ""
+        If Application.WorksheetFunction.VLookup(.Cells(fila, 4).Value, ruta, 4, False) = "" Then
+            .Cells(fila, 6).ClearContents
         Else
-            .Cells(Fila, 6).Value = Application.WorksheetFunction.VLookup(.Cells(Fila, 4).Value, ruta, 4, False) & ". " & Application.WorksheetFunction.VLookup(.Cells(Fila, 4).Value, ruta, 5, False)
+            .Cells(fila, 6).Value = Application.WorksheetFunction.VLookup(.Cells(fila, 4).Value, ruta, 4, False) & ". " & Application.WorksheetFunction.VLookup(.Cells(fila, 4).Value, ruta, 5, False)
         End If
-        
+
         ' Corrección del Talle
-        .Cells(Fila, 7).Value = "'" & Application.WorksheetFunction.VLookup(.Cells(Fila, 4).Value, ruta, 6, False)
+        .Cells(fila, 7).Value = "'" & Application.WorksheetFunction.VLookup(.Cells(fila, 4).Value, ruta, 6, False)
 
     End With
-Next Fila
+Next fila
 
 
 ' Ajuste ultima Fila - HARDCODEO ESTO PARA PROBAR
@@ -835,28 +845,28 @@ Debug.Print "Archivos a importar: " & cantArchivos
 Equivalencia.Close False
 
 ' Generación del txt
-Call generarTxt(Fila, ultimaFila, "", cantArchivos, planillaActual, carpetaDestino, limite, resto, server, txt)
-planillaActual.Sheets("Depósito").Activate
-End Sub
+Call generarTxt(fila, ultimaFila, "", cantArchivos, planillaActual, carpetaDestino, limite, resto, server, txt)
+planillaActual.Worksheets("Depósito").Activate
 
-Function BuscarEquivalencia(hoja, codigo, Fila, ruta, Columna)
+End Sub
+Function BuscarEquivalencia(hoja, codigo, fila, ruta, columna)
     ' BUSCA LAS EQUIVALENCIAS DE TALLES Y COLORES EN BASE AL CODIGO
     ' Usamos Application.VLookup (sin WorksheetFunction) para que no detenga la macro ante un error
-    Resultado = Application.VLookup(codigo, ruta, Columna, False)
+    Resultado = Application.VLookup(codigo, ruta, columna, False)
     
     If IsError(Resultado) Then
-        hoja.Cells(Fila, Columna) = "SIN EQUIVALENCIA"
+        hoja.Cells(fila, columna) = "SIN EQUIVALENCIA"
     Else
-        hoja.Cells(Fila, Columna) = "'" & Resultado
+        hoja.Cells(fila, columna) = "'" & Resultado
     End If
 End Function
 
-Function generarTxt(Fila, ultimaFila, textoArchivo, cantArchivos, archivoFuente, carpetaDestino, limite, resto, server, hoja)
+Function generarTxt(fila, ultimaFila, textoArchivo, cantArchivos, archivoFuente, carpetaDestino, limite, resto, server, hoja)
 Dim rutaArchivo As String
 Dim nombreArchivo As String
 Dim i As Byte
 Dim tope As Byte
-Fila = 0
+fila = 0
 
 
 ' Generación del txt
@@ -866,17 +876,17 @@ tope = i * limite
         tope = ultimaFila
     End If
     
-    For Fila = (limite * (i - 1)) + 1 To tope
+    For fila = (limite * (i - 1)) + 1 To tope
         archivoFuente.Sheets(hoja).Activate
-        Cells(Fila, 1).Activate
+        Cells(fila, 1).Activate
         textoArchivo = textoArchivo _
-            & Cells(Fila, 1).Value _
-            & "+" & archivoFuente.Sheets(hoja).Cells(Fila, 2).Value _
-            & "!" & archivoFuente.Sheets(hoja).Cells(Fila, 3).Value _
-            & "!" & archivoFuente.Sheets(hoja).Cells(Fila, 4).Value _
+            & Cells(fila, 1).Value _
+            & "+" & archivoFuente.Sheets(hoja).Cells(fila, 2).Value _
+            & "!" & archivoFuente.Sheets(hoja).Cells(fila, 3).Value _
+            & "!" & archivoFuente.Sheets(hoja).Cells(fila, 4).Value _
             & vbNewLine
-            Debug.Print "Archivo N°: " & i, "Fila N° :" & Fila
-    Next Fila
+            Debug.Print "Archivo N°: " & i, "Fila N° :" & fila
+    Next fila
     
     ' Si es mayor a uno, se van nombrando incrementalmente
     If cantArchivos > 1 Then
