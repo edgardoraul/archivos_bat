@@ -6,12 +6,13 @@ Function PintarFila(Hojilla As String, fila As Integer, DesdeColumna As Integer,
     
     ' Pinta filas impares
     If fila Mod 2 <> 0 Then
-        Worksheets(Hojilla).Range(Cells(fila, DesdeColumna), Cells(fila, HastaColumna)).Interior.color = RGB(240, 240, 240)
+        With Worksheets(Hojilla)
+            .Range(Cells(fila, DesdeColumna), Cells(fila, HastaColumna)).Interior.color = RGB(240, 240, 240)
         
-        ' Formateando el dato del código
-        Worksheets(Hojilla).Cells(fila, 4).Font.color = RGB(240, 240, 240)
-        Worksheets(Hojilla).Cells(fila, 4).Characters(Start:=1, Length:=7).Font.ColorIndex = xlAutomatic
-
+            ' Formateando el dato del código
+            .Cells(fila, 4).Font.color = RGB(240, 240, 240)
+            .Cells(fila, 4).Characters(Start:=1, Length:=7).Font.ColorIndex = xlAutomatic
+        End With
     End If
 End Function
 
@@ -154,9 +155,16 @@ Columns("B").ColumnWidth = 19
 Columns("C").ColumnWidth = 27
 Columns("D").ColumnWidth = 45
 Columns("E").ColumnWidth = 11
+
 Columns("F").ColumnWidth = 15
+Columns("F").HorizontalAlignment = xlCenter
+
 Columns("G").ColumnWidth = 6
+Columns("G").HorizontalAlignment = xlCenter
+
 Columns("H").ColumnWidth = 5
+Columns("H").HorizontalAlignment = xlCenter
+
 Columns("I").ColumnWidth = 10.7
 Columns("J").ColumnWidth = 10.7
 Columns("J").Hidden = True
@@ -231,13 +239,14 @@ Cells(ultima + 1, 7).Value = "TOTALES:"
 Cells(ultima + 1, 8).Select
 Cells(ultima + 1, 8).Value = "=SUM(H2:H" & ultima & ")"
 Range(Cells(ultima + 1, 7), Cells(ultima + 1, 8)).Select
-    With Selection
-        .Font.Bold = True
-        .Font.Size = 15
-        .HorizontalAlignment = xlRight
-        .VerticalAlignment = xlBottom
-    End With
+With Selection
+    .Font.Bold = True
+    .Font.Size = 15
+    .HorizontalAlignment = xlRight
+    .VerticalAlignment = xlBottom
+End With
 
+Cells(ultima + 1, 8).HorizontalAlignment = xlCenter
 
 ' Dando formato a la columna de los números de ventas
 Range(Cells(2, 2), Cells(ultima, 2)).Select
@@ -389,6 +398,7 @@ End If
 ' Preguntando al usuario qué cuenta es
 cuenta = Application.InputBox(Prompt:="¿Qué cuenta de MercadoLibre es? ¿1 ó 2?", Title:="Cuenta de MercadoLibre", Default:=1)
 If cuenta <> 1 And cuenta <> 2 Then
+
     MsgBox ("¿Cuenta 1 ó 2?. Elegí bien.")
     cuenta = Application.InputBox(Prompt:="¿Qué cuenta de MercadoLibre es? ¿1 ó 2?", Title:="Cuenta de MercadoLibre", Default:=1)
 End If
@@ -557,13 +567,16 @@ For i = 2 To ultima
         .Cells(i, 3).HorizontalAlignment = xlLeft
         
         ' Color
-        .Cells(i, 5).Value = Worksheets("Planilla").Cells(i, 6).Value
+        '.Cells(i, 5).Value = Worksheets("Planilla").Cells(i, 6).Value
+        .Cells(i, 5).HorizontalAlignment = xlCenter
         
         ' Talle
         .Cells(i, 6).Value = Worksheets("Planilla").Cells(i, 7).Value
+        .Cells(i, 6).HorizontalAlignment = xlCenter
         
         ' Cantidad
         .Cells(i, 7).Value = Worksheets("Planilla").Cells(i, 8).Value
+        .Cells(i, 7).HorizontalAlignment = xlCenter
            
         ' La ubicación. Si está en planta baja agregar esta aclaración
         If Worksheets("Planilla").Cells(i, 9).Value = "planta baja" Then
@@ -612,6 +625,8 @@ With Selection
     .VerticalAlignment = xlBottom
 End With
 
+' Centrando el total
+Worksheets("Depósito").Cells(ultima + 1, 7).HorizontalAlignment = xlCenter
 
 With Worksheets("Depósito").Range(Cells(1, 3), Cells(ultima, 8))
     .Borders.LineStyle = xlContinuous
@@ -783,9 +798,10 @@ For fila = 1 To ultimaFila - 1
         ' 3° Color
         On Error Resume Next
         .Cells(fila, 3).Value = "'" & Application.VLookup(planillaActual.Worksheets("Depósito").Cells(fila + 1, 3).Value, ruta, 4, False)
-        'If .Cells(fila, 3).Value = "." Then
-            ' .Cells(fila, 3).ClearContents
-        'End If
+        
+        If .Cells(fila, 3).Value = "." Then
+            .Cells(fila, 3).ClearContents
+        End If
         
         ' 4° Talle
         .Cells(fila, 4).Value = "'" & Application.VLookup(planillaActual.Worksheets("Depósito").Cells(fila + 1, 3).Value, ruta, 6, False)
@@ -802,7 +818,7 @@ For fila = 2 To ultimaFila
         planillaActual.Worksheets("Depósito").Activate
         .Cells(fila, 5).Activate
         .Cells(fila, 5).Value = Application.VLookup(.Cells(fila, 3).Value, ruta, 4, False) & ". " & Application.VLookup(.Cells(fila, 3).Value, ruta, 5, False)
-        If .Cells(fila, 5) = ". " Then
+        If .Cells(fila, 5) = ". " Or .Cells(fila, 5) = "" Then
             .Cells(fila, 5).ClearContents
         End If
 
