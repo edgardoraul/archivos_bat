@@ -54,9 +54,6 @@ Cells(1, 49).Activate
 
 ' Bucle que recorre las filas y obtiene el nombre+apellido y/o razón social.
 For i = 2 To ultima
-    Debug.Print Cells(i, 49).Value
-    Cells(i, 49).Activate
-    
     ' Obtención del usuario en mayúsculas
     Cells(i, 49).Value = Cells(i, 4).Value
 Next i
@@ -71,7 +68,7 @@ Application.CutCopyMode = False
 ' Copiando unas ciertas columnas
 Range("AS:AT").Select
 Selection.Copy
-Sheets("Planilla").Activate
+Worksheets("Planilla").Activate
 Range("M1").Activate
 Range("M1").PasteSpecial xlPasteAll
 Application.CutCopyMode = False
@@ -193,13 +190,13 @@ Next i
 Rows("1").RowHeight = 25.5
 Range("A1").Select
 Range(Selection, Selection.End(xlToRight)).Select
-    With Selection
-        .Font.Bold = True
-        .HorizontalAlignment = xlCenter
-        .VerticalAlignment = xlCenter
-        .Interior.color = RGB(250, 250, 250)
-        .WrapText = True
-    End With
+With Selection
+    .Font.Bold = True
+    .HorizontalAlignment = xlCenter
+    .VerticalAlignment = xlCenter
+    .Interior.color = RGB(250, 250, 250)
+    .WrapText = True
+End With
 
 ' Formateando la columna de fechas
 Range("A1").Select
@@ -212,12 +209,12 @@ End With
 Range("A2").CurrentRegion.Select
 Selection.Borders(xlDiagonalDown).LineStyle = xlNone
 Selection.Borders(xlDiagonalUp).LineStyle = xlNone
-    With Selection.Borders(xlInsideVertical)
-        .LineStyle = xlContinuous
-        .ColorIndex = 0
-        .TintAndShade = 0
-        .Weight = xlThin
-    End With
+With Selection.Borders(xlInsideVertical)
+    .LineStyle = xlContinuous
+    .ColorIndex = 0
+    .TintAndShade = 0
+    .Weight = xlThin
+End With
 
 ' Agregando bordes HORIZONTALES en titular
 Range("A1:K1").Select
@@ -298,11 +295,11 @@ Cells(ultima + 1, 3).Value = " ROTULOS"
 Cells(ultima + 1, 2).Select
 Cells(ultima + 1, 2).Value = "=COUNTA(K2:K" & ultima & ")-COUNTIF(K2:K" & ultima & ", ""Retira en Local"")"
 Range(Cells(ultima + 1, 2), Cells(ultima + 1, 3)).Select
-    With Selection
-        .Font.Bold = True
-        .Font.Size = 15
-        .VerticalAlignment = xlBottom
-    End With
+With Selection
+    .Font.Bold = True
+    .Font.Size = 15
+    .VerticalAlignment = xlBottom
+End With
 
 ' Borrando la última colummna ahora innecesaria
 Columns(13).EntireColumn.Delete
@@ -398,7 +395,6 @@ End If
 ' Preguntando al usuario qué cuenta es
 cuenta = Application.InputBox(Prompt:="¿Qué cuenta de MercadoLibre es? ¿1 ó 2?", Title:="Cuenta de MercadoLibre", Default:=1)
 If cuenta <> 1 And cuenta <> 2 Then
-
     MsgBox ("¿Cuenta 1 ó 2?. Elegí bien.")
     cuenta = Application.InputBox(Prompt:="¿Qué cuenta de MercadoLibre es? ¿1 ó 2?", Title:="Cuenta de MercadoLibre", Default:=1)
 End If
@@ -418,8 +414,8 @@ archivos = Dir(ruta)
 ' Recorrido de la carpeta
 ActiveWorkbook.Sheets.Add(after:=ActiveWorkbook _
     .Worksheets("Planilla")).Name = "Listado"
-Sheets("Listado").Visible = False
-Sheets("Planilla").Select
+Worksheets("Listado").Visible = False
+Worksheets("Planilla").Select
 
 Do While Len(archivos) > 0
     Sheets("Listado").Cells(u, 1).Value = archivos
@@ -429,7 +425,7 @@ Loop
 nombre = ruta & Sheets("Listado").Cells(u - 1, 1).Value
 
 ' Controlando que no se esté duplicando el mismo archivo con otro nombre
-If ActiveWorkbook.Name = Sheets("Listado").Cells(u - 1, 1).Value Then
+If ActiveWorkbook.Name = Worksheets("Listado").Cells(u - 1, 1).Value Then
     MsgBox ("Ya creaste este archivo antes. Generá uno nuevo.")
     ActiveWorkbook.Close SaveChanges:=False
     Exit Sub
@@ -445,7 +441,7 @@ e = 1
 
 ' Controlando si es cuenta 1
 If cuenta = 1 Then
-    parteNumero = Mid(Sheets("Listado").Cells(u - 1, 1).Value, 8, 7)
+    parteNumero = Mid(Worksheets("Listado").Cells(u - 1, 1).Value, 8, 7)
     nombreNumero = CInt(parteNumero) + 1
     parteNumero = CStr(nombreNumero)
     
@@ -457,7 +453,7 @@ If cuenta = 1 Then
     nombre = ruta & "Pedidos " & parteNumero & ". " & fecha & ".xlsx"
 
 ElseIf cuenta = 2 Then
-    parteNumero = Mid(Sheets("Listado").Cells(u - 1, 1).Value, 19, 7)
+    parteNumero = Mid(Worksheets("Listado").Cells(u - 1, 1).Value, 19, 7)
     nombreNumero = CInt(parteNumero) + 1
     parteNumero = CStr(nombreNumero)
     
@@ -471,7 +467,7 @@ Else
     MsgBox ("Elegí: 1 ó 2")
 End If
 
-Sheets("Planilla").Range("A1").Select
+Worksheets("Planilla").Range("A1").Select
 
 ActiveWorkbook.SaveAs nombre
 ActiveWorkbook.Save
@@ -479,7 +475,7 @@ ActiveWorkbook.Save
 ' Generando planilla para Depósito
 Call depositoMeli
 
-Sheets("Planilla").Activate
+Worksheets("Planilla").Activate
 Range("A1").Activate
 
 
@@ -523,7 +519,8 @@ With Worksheets("Depósito")
     .Cells.Clear
     .Cells.Select
     .Cells.ClearFormats
-    .Cells.Font.Size = 11
+    .Cells.Font.Size = 12
+    .Cells.RowHeight = 17
     .Cells(1, 1).Value = "Nº Venta"
     .Cells(1, 2).Value = "Cliente"
     .Cells(1, 3).Value = "Código"
@@ -627,6 +624,7 @@ End With
 
 ' Centrando el total
 Worksheets("Depósito").Cells(ultima + 1, 7).HorizontalAlignment = xlCenter
+Worksheets("Depósito").Cells(ultima + 1, 7).RowHeight = 24
 
 With Worksheets("Depósito").Range(Cells(1, 3), Cells(ultima, 8))
     .Borders.LineStyle = xlContinuous
@@ -760,7 +758,6 @@ Dim resto As Integer
 Dim cantArchivos As Long
 Dim ruta As Variant
 
-
 camino = planillaActual.Path & "\..\Equivalencia.XLS"
 Set Equivalencia = Workbooks.Open(camino, False, True)
 txt = "Exportar TXT"
@@ -774,14 +771,9 @@ limite = ultimaFila
 ' Crea la hoja
 Call CrearHoja(planillaActual, txt)
 
-
-
-
 ' Limpiar la hoja
 planillaActual.Worksheets(txt).Cells.Clear
 Set ruta = Equivalencia.Sheets(1).Range("A1:G10000")
-
-
 
 ' Completa planilla para exportar
 For fila = 1 To ultimaFila - 1

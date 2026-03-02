@@ -8,13 +8,13 @@ Dim e As Integer
 Dim sku As String
 Dim ultima_p As Long
 Dim ultima_i As Long
-Dim hojilla As String
+Dim Hojilla As String
 Dim c As Range
 Dim total As Long
 
 'hojilla = "Con Color"
 'hojilla = "Variables"
-hojilla = "Simples"
+Hojilla = "Simples"
 
 
 Workbooks.Open ("D:\Web\archivos_bat\Producteca_img.xlsx")
@@ -24,7 +24,7 @@ Set producteca = Workbooks("Producteca_img.xlsx")
 Set imagenes = Workbooks("ListadoImagenesWeb.xlsm")
 
 ultima_p = producteca.Worksheets(1).Cells(Rows.Count, 1).End(xlUp).Row
-ultima_i = imagenes.Worksheets(hojilla).Cells(Rows.Count, 1).End(xlUp).Row
+ultima_i = imagenes.Worksheets(Hojilla).Cells(Rows.Count, 1).End(xlUp).Row
 
 producteca.Worksheets(1).Activate
 producteca.Worksheets(1).Cells(1, 8).Activate
@@ -40,12 +40,12 @@ For i = 2 To ultima_p
     
     ' Buscar en imágenes ==========
     For e = 2 To ultima_i
-        If hojilla = "Con Color" And imagenes.Worksheets(hojilla).Cells(e, 2).Value = sku Then
-            producteca.Worksheets(1).Cells(i, 6).Value = imagenes.Worksheets(hojilla).Cells(e, 7).Value
+        If Hojilla = "Con Color" And imagenes.Worksheets(Hojilla).Cells(e, 2).Value = sku Then
+            producteca.Worksheets(1).Cells(i, 6).Value = imagenes.Worksheets(Hojilla).Cells(e, 7).Value
             producteca.Worksheets(1).Cells(i, 7).Value = "Cambiado"
             GoTo Siguiente
-        ElseIf imagenes.Worksheets(hojilla).Cells(e, 3).Value = Left(sku, 7) & "##" Then
-            producteca.Worksheets(1).Cells(i, 6).Value = imagenes.Worksheets(hojilla).Cells(e, 7).Value
+        ElseIf imagenes.Worksheets(Hojilla).Cells(e, 3).Value = Left(sku, 7) & "##" Then
+            producteca.Worksheets(1).Cells(i, 6).Value = imagenes.Worksheets(Hojilla).Cells(e, 7).Value
             producteca.Worksheets(1).Cells(i, 7).Value = "Cambiado"
             GoTo Siguiente
         End If

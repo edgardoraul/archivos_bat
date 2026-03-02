@@ -294,6 +294,10 @@ With Selection
 End With
 Cells(ultima + 1, 2).HorizontalAlignment = xlLeft
 
+' Centrando una columna
+Columns("F").HorizontalAlignment = xlCenter
+
+
 ' Colocando un borde superior
 For i = 3 To ultima
     Range(Cells(i, 1), Cells(i, 13)).Select
@@ -501,16 +505,6 @@ Next i
 Range("I:I").EntireColumn.Insert
 Range("I1:I1").Value = "Detalles"
 
-' Dando formato
-'For i = 2 To ultima
-    ' Columna de las ubicaciones de productos
-    With Cells(i, 9)
-        'Activate
-        '.WrapText = False
-        '.ShrinkToFit = True
-    End With
-'Next i
-
 ' Limpiando el contenido de "(sin color)" y "(sin talle)"
 ' Con comas y doble paréntesis
 Cells.Replace what:="((Sin Color)), ", Replacement:="", LookAt:=xlPart, searchorder:= _
@@ -628,7 +622,7 @@ Call correo(numVenta, nombre, ultima, i, packar, planilla)
 
 
 ' Posicionando al principio
-planilla.Worksheets(1).Activate
+planilla.Worksheets("ventas").Activate
 ActiveWorkbook.Save
 End Sub
 
@@ -678,10 +672,11 @@ For i = 2 To ultima
 
         ' Variante
         .Cells(i, 3).Value = Worksheets("ventas").Cells(i, 5).Value
+        .Cells(i, 3).HorizontalAlignment = xlCenter
         
         ' Cantidad
         .Cells(i, 4).Value = Worksheets("ventas").Cells(i, 6).Value
-            
+        
         ' La ubicación
         .Cells(i, 5).Formula = "=VLOOKUP(A" & i & "," & ruta & ",3,FALSE)"
     
@@ -737,6 +732,9 @@ With Worksheets("Depósito").Range(Cells(1, 1), Cells(ultima, 5))
     .Rows.RowHeight = 17
     .Borders.LineStyle = xlContinuous
 End With
+
+' Centrando columna
+Worksheets("Depósito").Columns("D").HorizontalAlignment = xlCenter
 
 ' Formato de impresión
 With ActiveSheet.PageSetup
