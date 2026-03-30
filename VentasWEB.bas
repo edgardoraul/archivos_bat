@@ -308,7 +308,7 @@ For i = 3 To ultima
     End If
     
     ' Color de fondo a las celdas
-    Call PintarFila("ventas", i, 1, 9)
+    'Call PintarFila("ventas", i, 1, 9)
 Next i
 
 ' Autofit para la última columna
@@ -589,8 +589,8 @@ For i = 2 To ultima
 Next i
 
 'Posicionando al principio
-Sheets.Add(after:=Worksheets(1)).Name = "Depósito"
-Sheets.Add(after:=Sheets("Depósito")).Name = "Exportar TXT"
+Worksheets.Add(after:=Worksheets(1)).Name = "Depósito"
+Worksheets.Add(after:=Worksheets("Depósito")).Name = "Exportar TXT"
 Worksheets(1).Activate
 Range("A1").Activate
 
@@ -799,7 +799,7 @@ Dim RangoVariante As Range
 
 
 Dim matrixCodColor As Object
-ultimaFila = Worksheets("Depósito").Cells(Rows.Count, 2).End(xlUp).Row - 1
+ultimaFila = Worksheets("Depósito").Cells(Rows.Count, 2).End(xlUp).Row
 nombreArchivo = Len(ActiveWorkbook.Name)
 server = "\\SER-DF\D\A Remitar TXT"
 carpetaDestino = "\WEB\"

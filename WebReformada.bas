@@ -885,12 +885,6 @@ Call formato(ultima, i)
 Columns("C").ColumnWidth = 8
 Range(Cells(2, 3), Cells(ultima - 1, 3)).WrapText = False
 
-' Coloreando filas impares
-For i = 3 To ultima - 1
-    Call PintarFila("ventas", i, 1, 9)
-Next i
-
-
 ' GENERANDO LOS ROTULOS DE RETIRO
 Dim HojaRetiroLocal As String
 For i = 2 To ultima

@@ -285,7 +285,7 @@ Do While ultima - contador > 1
     End If
     
     ' Pintando la fila
-    Call PintarFila("Planilla", ultima - contador, 1, 9)
+    ' Call PintarFila("Planilla", ultima - contador, 1, 9)
     
     contador = contador + 1
 Loop
@@ -805,17 +805,19 @@ Next fila
 ' Corrección de "Depósito" ==========
 For fila = 2 To ultimaFila
     With planillaActual.Worksheets("Depósito")
-
+    
         ' Corrección del Color
         planillaActual.Worksheets("Depósito").Activate
         .Cells(fila, 5).Activate
         .Cells(fila, 5).Value = Application.VLookup(.Cells(fila, 3).Value, ruta, 4, False) & ". " & Application.VLookup(.Cells(fila, 3).Value, ruta, 5, False)
+        
         If .Cells(fila, 5) = ". " Or .Cells(fila, 5) = "" Then
             .Cells(fila, 5).ClearContents
         End If
 
         ' Corrección del Talle
         .Cells(fila, 6).Value = "'" & Application.VLookup(.Cells(fila, 3).Value, ruta, 6, False)
+    
     End With
 Next fila
 
