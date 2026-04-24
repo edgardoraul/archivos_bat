@@ -435,16 +435,17 @@ End Function
 
 
 ' Sirve para controlar si corresponde o no una factura proforma
-Function proforma(apellidoNombre, direccion, provincia, codigoPostal, ciudad, telefono, fecha, RotulosCorreo, VentaWeb, ultimaFila, ruta)
+Function proforma(apellidoNombre, direccion, provincia, codigoPostal, ciudad, telefono, fecha, RotulosCorreo, VentaWeb, ultimaFila, ruta, fila)
     Dim acumulador As Byte
     Dim cantidad As Byte
     Dim precio As Double
     Dim sku As String
-    Dim color As String
-    Dim talle As String
+    Dim variante As String
     Dim cotizacion As Double
     Dim i As Integer
     cotizacion = 0
+    Dim AcumProf As Byte
+    AcumProf = 21
     
     
     'Limpiando información previa
@@ -469,12 +470,16 @@ Function proforma(apellidoNombre, direccion, provincia, codigoPostal, ciudad, te
     End With
     
     If provincia = "TIERRA DEL FUEGO" Or provincia = "Tierra del Fuego" Then
+        Dim ventaProforma As String
+        ventaProforma = VentaWeb.Worksheets("ventas").Cells(fila, 1).Value
+        
         ' Pide cotización del dólar
         Do While cotizacion = 0
             cotizacion = Application.InputBox(Prompt:="Cotización del dólar", Title:="Factura Proforma", Default:=1)
         Loop
         
-        'hacer proforma
+        ' Hacer proforma
+        RotulosCorreo.Worksheets("Proforma").Activate
         With RotulosCorreo.Worksheets("Proforma")
             .Cells(7, 9).Value = UCase(apellidoNombre)
             .Cells(9, 9).Value = direccion
@@ -483,42 +488,39 @@ Function proforma(apellidoNombre, direccion, provincia, codigoPostal, ciudad, te
             .Cells(13, 9).Value = UCase(provincia)
             .Cells(17, 9).Value = "'" & telefono
         End With
-        acumulador = 0
+        acumulador = fila
         
         ' Bucle que recorre la venta
         Do
             With VentaWeb.Worksheets("ventas")
-                sku = .Cells(acumulador + 2, 3).Value
-                cantidad = .Cells(acumulador + 2, 6).Value
-                color = .Cells(acumulador + 2, 5).Value
-                talle = .Cells(acumulador + 2, 5).Value
-                precio = .Cells(acumulador + 2, 16).Value
+                sku = .Cells(acumulador, 3).Value
+                cantidad = .Cells(acumulador, 6).Value
+                variante = .Cells(acumulador, 5).Value
+                precio = .Cells(acumulador, 16).Value
             End With
-            Debug.Print sku, cantidad, color, talle, precio
+            Debug.Print "#" & ventaProforma, sku, cantidad, variante, precio
 
             
             ' Los vuelca en la Proforma
             With RotulosCorreo.Worksheets("Proforma")
                 ' Copiando el código
-                .Cells(21 + acumulador, 2).Value = sku
+                .Cells(AcumProf, 2).Value = sku
             
-                ' Copiando el talle
-                .Cells(21 + acumulador, 4).Value = talle
-            
-                ' Copiando el color
-                .Cells(21 + acumulador, 3).Value = color
+                ' Copiando la variante
+                .Cells(AcumProf, 3).Value = variante
             
                 ' Copiando la cantidad
-                .Cells(21 + acumulador, 1).Value = cantidad
+                .Cells(AcumProf, 1).Value = cantidad
             
                 ' Copiando el monto
-                .Cells(21 + acumulador, 8).Value = precio / cotizacion
+                .Cells(AcumProf, 8).Value = precio / cotizacion
             End With
             
             ' Aumentando el contador
+            AcumProf = AcumProf + 1
             acumulador = acumulador + 1
             
-        Loop While VentaWeb.Worksheets("ventas").Cells(acumulador + 2, 1).Value = "" And VentaWeb.Worksheets("ventas").Cells(acumulador + 2, 2).Value <> "ROTULOS"
+        Loop While VentaWeb.Worksheets("ventas").Cells(acumulador, 1).Value = "" And VentaWeb.Worksheets("ventas").Cells(acumulador, 2).Value <> "ROTULOS"
                 
         ' Imprimiendo el rótulo
         Call Rotulo_Correo_Argentino("Factura Proforma - " & apellidoNombre, RotulosCorreo.Worksheets("Proforma"), fecha, ruta)
@@ -605,7 +607,7 @@ Function Rotulador(VentaWeb As Workbook, RotulosCorreo As Workbook, fila As Inte
         End With
         
         ' Generar Proforma
-        Call proforma(apellidoNombre, direccion, provincia, codigoPostal, ciudad, telefono, fecha, RotulosCorreo, VentaWeb, ultimaFila, ruta)
+        Call proforma(apellidoNombre, direccion, provincia, codigoPostal, ciudad, telefono, fecha, RotulosCorreo, VentaWeb, ultimaFila, ruta, fila)
         
         ' Generar rotulo
         Call Rotulo_Correo_Argentino(apellidoNombre, RotulosCorreo.Worksheets("A Domicilio"), fecha, ruta)
@@ -644,7 +646,7 @@ Function Rotulador(VentaWeb As Workbook, RotulosCorreo As Workbook, fila As Inte
         End With
         
         ' Generar Proforma
-        Call proforma(apellidoNombre, "Retiro en Sucursal del Correo Argentino Cód. NIS " & codigoNis, provincia, codigoPostal, ciudad, telefono, fecha, RotulosCorreo, VentaWeb, ultimaFila, ruta)
+        Call proforma(apellidoNombre, "Retiro en Sucursal del Correo Argentino Cód. NIS " & codigoNis, provincia, codigoPostal, ciudad, telefono, fecha, RotulosCorreo, VentaWeb, ultimaFila, ruta, fila)
         
         ' Generar rotulo
         Call Rotulo_Correo_Argentino(apellidoNombre, RotulosCorreo.Worksheets("A Sucursal"), fecha, ruta)
