@@ -1,13 +1,14 @@
-/* <a id="gotop" class="btn btn-warning" href="#" title="Ir arriba">↑</a>
+/*
+<a id="gotop" class="btn btn-warning" href="#" title="Ir arriba">↑</a>
 
 <script>
 	/*
-	* Script para poder mostrar los títulos de los productos de una forma correcta en las plantillas de TiendaNube.
-	* Evitamos el recorte innecesario del título.
-	* Favorecemos la experiencia del usuario para buscar lo que necesite, ya sea siendo cliente o vendedor del producto.
-	* Mostrar el código del producto en una leyenda aparte.
-	* El enlace no se modifica.
-	* 
+    * Script para poder mostrar los títulos de los productos de una forma correcta en las plantillas de TiendaNube.
+    * Evitamos el recorte innecesario del título.
+    * Favorecemos la experiencia del usuario para buscar lo que necesite, ya sea siendo cliente o vendedor del producto.
+    * Mostrar el código del producto en una leyenda aparte.
+    * El enlace no se modifica.
+    * 
 */
 
 
@@ -17,7 +18,7 @@ let titulares;
 
 function completador(items) {
 
-	// Constante que recoje todos los items de productos.
+	// Variable que recoje todos los items de productos.
 	titulares = document.querySelectorAll(".js-item-name.item-name");
 	console.log("Primera carga: " + titulares.length, "\n", "Acumulador: " + acumulador, "\n", "\n" );
 
@@ -33,7 +34,13 @@ function completador(items) {
 		.en-bloques
 		{
 			display: block;
-			margin: -1.5em auto -1.5em auto;
+			margin: 0.5em auto -1.5em auto;
+			user-select: text !important;
+			-webkit-user-select: text !important;
+			-moz-user-select: text !important;
+			-ms-user-select: text !important;
+			pointer-events: auto !important;
+			cursor: text;
 		}
 		@media (max-width:769px) {
 			.js-item-name.item-name {
@@ -57,20 +64,25 @@ function completador(items) {
 		// Extracción del código del producto.
 		codigo = titulares[i].title.slice( primerParentesis + 1, ultimoParentesis );
 		
-		// Creamos elementos adicionales
-		const br1 = document.createElement("br");
-		const small = document.createElement("small");
-		const br2 = document.createElement("br");
-		
-		// Completamos el código con leyenda y formato
-		small.textContent = "Código: " + codigo;
-		small.classList.add("text-capitalize", "en-bloques");
-		
-		// Y agregamos los elementos adicionales al DOM
-		titulares[i].parentNode.appendChild(br1);
-		titulares[i].parentNode.appendChild(small);
-		titulares[i].parentNode.appendChild(br2);
+		// Verifica si el código ya fue agregado previamente
+		const yaExiste = titulares[i].parentNode.querySelector(".en-bloques");
 
+		if( !yaExiste )
+		{
+			// Creamos elementos adicionales
+			const br1 = document.createElement("br");
+			const small = document.createElement("small");
+			const br2 = document.createElement("br");
+
+			// Completamos el código con leyenda y formato
+			small.textContent = "Código: " + codigo;
+			small.classList.add("text-capitalize", "en-bloques");
+
+			// Agregamos los elementos al DOM
+			titulares[i].parentNode.appendChild(br1);
+			titulares[i].parentNode.appendChild(small);
+			titulares[i].parentNode.appendChild(br2);
+		}
 	}
 
 	// Actualizamos el valor del acumulador
@@ -95,10 +107,7 @@ function detectarCargaAjax() {
 
 	function detectarScroll() {
 		// Verificar si el usuario ha llegado al final de la página
-		// if (window.innerHeight + window.scrollY >= (document.body.offsetHeight - futer.offsetHeight )) {
-			completador();
-			ofertor();
-		// }
+		completador();
 	}
 
 	/* IR ARRIBA */
@@ -125,7 +134,7 @@ function detectarCargaAjax() {
 // Ejecutar la función detectarCargaAjax() cuando se carga el DOM
 document.addEventListener("DOMContentLoaded", detectarCargaAjax);
 
-/*/ PROMOCIONES
+/* PROMOCIONES
 let itemsPromos;
 let porcentaje;
 let acumuladorPromos = 0;
