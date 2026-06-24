@@ -10,7 +10,7 @@ Dim acumulador As Integer
 Sub ImagenesDF()
 ' CREA LAS RUTAS PARA IMPORTAR IMAGENES AL PESCADO DRAGÓN
 ' LA PRIMERA PARTE DEL ENLACE QUE NO CAMBIA
-ruta = ThisWorkbook.Path & "\Exportado.txt"
+ruta = ActiveWorkbook.Path & "\Exportado.txt"
 ruta_base = Worksheets("Constantes").Cells(13, 2).Value
 archivo = "\1.jpg"
 
@@ -40,8 +40,16 @@ Function copiaCodigos(hoja)
     Dim i As Integer
     Dim Servidor As String
     Dim total As Long
+    If hoja = "Con Color" Then
+        archivo = "\Portada.jpg"
+    ElseIf hoja = "Con Talles" Then
+        archivo = "\Portada.jpg"
+    Else
+        archivo = "\1.jpg"
+    End If
     
     Servidor = Worksheets("Constantes").Range("B15").Value
+    
     ' Va copiando códigos de arriba hacia abajo y generando enlaces
     ultima = Worksheets(hoja).Cells(Rows.Count, 1).End(xlUp).Row
     
@@ -66,7 +74,10 @@ Function copiaCodigos(hoja)
         ' Escribiendo registros
         Cells(acumulador, 1).Value = codigo
         Cells(acumulador, 2).Value = ruta
-        Call CopiarImagen_PorCodigo(codigo, i, archivo, Servidor, ruta_base)
+        
+        ' Se comenta esto por ser la computadora EDGAR
+        ' la única servidora de las imágenes.
+        'Call CopiarImagen_PorCodigo(codigo, i, archivo, Servidor, ruta_base)
         
         ' Aumento el acumulador para no pisar información cargada
         acumulador = acumulador + 1
@@ -89,6 +100,7 @@ Function ExportarComoTXT_Tab()
     
     '?? Abrir archivo para escritura
     archivo = FreeFile
+    On Error Resume Next
     Open ruta For Output As #archivo
     
     '?? Detectar rango usado
@@ -132,7 +144,7 @@ Function CopiarImagen_PorCodigo(codigo, i, NombreImagen, CarpetaRaizDestino, Rut
     ' La Carpeta de Destino es igual al Código
     
     RutaOrigen = RutaDelOrigen & codigo & NombreImagen
-    RutaDestino = CarpetaRaizDestino & codigo & NombreImagen
+    'RutaDestino = CarpetaRaizDestino & codigo & NombreImagen
     
     ' Crear el objeto FileSystemObject
     Set FSO = CreateObject("Scripting.FileSystemObject")

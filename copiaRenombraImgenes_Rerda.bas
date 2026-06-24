@@ -12,7 +12,7 @@ Attribute CopiarPegarRenombrarBorrarSubcarpetas.VB_ProcData.VB_Invoke_Func = "P\
     Dim destinoFolder As Object
     Dim subFolder As Object
     Dim response As Integer
-    Dim control As String
+    Dim Control As String
     
     ' Obtener la ruta de la carpeta de origen
     With Application.FileDialog(msoFileDialogFolderPicker)
@@ -34,7 +34,7 @@ Attribute CopiarPegarRenombrarBorrarSubcarpetas.VB_ProcData.VB_Invoke_Func = "P\
     End With
     
     ' Verificar si existe 1.jpg, si no, crear una copia del primer archivo de imagen encontrado
-    Call AsegurarImagen1(origenPath)
+    'Call AsegurarImagen1(origenPath)
     
     ' Obtener el nombre de la carpeta de origen
     newFolderName = Left(GetFolderName(origenPath), 7)
@@ -67,28 +67,26 @@ Attribute CopiarPegarRenombrarBorrarSubcarpetas.VB_ProcData.VB_Invoke_Func = "P\
         subFolder.Delete
     Next subFolder
     
-    control = destinoFolder
+    Control = destinoFolder
     Debug.Print destinoFolder
-    Call Agregar1jpgSiNoExiste(control)
-    
-    
+    'Call Agregar1jpgSiNoExiste(Control)
     
 End Sub
 
 Sub AsegurarImagen1(origenPath As String)
-    Dim fso As Object, archivo As Object
+    Dim FSO As Object, archivo As Object
     Dim archivoImagen As String
     
-    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set FSO = CreateObject("Scripting.FileSystemObject")
     
     ' Si ya existe 1.jpg, no hacer nada
-    If fso.FileExists(origenPath & "\1.jpg") Then Exit Sub
+    If FSO.FileExists(origenPath & "\1.jpg") Then Exit Sub
     
     ' Buscar el primer archivo de imagen
-    For Each archivo In fso.GetFolder(origenPath).Files
-        If LCase(fso.GetExtensionName(archivo.Name)) = "jpg" Or _
-           LCase(fso.GetExtensionName(archivo.Name)) = "jpeg" Or _
-           LCase(fso.GetExtensionName(archivo.Name)) = "png" Then
+    For Each archivo In FSO.GetFolder(origenPath).Files
+        If LCase(FSO.GetExtensionName(archivo.Name)) = "jpg" Or _
+           LCase(FSO.GetExtensionName(archivo.Name)) = "jpeg" Or _
+           LCase(FSO.GetExtensionName(archivo.Name)) = "png" Then
             archivoImagen = archivo.Path
             Exit For
         End If
@@ -96,7 +94,7 @@ Sub AsegurarImagen1(origenPath As String)
     
     ' Si encontró un archivo de imagen, copiarlo como 1.jpg
     If archivoImagen <> "" Then
-        fso.CopyFile archivoImagen, origenPath & "\1.jpg"
+        FSO.CopyFile archivoImagen, origenPath & "\1.jpg"
     End If
 End Sub
 
@@ -123,35 +121,35 @@ End Function
 
 
 Function Agregar1jpgSiNoExiste(rutaCarpeta As String) As Boolean
-    Dim fso As Object
+    Dim FSO As Object
     Dim archivo As Object
     Dim archivo1jpg As String
     Dim primerJPG As String
     
     On Error GoTo errHandler
     
-    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set FSO = CreateObject("Scripting.FileSystemObject")
     
-    If Not fso.FolderExists(rutaCarpeta) Then
+    If Not FSO.FolderExists(rutaCarpeta) Then
         Debug.Print "La carpeta no existe: " & rutaCarpeta
         Agregar1jpgSiNoExiste = False
         Exit Function
     End If
     
-    archivo1jpg = fso.BuildPath(rutaCarpeta, "1.jpg")
+    archivo1jpg = FSO.BuildPath(rutaCarpeta, "1.jpg")
     
     ' Si ya existe "1.jpg", no hacer nada
-    If fso.FileExists(archivo1jpg) Then
+    If FSO.FileExists(archivo1jpg) Then
         Agregar1jpgSiNoExiste = True
         Exit Function
     End If
     
     ' Buscar el primer .jpg (o .jpeg)
-    For Each archivo In fso.GetFolder(rutaCarpeta).Files
+    For Each archivo In FSO.GetFolder(rutaCarpeta).Files
         If Not (archivo.Attributes And 2) = 0 Then GoTo Siguiente ' Saltar ocultos
         If EsExtensionJPG(archivo.Name) Then
             primerJPG = archivo.Path
-            fso.CopyFile primerJPG, archivo1jpg
+            FSO.CopyFile primerJPG, archivo1jpg
             Debug.Print "Se copió: " & primerJPG & " como 1.jpg en " & rutaCarpeta
             Agregar1jpgSiNoExiste = True
             Exit Function
@@ -172,6 +170,6 @@ End Function
 Private Function EsExtensionJPG(nombreArchivo As String) As Boolean
     Dim ext As String
     ext = LCase(Right(nombreArchivo, Len(nombreArchivo) - InStrRev(nombreArchivo, ".")))
-    EsExtensionJPG = (ext = "jpg" Or ext = "jpeg")
+    EsExtensionJPG = (ext = "jpg")
 End Function
 

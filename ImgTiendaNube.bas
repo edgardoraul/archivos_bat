@@ -43,58 +43,56 @@ Const rutaFinal = "D:\OneDrive\Dragonfish Color y Talle\Articulos\"
 
 
 Function GeneradorImagenesVariables()
+
 ' PRODUCTO CON VARIENTE DE TALLE ===================
-
-Sheets("Variables").Activate
-
+Worksheets("Variables").Activate
 
 ' Rellenando la url
-URL = Sheets("Constantes").Range("B1").Value
+URL = Worksheets("Constantes").Range("B1").Value
 extension = ".jpg"
 tabla = "/tabla" & extension
 
-
 ' Obteniendo la última fila
-Range("A1").Select
-ultimaFila = Range(Selection, Selection.End(xlDown)).Count
+ultimaFila = Worksheets("Variables").Cells(Rows.Count, 1).End(xlUp).Row
 
 ' Bucle que recorre toda la columna
-For i = 2 To ultimaFila
-    If Cells(i, 8) >= 1 Then
-        ' Asigando la cantidad de imágenes que tiene el producto
-        CantS = Cells(i, 8).Value
-        imagenes = ""
-        
-        For contador = 1 To CantS
-            imagenes = imagenes & "," & URL & Cells(i, 6).Value & "/" & contador & extension
-        Next
-                
-        ' Controlando si tiene tabla
-        If Cells(i, 9).Value = 1 Then
-            imagenes = imagenes & "," & URL & Cells(i, 6).Value & tabla
+With Worksheets("Variables")
+    For i = 2 To ultimaFila
+        If .Cells(i, 8) >= 1 Then
+            ' Asigando la cantidad de imágenes que tiene el producto
+            CantS = .Cells(i, 8).Value
+            imagenes = ""
+            
+            For contador = 1 To CantS
+                imagenes = imagenes & "," & URL & .Cells(i, 6).Value & "/" & contador & extension
+            Next
+                    
+            ' Controlando si tiene tabla
+            If .Cells(i, 9).Value = 1 Then
+                imagenes = imagenes & "," & URL & .Cells(i, 6).Value & tabla
+            End If
+            
+            ' Insertando el resultado completo de las imágenes
+            .Cells(i, 7).Value = Right(imagenes, Len(imagenes) - 1)
         End If
-        
-        ' Insertando el resultado completo de las imágenes
-        Cells(i, 7).Value = Right(imagenes, Len(imagenes) - 1)
-    End If
-Next
+    Next
+End With
 
-ThisWorkbook.Save
+ActiveWorkbook.Save
 End Function
 
 
 Function generadorImagenesConColor()
 ' PRODUCTO CON VARIANTE DE COLOR ===================
 
-Sheets("Con Color").Activate
+Worksheets("Con Color").Activate
 
 ' Rellenando la url
-URL = Sheets("Constantes").Range("B1").Value
+URL = Worksheets("Constantes").Range("B1").Value
 extension = ".jpg"
 
 ' Obteniendo la última fila
-Range("A1").Select
-ultimaFila = Range(Selection, Selection.End(xlDown)).Count
+ultimaFila = Worksheets("Con Color").Cells(Rows.Count, 1).End(xlUp).Row
 
 ' Ordenando de mayor a menor el ID para facilitar la construcción de los enlaces del Padre.
 Range("A1").Sort Key1:=Range("A1"), Order1:=xlDescending, Header:=xlNo
@@ -144,7 +142,7 @@ For i = 2 To ultimaFila
 
 Next
 Range("A1").Sort Key1:=Range("A1"), Order1:=xlAscending, Header:=xlYes
-ThisWorkbook.Save
+ActiveWorkbook.Save
 
 End Function
 
@@ -158,8 +156,7 @@ URL = Worksheets("Constantes").Range("B1").Value
 extension = ".jpg"
 
 ' Obteniendo la última fila
-Cells(2, 1).Activate
-ultimaFila = Cells(Rows.Count, 1).End(xlUp).Row
+ultimaFila = Worksheets("Con Talles").Cells(Rows.Count, 1).End(xlUp).Row
 
 ' Ordenando de mayor a menor el ID para facilitar la construcción de los enlaces del Padre.
 Range("A1").Sort Key1:=Range("A1"), Order1:=xlDescending, Header:=xlNo
@@ -181,7 +178,6 @@ For i = 2 To ultimaFila
         
         ' Insertando el resultado completo de las imágenes
         Cells(i, 7).Value = Right(imagenes, Len(imagenes) - 1)
-        
        
     End If
     
@@ -200,22 +196,23 @@ For i = 2 To ultimaFila
 
 Next
 Range("A1").Sort Key1:=Range("A1"), Order1:=xlAscending, Header:=xlYes
-ThisWorkbook.Save
+ActiveWorkbook.Save
 
 End Function
 
 Function GeneradorImagenesSimples()
 ' PRODUCTO SIMPLE ===================
 
-Sheets("Simples").Activate
+Worksheets("Simples").Activate
+extension = ".jpg"
+tabla = "/tabla" & extension
 
 ' Rellenando la url
-URL = Sheets("Constantes").Range("B1").Value
+URL = Worksheets("Constantes").Range("B1").Value
 extension = ".jpg"
 
 ' Obteniendo la última fila
-Range("A1").Select
-ultimaFila = Range(Selection, Selection.End(xlDown)).Count
+ultimaFila = Worksheets("Simples").Cells(Rows.Count, 1).End(xlUp).Row
 
 ' Bucle que recorre toda la columna
 For i = 2 To ultimaFila
@@ -229,12 +226,17 @@ For i = 2 To ultimaFila
             imagenes = imagenes & "," & URL & Cells(i, 6).Value & "/" & contador & extension
         Next
         
+        ' Controlando si tiene tabla
+        If Cells(i, 9).Value = 1 Then
+            imagenes = imagenes & "," & URL & Cells(i, 6).Value & tabla
+        End If
+        
         ' Insertando el resultado completo de las imágenes
         Cells(i, 7).Value = Right(imagenes, Len(imagenes) - 1)
     End If
 Next
 
-ThisWorkbook.Save
+ActiveWorkbook.Save
 End Function
 
 
@@ -257,8 +259,7 @@ Sub copiarImgVariables()
     Dim FSO As Object
     Set FSO = CreateObject("Scripting.FileSystemObject")
     
-    Range("A1").Select
-    ultimaFila = Range(Selection, Selection.End(xlDown)).Count
+    ultimaFila = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).Row
     
     extension = ".jpg"
 
@@ -346,6 +347,7 @@ Sub copiarImgVariables()
             
             ' Carpeta y nombre nuevo de destino
             destino = rutaImgRenombradas & archivoNuevo
+            On Error Resume Next
             FileCopy origen, destino
             Debug.Print origen & " está copiado como " & destino
             
@@ -361,8 +363,8 @@ Sub copiarImgColor()
 ' DESCRIPCION: Copia y renombra imágenes con variantes de COLOR
 
 ' Creamos coordenadas para trabajar
-Range("A1").Select
-ultimaFila = Range(Selection, Selection.End(xlDown)).Count
+Worksheets("Con Color").Activate
+ultimaFila = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).Row
 extension = ".jpg"
 ruta = rutaOrigenImg
 rutaImgRenombradas = rutaFinal
@@ -371,71 +373,80 @@ Debug.Print ultimaFila
 
 ' Copiando Imágenes. Recorremos toda la tabla desde arriba hasta abajo
 For i = 2 To ultimaFila
-    'Definiendo la cantidad de imágenes que tiene esta variante
-    codigo = Cells(i, 6).Value
-    xPath = ruta & codigo & "\*" & extension
-    xFile = Dir(xPath)
-    If xFile = "" Then
-        Cells(i, 8).Value = "Sin imágenes"
-        GoTo Seguir
-    End If
+    With Worksheets("Con Color")
     
-    'Averiguando cuántas imágenes hay en la variante o padre seleccionada
-    xCount = 0
-    Do While xFile <> ""
-        'Si coincide el nombre del archivo con el color
-        If Left(xFile, 2) = Cells(i, 4).Value Then
-            xCount = xCount + 1
-            Cells(i, (8 + xCount)).Value = xFile
-        
-        ElseIf xFile = "1.jpg" Then
-            origen = ruta & codigo & "\" & xFile
-            archivoNuevo = codigo & "'''.jpg"
-            destino = rutaImgRenombradas & archivoNuevo
-            FileCopy origen, destino
-        ElseIf xFile = "2.jpg" Then
-            origen = ruta & codigo & "\" & xFile
-            archivoNuevo = codigo & "'''1.jpg"
-            destino = rutaImgRenombradas & archivoNuevo
-            FileCopy origen, destino
-        ElseIf xFile = "3.jpg" Then
-            origen = ruta & codigo & "\" & xFile
-            archivoNuevo = codigo & "'''2.jpg"
-            destino = rutaImgRenombradas & archivoNuevo
-            FileCopy origen, destino
+        'Definiendo la cantidad de imágenes que tiene esta variante
+        .Cells(i, 6).Activate
+        codigo = .Cells(i, 6).Value
+        xPath = ruta & codigo & "\*" & extension
+        xFile = Dir(xPath)
+        If xFile = "" Then
+            .Cells(i, 8).Value = "Sin imágenes"
+            GoTo Seguir
         End If
-        ' Aquí ya cambia de valor
-        xFile = Dir()
-    Loop
-    
-    
-    'Extrayendo la cantidad de imágenes que tiene cada publicación
-    cantidadImg = xCount
-    
-    'Anotando el resultado
-    Cells(i, 8).Value = cantidadImg
-    
-    'Renombrando cada imagen y copiándola al destino
-    For e = 1 To cantidadImg
-        ' Fotos de las variantes de color
-        color = Left(Cells(i, (8 + e)).Value, 2)
-        cantidad = Mid(Cells(i, (8 + e)).Value, 3, (Len(Cells(i, (8 + e))) - Len(extension) - 2))
-        archivoAntiguo = color & cantidad & extension
-        origen = ruta & codigo & "\" & archivoAntiguo
-        archivoNuevo = codigo & "'" & color & "''" & cantidad & extension
         
-        'Definiendo el destino final del archivo de la imagen
-        destino = rutaImgRenombradas & archivoNuevo
+        'Averiguando cuántas imágenes hay en la variante o padre seleccionada
+        xCount = 0
+        Do While xFile <> ""
+            'Si coincide el nombre del archivo con el color
+            If Left(xFile, 2) = .Cells(i, 4).Value Then
+                xCount = xCount + 1
+                .Cells(i, (8 + xCount)).Value = xFile
+            
+            ElseIf xFile = "1.jpg" Then
+                origen = ruta & codigo & "\" & xFile
+                archivoNuevo = codigo & "'''1.jpg"
+                destino = rutaImgRenombradas & archivoNuevo
+                FileCopy origen, destino
+            ElseIf xFile = "2.jpg" Then
+                origen = ruta & codigo & "\" & xFile
+                archivoNuevo = codigo & "'''2.jpg"
+                destino = rutaImgRenombradas & archivoNuevo
+                FileCopy origen, destino
+            ElseIf xFile = "3.jpg" Then
+                origen = ruta & codigo & "\" & xFile
+                archivoNuevo = codigo & "'''3.jpg"
+                destino = rutaImgRenombradas & archivoNuevo
+                FileCopy origen, destino
+            ElseIf xFile = "Portada.jpg" Then
+                origen = ruta & codigo & "\" & xFile
+                archivoNuevo = codigo & "'''.jpg"
+                destino = rutaImgRenombradas & archivoNuevo
+                FileCopy origen, destino
+            End If
+            ' Aquí ya cambia de valor
+            xFile = Dir()
+        Loop
         
-        'Copiando el achivo con el nuevo nombre
-        Debug.Print "Fila " & i & " tiene " & cantidadImg & " # " & archivoAntiguo & " -> " & archivoNuevo
-               
-        FileCopy origen, destino
-        Debug.Print origen & " -> " & destino
+        
+        'Extrayendo la cantidad de imágenes que tiene cada publicación
+        cantidadImg = xCount
+        
+        'Anotando el resultado
+        .Cells(i, 8).Value = cantidadImg
+        
+        'Renombrando cada imagen y copiándola al destino
+        For e = 1 To cantidadImg
+            ' Fotos de las variantes de color
+            color = Left(.Cells(i, (8 + e)).Value, 2)
+            cantidad = Mid(.Cells(i, (8 + e)).Value, 3, (Len(.Cells(i, (8 + e))) - Len(extension) - 2))
+            archivoAntiguo = color & cantidad & extension
+            origen = ruta & codigo & "\" & archivoAntiguo
+            archivoNuevo = codigo & "'" & color & "''" & cantidad & extension
+            
+            'Definiendo el destino final del archivo de la imagen
+            destino = rutaImgRenombradas & archivoNuevo
+            
+            'Copiando el achivo con el nuevo nombre
+            Debug.Print "Fila " & i & " tiene " & cantidadImg & " # " & archivoAntiguo & " -> " & archivoNuevo
+                   
+            FileCopy origen, destino
+            Debug.Print origen & " -> " & destino
 Seguir:
-    Next
-    
+        Next
+    End With
 Next
+    
   
 Call generadorImagenesConColor
 End Sub
@@ -452,8 +463,6 @@ extension = ".jpg"
 ruta = rutaOrigenImg
 rutaImgRenombradas = rutaFinal
 
-Debug.Print ultimaFila
-
 ' Copiando Imágenes. Recorremos toda la tabla desde arriba hasta abajo
 For i = 2 To ultimaFila
     'Definiendo la cantidad de imágenes que tiene esta variante
@@ -467,17 +476,13 @@ For i = 2 To ultimaFila
     ' Controles para saber si tiene portada o no; o más de una.
     ElseIf xFile = "1.jpg" Then
         origen = ruta & codigo & "\" & xFile
-        archivoNuevo = codigo & "'''.jpg"
-        destino = rutaImgRenombradas & archivoNuevo
-        FileCopy origen, destino
-    ElseIf xFile = "2.jpg" Then
-        origen = ruta & codigo & "\" & xFile
         archivoNuevo = codigo & "'''1.jpg"
         destino = rutaImgRenombradas & archivoNuevo
         FileCopy origen, destino
-    ElseIf xFile = "3.jpg" Then
+        
+    ElseIf xFile = "Portada.jpg" Then
         origen = ruta & codigo & "\" & xFile
-        archivoNuevo = codigo & "'''2.jpg"
+        archivoNuevo = codigo & "'''.jpg"
         destino = rutaImgRenombradas & archivoNuevo
         FileCopy origen, destino
     End If
@@ -486,7 +491,6 @@ For i = 2 To ultimaFila
     xCount = 0
     Do While xFile <> ""
         'Si coincide el nombre del archivo con el talle
-        Debug.Print Left(xFile, InStr(xFile, ".") - 2)
         If Left(xFile, InStr(xFile, ".") - 2) = Cells(i, 4).Value Then
             xCount = xCount + 1
             Cells(i, (8 + xCount)).Value = xFile
@@ -505,11 +509,13 @@ For i = 2 To ultimaFila
     'Renombrando cada imagen y copiándola al destino
     For e = 1 To cantidadImg
         ' Fotos de las variantes de color
-        color = Left(Cells(i, (8 + e)).Value, 2)
-        cantidad = Mid(Cells(i, (8 + e)).Value, 3, (Len(Cells(i, (8 + e))) - Len(extension) - 2))
+        color = Cells(i, 4).Value
+        'cantidad = Mid(Cells(i, (8 + e)).Value, 3, (Len(Cells(i, (8 + e))) - Len(extension) - 2))
+        cantidad = e
         archivoAntiguo = color & cantidad & extension
         origen = ruta & codigo & "\" & archivoAntiguo
-        archivoNuevo = codigo & "''" & color & "'" & cantidad & extension
+        archivoNuevo = codigo & "''" & color & "'" & e & extension
+        Debug.Print color; candidad; archivoNuevo
 
         
         'Definiendo el destino final del archivo de la imagen
@@ -601,15 +607,15 @@ Function EsImagen(nombreArchivo As String, extensiones As Variant) As Boolean
 End Function
 
 
-Function Control()
-    ActiveSheet.Cells(3, 6).Activate
+'Function Control()
+ '   ActiveSheet.Cells(3, 6).Activate
     
-    Do While ActiveCell <> ""
-        If ActiveCell.Offset(-1, 0).Value = ActiveCell.Value Then
+  '  Do While ActiveCell <> ""
+   '     If ActiveCell.Offset(-1, 0).Value = ActiveCell.Value Then
             ' hacer algo
-        Else
-            ActiveCell.Offset(0, 5).Value = "Sin repetir"
-        End If
-        ActiveCell.Offset(1, 0).Activate
-    Loop
-End Function
+    '    Else
+     '       ActiveCell.Offset(0, 5).Value = "Sin repetir"
+      '  End If
+       ' ActiveCell.Offset(1, 0).Activate
+    'Loop
+'End Function
