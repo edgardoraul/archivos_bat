@@ -7,24 +7,22 @@ Public ultima As Integer
 
 Sub CompletarNombres()
     Dim columnaImagen As Boolean
-    Dim columna As Integer
-    Dim fila As Integer
-    Dim f As Integer
-    Dim c As Integer
+    Dim esSegundaImagen As Boolean
+    Dim col As Integer
     Dim CantNombre As Integer
+    Dim CantNombreReal As Integer
     Dim img As Picture
     Dim archivoImagen As String
+    Dim archivoImagen2 As String
+    Dim usarSegundaImagen As Boolean
     Dim celdaDestino As Range
     Dim contenido As String
     Dim filaFuente As Integer
     Dim celdaFuente As String
+    Dim r As Long
     
     ' Ultima fila con datos
-    ultima = Sheets("Listado").Cells(Rows.Count, 1).End(xlUp).Row
-
-    ' Usamos Long para filas y columnas en bucles grandes, aunque Byte/Integer es suficiente aquí
-    Dim r As Long
-    Dim col As Long
+    ultima = Worksheets("Listado").Cells(Rows.Count, 1).End(xlUp).Row
 
     ' Controla si ya está editado
     If Sheets("Nombres").Range("B1").Value <> "" Then
@@ -32,261 +30,281 @@ Sub CompletarNombres()
         Exit Sub
     End If
 
+    CantNombreReal = ultima - 1
+    CantNombre = CantNombreReal
 
-    ' Validar la entrada de CantNombre
-    ' Para manejar si el usuario cancela el InputBox
-    On Error Resume Next
-    
-    'CantNombre = Application.InputBox("¿Cuántos Nombres necesitás?", Type:=1) ' Type:=1 asegura que la entrada sea un número
-    ' Restablecer el manejo de errores
-    On Error GoTo 0
-    
-    CantNombre = ultima - 1
-
-    ' El usuario canceló o ingresó 0
     If CantNombre <= 0 Then
         MsgBox "Operación cancelada o cantidad inválida."
         Exit Sub
-        
-    ' Limite razonable para filas en versiones antiguas
-    ElseIf CantNombre < 0 Or CantNombre > 40000 Then
-         MsgBox ("¿Cuántos nombres vas a imprimir? " & vbNewLine & "Hasta 40000 (límite de filas en versiones antiguas)") ' Ajustado el mensaje
+    ElseIf CantNombre > 40000 Then
+         MsgBox "¿Cuántos nombres vas a imprimir? " & vbNewLine & "Hasta 40000 (límite de filas)"
          Exit Sub
-    
-    ' Para saber asegurarse que siempre sea par
     ElseIf CantNombre Mod 2 > 0 Then
         CantNombre = CantNombre + 1
     End If
 
-    ' Validar la entrada de contenido
-    ' Para manejar si el usuario cancela el InputBox
+    ' Validar contenido
     On Error Resume Next
-    
-    ' Type:=2 asegura que la entrada sea texto
     contenido = Application.InputBox("Escribí el texto que se va a repetir", Type:=2)
-    contenido = UCase(contenido)
-    
-    ' Restablecer el manejo de errores
     On Error GoTo 0
 
-    ' El usuario canceló o no ingresó texto
     If contenido = "" Then
-        MsgBox "Operación cancelada o no ingresastre nada."
+        MsgBox "Operación cancelada o no ingresaste nada."
         Exit Sub
     End If
 
-
-IMAGEN:
-    ' Validar la selección de archivo de imagen
-    ' Para manejar si el usuario cancela el GetOpenFilename
+IMAGEN1:
     On Error Resume Next
-    archivoImagen = Application.GetOpenFilename("Archivos de imagen (*.jpg; *.jpeg; *.png; *.gif),*.jpg;*.jpeg;*.png;*.gif", , "Selecciona una imagen")
-    
-    ' Restablecer el manejo de errores
+    archivoImagen = Application.GetOpenFilename("Archivos de imagen (*.jpg; *.jpeg; *.png; *.gif),*.jpg;*.jpeg;*.png;*.gif", , "Selecciona la PRIMERA imagen")
     On Error GoTo 0
 
-    ' GetOpenFilename devuelve "False" si se cancela
     If archivoImagen = "False" Or archivoImagen = "" Then
         MsgBox "Tenés que elegir alguna imagen"
-        
-        ' Volver a pedir la imagen
-        GoTo IMAGEN
+        GoTo IMAGEN1
+    End If
+
+    ' Preguntar si se agrega la segunda columna de imagen
+    If MsgBox("¿Querés agregar una segunda columna de imagen?", vbQuestion + vbYesNo, "Imagen Adicional") = vbYes Then
+        usarSegundaImagen = True
+IMAGEN2:
+        On Error Resume Next
+        archivoImagen2 = Application.GetOpenFilename("Archivos de imagen (*.jpg; *.jpeg; *.png; *.gif),*.jpg;*.jpeg;*.png;*.gif", , "Selecciona la SEGUNDA imagen")
+        On Error GoTo 0
+
+        If archivoImagen2 = "False" Or archivoImagen2 = "" Then
+            MsgBox "Tenés que elegir la segunda imagen"
+            GoTo IMAGEN2
+        End If
+    Else
+        usarSegundaImagen = False
     End If
 
 COLOR:
-    ' Validar la selección del color de fondo
-    ' colorFondo ahora devuelve el color directamente
     Call colorFondo
     If BackgroundColor < 1 Or BackgroundColor > 56 Then
         MsgBox "Tenés que elegir el número de un color válido (1-56)"
-        
-        ' Volver a pedir el color
         GoTo COLOR
     End If
 
-
-    ' Comienza en primera fila
     r = 1
     filaFuente = 1
-    
-    ' El bucle ahora recorre la cantidad total de nombres, distribuyendo en 2 columnas
-    ' Recorre las filas necesarias para la mitad de nombres
+
     While r <= CantNombre / 2
-        
-        celdaFuente = UCase(Sheets("Listado").Cells(filaFuente + 1, 1).Value & " " & Sheets("Listado").Cells(filaFuente + 1, 2).Value)
-        col = 1
-        Set celdaDestino = Cells(r, col)
-        columnaImagen = True
-        Call formato(columnaImagen, celdaDestino, BackgroundColor, TextColor) ' Pasar la celda de destino
-        
-        ' Insertar la imagen y obtener una referencia al objeto Picture insertado
-        Set img = ActiveSheet.Pictures.Insert(archivoImagen)
-        ' Redimensionar y posicionar usando el objeto img y la celda de destino
-        Call redimensionar(img, celdaDestino)
+        ' Obtener primer nombre
+        celdaFuente = ObtenerNombreFuente(filaFuente, CantNombreReal)
 
-        ' Columna 2 (Texto)
-        col = 2
-        Set celdaDestino = Cells(r, col)
-        columnaImagen = False
-        
-        ' Pasar la celda de destino
-        Call formato(columnaImagen, celdaDestino, BackgroundColor, TextColor)
-        
-        ' Contenido
-        If Sheets("Listado").Cells(filaFuente + 1, 3).Value = "" Then
-            celdaDestino.Value = celdaFuente & vbNewLine & contenido
+        If Not usarSegundaImagen Then
+            ' --- ESTRUCTURA NORMAL (4 COLUMNAS -> Rótulo = 7,5 cm) ---
+            
+            ' Col 1: Img 1
+            col = 1
+            Set celdaDestino = Cells(r, col)
+            Call formato(True, False, False, celdaDestino, BackgroundColor, TextColor)
+            Set img = ActiveSheet.Pictures.Insert(archivoImagen)
+            Call redimensionar(img, celdaDestino)
+
+            ' Col 2: Texto
+            col = 2
+            Set celdaDestino = Cells(r, col)
+            Call formato(False, False, False, celdaDestino, BackgroundColor, TextColor)
+            Call InsertarTexto(celdaDestino, filaFuente, celdaFuente, contenido, CantNombreReal)
+
+            ' Col 3: Img 1
+            col = 3
+            Set celdaDestino = Cells(r, col)
+            Call formato(True, False, False, celdaDestino, BackgroundColor, TextColor)
+            Set img = ActiveSheet.Pictures.Insert(archivoImagen)
+            Call redimensionar(img, celdaDestino)
+
+            ' Col 4: Texto
+            col = 4
+            filaFuente = filaFuente + 1
+            celdaFuente = ObtenerNombreFuente(filaFuente, CantNombreReal)
+            Set celdaDestino = Cells(r, col)
+            Call formato(False, False, False, celdaDestino, BackgroundColor, TextColor)
+            Call InsertarTexto(celdaDestino, filaFuente, celdaFuente, contenido, CantNombreReal)
+
         Else
-            celdaDestino.Value = celdaFuente & vbNewLine & contenido & vbNewLine & UCase(Sheets("Listado").Cells(filaFuente + 1, 3).Value)
+            ' --- ESTRUCTURA CON SEGUNDA IMAGEN (6 COLUMNAS -> Rótulo = 7,5 cm) ---
+            
+            ' Col 1 (A): Img 1
+            col = 1
+            Set celdaDestino = Cells(r, col)
+            Call formato(True, False, True, celdaDestino, BackgroundColor, TextColor)
+            Set img = ActiveSheet.Pictures.Insert(archivoImagen)
+            Call redimensionar(img, celdaDestino)
+
+            ' Col 2 (B): Texto
+            col = 2
+            Set celdaDestino = Cells(r, col)
+            Call formato(False, False, True, celdaDestino, BackgroundColor, TextColor)
+            Call InsertarTexto(celdaDestino, filaFuente, celdaFuente, contenido, CantNombreReal)
+
+            ' Col 3 (C): Img 2 (Sin borde izquierdo)
+            col = 3
+            Set celdaDestino = Cells(r, col)
+            Call formato(True, True, True, celdaDestino, BackgroundColor, TextColor)
+            Set img = ActiveSheet.Pictures.Insert(archivoImagen2)
+            Call redimensionar(img, celdaDestino)
+
+            ' Col 4 (D): Img 1
+            col = 4
+            Set celdaDestino = Cells(r, col)
+            Call formato(True, False, True, celdaDestino, BackgroundColor, TextColor)
+            Set img = ActiveSheet.Pictures.Insert(archivoImagen)
+            Call redimensionar(img, celdaDestino)
+
+            ' Col 5 (E): Texto
+            col = 5
+            filaFuente = filaFuente + 1
+            celdaFuente = ObtenerNombreFuente(filaFuente, CantNombreReal)
+            Set celdaDestino = Cells(r, col)
+            Call formato(False, False, True, celdaDestino, BackgroundColor, TextColor)
+            Call InsertarTexto(celdaDestino, filaFuente, celdaFuente, contenido, CantNombreReal)
+
+            ' Col 6 (F): Img 2 (Sin borde izquierdo)
+            col = 6
+            Set celdaDestino = Cells(r, col)
+            Call formato(True, True, True, celdaDestino, BackgroundColor, TextColor)
+            Set img = ActiveSheet.Pictures.Insert(archivoImagen2)
+            Call redimensionar(img, celdaDestino)
         End If
-        
-        celdaDestino.Value = RTrim(celdaDestino.Value)
 
-        ' Columna 3 (Imagen)
-        col = 3
-        Set celdaDestino = Cells(r, col)
-        columnaImagen = True
-        Call formato(columnaImagen, celdaDestino, BackgroundColor, TextColor)
-        
-        ' Insertar la imagen y obtener una referencia al objeto Picture insertado
-        Set img = ActiveSheet.Pictures.Insert(archivoImagen)
-        
-        ' Redimensionar y posicionar usando el objeto img y la celda de destino
-        Call redimensionar(img, celdaDestino)
-
-        ' Columna 4 (Texto)
-        col = 4
-        filaFuente = filaFuente + 1
-        celdaFuente = UCase(Sheets("Listado").Cells(filaFuente + 1, 1).Value & " " & Sheets("Listado").Cells(filaFuente + 1, 2).Value)
-        Set celdaDestino = Cells(r, col)
-        columnaImagen = False
-        Call formato(columnaImagen, celdaDestino, BackgroundColor, TextColor)
-        
-        ' Contenido
-        If Sheets("Listado").Cells(filaFuente + 1, 3).Value = "" Then
-            celdaDestino.Value = celdaFuente & vbNewLine & contenido
-        Else
-            celdaDestino.Value = celdaFuente & vbNewLine & contenido & vbNewLine & UCase(Sheets("Listado").Cells(filaFuente + 1, 3).Value)
-        End If
-        
-        celdaDestino.Value = RTrim(celdaDestino.Value)
-        
-
-        ' Contador para las filas
         r = r + 1
         filaFuente = filaFuente + 1
     Wend
+    
+    ' --- CONFIGURACIÓN DE ENCABEZADO (Número de Página) ---
+    With ActiveSheet.PageSetup
+        .CenterHeader = "Página &P"
+    End With
 
-    ' Guardar el libro
-    On Error Resume Next ' Para manejar si el usuario cancela al guardar
+    On Error Resume Next
     ActiveWorkbook.Save
-    On Error GoTo 0 ' Restablecer el manejo de errores
+    On Error GoTo 0
 
-    ' Limpiar objetos
     Set img = Nothing
     Set celdaDestino = Nothing
     Call Proteger
 End Sub
 
-' Modificada para aceptar el rango de la celda de destino
-Function formato(columnaImagen As Boolean, celdaDestino As Range, BackgroundColor As Byte, TextColor As Byte)
-' Da formato a la tarjeta
-Const ALTO = 54
-Const ANCHOTEXTO = 30
-Const ANCHOIMAGEN = 7
-
-With celdaDestino
-    ' Color de Fondo
-    .Interior.ColorIndex = BackgroundColor
-    .Font.ColorIndex = TextColor
-
-    ' Fuente
-    .Font.Bold = True
-    .Font.Size = 11
-    .Font.Name = "Arial"
-    .HorizontalAlignment = xlCenter
-    .VerticalAlignment = xlCenter
-
-    ' Bordes
-    '.Borders.LineStyle = xlContinuous
-    .Borders.LineStyle = xlDouble
-    ' Usar ColorIndex para bordes también para máxima compatibilidad si RGB da problemas
-    .Borders.ColorIndex = 16 ' Un gris oscuro, compatible con ColorIndex
-    .Borders.Weight = xlMedium
-
-    ' Dimensiones
-    .RowHeight = ALTO
-    If columnaImagen = True Then
-        .EntireColumn.ColumnWidth = ANCHOIMAGEN
+' Función auxiliar para obtener el nombre sin desbordar en impares
+Function ObtenerNombreFuente(filaFuente As Integer, cantReal As Integer) As String
+    If filaFuente <= cantReal Then
+        ObtenerNombreFuente = UCase(Worksheets("Listado").Cells(filaFuente + 1, 1).Value & " " & Sheets("Listado").Cells(filaFuente + 1, 2).Value)
     Else
-        .EntireColumn.ColumnWidth = ANCHOTEXTO
-        ' Asegurarse de que el borde izquierdo se elimine solo si no es la primera columna
-        If .Column > 1 Then
-             .Borders(xlEdgeLeft).LineStyle = xlNone
-        End If
-        .WrapText = True
+        ObtenerNombreFuente = ""
     End If
-End With
-
 End Function
 
-' Modificada para aceptar el objeto Picture y el rango de la celda de destino
+' Función auxiliar para escribir el texto
+Sub InsertarTexto(celdaDestino As Range, filaFuente As Integer, celdaFuente As String, contenido As String, cantReal As Integer)
+    Dim campo3 As String
+    
+    If filaFuente <= cantReal Then
+        campo3 = UCase(Sheets("Listado").Cells(filaFuente + 1, 3).Value)
+    Else
+        campo3 = ""
+    End If
+
+    If celdaFuente = "" Then
+        celdaDestino.Value = contenido
+        If campo3 <> "" Then celdaDestino.Value = celdaDestino.Value & vbNewLine & campo3
+    Else
+        If campo3 = "" Then
+            celdaDestino.Value = celdaFuente & vbNewLine & contenido
+        Else
+            celdaDestino.Value = celdaFuente & vbNewLine & contenido & vbNewLine & campo3
+        End If
+    End If
+    
+    celdaDestino.Value = RTrim(celdaDestino.Value)
+End Sub
+
+Function formato(columnaImagen As Boolean, esSegundaImagen As Boolean, modoDosImagenes As Boolean, celdaDestino As Range, BackgroundColor As Byte, TextColor As Byte)
+    Const ALTO = 54
+    Const ANCHOIMAGEN = 9.5 ' ~1.9 cm (celda cuadrada)
+    
+    ' Ajuste del ancho de texto para mantener total exacto de 7.5 cm
+    Dim anchoTexto As Double
+    If modoDosImagenes Then
+        anchoTexto = 19.5 ' ~3.7 cm (1.9 + 3.7 + 1.9 = 7.5 cm)
+        celdaDestino.Font.Size = 8
+    Else
+        anchoTexto = 29.5 ' ~5.6 cm (1.9 + 5.6 = 7.5 cm)
+        celdaDestino.Font.Size = 10
+    End If
+
+    With celdaDestino
+        .Interior.ColorIndex = BackgroundColor
+        .Font.ColorIndex = TextColor
+        .Font.Bold = True
+        
+        .Font.Name = "Arial"
+        .HorizontalAlignment = xlCenter
+        .VerticalAlignment = xlCenter
+
+        .Borders.LineStyle = xlDouble
+        .Borders.ColorIndex = 16
+        .Borders.Weight = xlMedium
+
+        .RowHeight = ALTO
+        If columnaImagen Then
+            .EntireColumn.ColumnWidth = ANCHOIMAGEN
+            If esSegundaImagen Then
+                .Borders(xlEdgeLeft).LineStyle = xlNone
+            End If
+        Else
+            .EntireColumn.ColumnWidth = anchoTexto
+            If .Column > 1 Then
+                 .Borders(xlEdgeLeft).LineStyle = xlNone
+            End If
+            .WrapText = True
+        End If
+    End With
+End Function
+
 Function redimensionar(img As Picture, celdaDestino As Range)
-' Redimensiona y posiciona la imagen para que ocupe toda la celda
-On Error GoTo ErrorHandler ' Manejo de errores más específico
+On Error GoTo ErrorHandler
 
     Dim PicWtoHRatio As Single
     Dim CellWtoHRatio As Single
     Dim targetWidth As Single
     Dim targetHeight As Single
 
-    ' Calcular la relación de aspecto de la imagen
     PicWtoHRatio = img.Width / img.Height
-
-    ' Calcular la relación de aspecto de la celda de destino
-    ' Usamos .Width y .Height del rango, que son más fiables que .TopLeftCell en algunos casos
     CellWtoHRatio = celdaDestino.Width / celdaDestino.Height
 
-    ' Determinar el tamaño objetivo manteniendo la relación de aspecto
-    If PicWtoHRatio / CellWtoHRatio > 1 Then ' La imagen es más ancha que la celda (relativamente)
-        ' Ajustar al ancho de la celda (menos un pequeño margen)
+    If PicWtoHRatio / CellWtoHRatio > 1 Then
         targetWidth = celdaDestino.Width - 4
         targetHeight = targetWidth / PicWtoHRatio
-    Else ' La imagen es más alta que la celda (relativamente)
-        ' Ajustar a la altura de la celda (menos un pequeño margen)
+    Else
         targetHeight = celdaDestino.Height - 4
         targetWidth = targetHeight * PicWtoHRatio
     End If
 
-    ' Aplicar el nuevo tamaño a la imagen
     img.Width = targetWidth
     img.Height = targetHeight
 
-    ' Posicionar la imagen en el centro de la celda de destino
-    ' Usamos las propiedades Top y Left de la celda de destino
     img.Top = celdaDestino.Top + (celdaDestino.Height - img.Height) / 2
     img.Left = celdaDestino.Left + (celdaDestino.Width - img.Width) / 2
 
-    Exit Function ' Salir de la función si todo va bien
+    Exit Function
 
 ErrorHandler:
-    ' Puedes agregar un mensaje de error si lo deseas, pero el error "NOT_SHAPE" original no era crítico
-    ' MsgBox "Error en redimensionar: " & Err.Description
-    Resume Next ' Continuar la ejecución después del error (si el error no es grave)
+    Resume Next
 End Function
 
-' Modificada para devolver el color seleccionado
 Sub colorFondo()
     Dim tempSheet As Worksheet
     Dim x As Byte
-    Dim inputColor As Variant ' Usamos Variant para manejar posible cancelación del InputBox
+    Dim inputColor As Variant
     Dim inputColorText As Variant
     
     Call Desproteger
 
-    
-    ' Agregar una hoja temporal para mostrar los colores
-    Set tempSheet = ActiveWorkbook.Sheets.Add(After:=ActiveWorkbook.Worksheets(ActiveWorkbook.Sheets.Count))
-    tempSheet.Name = "PaletaColoresTemp" ' Darle un nombre para identificarla
+    Set tempSheet = ActiveWorkbook.Worksheets.Add(After:=ActiveWorkbook.Worksheets(ActiveWorkbook.Sheets.Count))
+    tempSheet.Name = "PaletaColoresTemp"
 
      For x = 1 To 56
         If x <= 14 Then
@@ -308,52 +326,41 @@ Sub colorFondo()
         End If
     Next x
 
-    ' Ajustar el ancho de las columnas para que se vea bien
     tempSheet.Columns("A:H").AutoFit
 
-    ' Pedir al usuario que elija un número de color
-    ' Usamos Type:=1 para asegurar que la entrada sea un número
     inputColor = Application.InputBox("Escribí el número de color de fondo (1-56) y presiona Enter.", Type:=1)
-    
-    ' Elegimos el color del texto
     inputColorText = Application.InputBox("Escribí el número de color del texto (1-56) y presiona Enter.", Type:=1)
     
     Call Desalertar
     Sheets("Nombres").Activate
     
-    ' Eliminar la hoja temporal
     tempSheet.Delete
     
-    ' Verificar si la entrada es un número válido
     If IsNumeric(inputColor) Then
-        BackgroundColor = CByte(inputColor) ' Asignar el color a la variable global
+        BackgroundColor = CByte(inputColor)
     Else
-        BackgroundColor = 0 ' Indicar que no se seleccionó un color de fondo válido
+        BackgroundColor = 0
     End If
 
     If IsNumeric(inputColorText) Then
-        TextColor = CByte(inputColorText) ' Asignar el color a la variable global
+        TextColor = CByte(inputColorText)
     Else
-        TextColor = 0 ' Indicar que no se seleccionó un color de texto válido
+        TextColor = 0
     End If
     
-    ' Limpiar objetos
     Set tempSheet = Nothing
-    
     Call Proteger
 End Sub
 
-
 Function Proteger()
-    ' Protege el archivo y sus hojas excepto "Listados"
     Call Desalertar
     Dim Archivo As Workbook
     Dim i As Byte
     Set Archivo = ThisWorkbook
     
-    For i = 1 To Archivo.Sheets.Count
-        If Archivo.Sheets(i).Name <> "Nombres" Then
-            Archivo.Sheets(i).Protect clave
+    For i = 1 To Archivo.Worksheets.Count
+        If Archivo.Worksheets(i).Name <> "Nombres" Then
+            Archivo.Worksheets(i).Protect clave
         End If
     Next i
     Archivo.Protect clave
@@ -362,26 +369,22 @@ Function Proteger()
 End Function
 
 Function Desproteger()
-    ' Desprotege el archivo y sus hojas excepto "Listados"
     Call Desalertar
     Dim Archivo As Workbook
     Dim i As Byte
     Set Archivo = ThisWorkbook
     Archivo.Unprotect clave
-    For i = 1 To Archivo.Sheets.Count
-        Archivo.Sheets(i).Unprotect clave
+    For i = 1 To Archivo.Worksheets.Count
+        Archivo.Worksheets(i).Unprotect clave
     Next i
     Call Alertar
     Archivo.Save
 End Function
 
 Function Desalertar()
-    ' Desactivar la alerta de eliminación
     Application.DisplayAlerts = False
 End Function
 
 Function Alertar()
-    ' Reactivar las alertas
     Application.DisplayAlerts = True
 End Function
-
