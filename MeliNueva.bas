@@ -1,10 +1,13 @@
 Attribute VB_Name = "MeliNueva"
 Option Explicit
+
 Public RUTA As String
 Public Const MIPC As String = "D:\Web\Listados de Ventas Online\MELY"
 Public Const MIPCENRED As String = "\\EDGAR\Web\Listados de Ventas Online\MELY"
 Public UltimaTotal As Long
 Public IdCliente As String
+Public Provincias As Variant
+
 
 Sub MeliNueva()
 ' GENERACION DE PLANILLAS DE MELI AÑO 2027
@@ -18,20 +21,16 @@ Public Sub EstablecerRuta()
     Dim colItems As Object
     Dim objItem As Object
     
-    ' Obtener nombre del equipo actual
     pcName = UCase(Environ("COMPUTERNAME"))
     
-    ' Obtener Grupo de Trabajo vía WMI
     On Error Resume Next
     Set objWMIService = GetObject("winmgmts:\\.\root\cimv2")
     Set colItems = objWMIService.ExecQuery("Select Workgroup from Win32_ComputerSystem")
-    
     For Each objItem In colItems
         workgroupName = UCase(objItem.Workgroup)
     Next objItem
     On Error GoTo 0
     
-    ' Evaluar condiciones
     If pcName = "EDGAR" Then
         RUTA = MIPC
     ElseIf workgroupName = "RERDA" Then
@@ -40,7 +39,6 @@ Public Sub EstablecerRuta()
         RUTA = ""
         MsgBox "Debes estar en la red del local de Rerda para trabajar y en su grupo de trabajo", vbExclamation, "Acceso restringido"
     End If
-    Debug.Print RUTA
 End Sub
 
 Public Sub GuardarCopiaConSecuencial()
@@ -57,14 +55,16 @@ Public Sub GuardarCopiaConSecuencial()
     Dim currentNum As Long
     Dim maxNum As Long
     Dim numStr As String
-    Dim extension As String
     Dim posDot As Long
+    Dim UltFilaAcum As Long
+    Dim UltFilaParcial As Long
+    Dim PlanillaNumero As Byte
+    
 
     ' 1. Verificar/Obtener la RUTA global
     If RUTA = "" Then Call EstablecerRuta
-    If RUTA = "" Then Exit Sub ' Si no hay ruta válida, detiene el proceso
+    If RUTA = "" Then Exit Sub
 
-    ' Verificar que la carpeta exista realmente en la red/disco
     Set fso = CreateObject("Scripting.FileSystemObject")
     If Not fso.FolderExists(RUTA) Then
         MsgBox "La carpeta de destino no está accesible:" & vbCrLf & RUTA, vbCritical, "Error de Ruta"
@@ -72,47 +72,44 @@ Public Sub GuardarCopiaConSecuencial()
     End If
 
     Set wbOriginal = ActiveWorkbook
+    tempPath = wbOriginal.Path & "\MELI-Temp.xlsx"
     
-    ' Definir la ruta del archivo temporal local
-    tempPath = ActiveWorkbook.Path & "\MELI-Temp.xlsx"
-    
-    ' Salvar error si el archivo temporal anterior quedó abierto
     On Error Resume Next
     If fso.FileExists(tempPath) Then fso.DeleteFile tempPath, True
     On Error GoTo 0
 
-    ' 2. Guardar copia del libro actual como "MELI-Temp.xlsx" sin alterar el original
-    On Error Resume Next
-    wbOriginal.SaveCopyAs tempPath
+    ' 2. Guardar como excel el libro actual
+    wbOriginal.SaveAs fileName:=tempPath, _
+        FileFormat:=xlOpenXMLWorkbook, _
+        CreateBackup:=False
     
-    ' 3. Abrir la copia temporal para trabajar sobre ella.
+    ' 3. Abrir la copia temporal para trabajar
     Set wbTemp = Workbooks.Open(tempPath)
     
-    ' Ver más adelante dónde lo pongo, tendría que ir al final
-    wbOriginal.Close SaveChanges:=False
+    ' 4. Limpieza de datos pasando el libro como parámetro
+    Call LimpiezaDatos(wbTemp)
     
-    ' 4. Limpieza de datos
-    'Call LimpiezaDatos(wbTemp)
-    Call LimpiezaDatos
+    ' 4.1 Particionar la planilla
+    ' Como máximo se hará una planilla con 20 renglones, no más.
+    ' Pero si justo cae en medio de un carrito de compras, pues pasa a la
+    ' planilla siguiente.
+    Call ConstructorPlantillas
+    
 
-    ' 5. Determinar la fecha de hoy en formato AAAA-MM-DD
+    ' 5. Determinar fecha
     todayStr = Format(Date, "yyyy-mm-dd")
     filePrefix = todayStr & ". "
 
-    ' 6. Analizar los archivos de la carpeta RUTA para encontrar el mayor número del patrón
+    ' 6. Analizar archivos correlativos
     maxNum = 0
     Set folderObj = fso.GetFolder(RUTA)
 
     For Each fileObj In folderObj.Files
         fileName = fileObj.Name
-        ' Verificar si inicia con la fecha de hoy "YYYY-MM-DD. "
         If Left(fileName, Len(filePrefix)) = filePrefix Then
-            ' Quitar la extensión del nombre
             posDot = InStrRev(fileName, ".")
             If posDot > 0 Then fileName = Left(fileName, posDot - 1)
             
-            ' Intentar extraer el número correlativo de 5 dígitos
-            ' Formato esperado: "YYYY-MM-DD. XXXXX - MELI"
             If Mid(fileName, Len(filePrefix) + 6, 8) = " - MELI" Then
                 numStr = Mid(fileName, Len(filePrefix) + 1, 5)
                 If IsNumeric(numStr) Then
@@ -123,251 +120,95 @@ Public Sub GuardarCopiaConSecuencial()
         End If
     Next fileObj
 
-    ' 7. Generar el nuevo nombre correlativo (aumentando en +1)
+    ' 7. Generar nuevo nombre
     numStr = Format(maxNum + 1, "00000")
     finalPath = RUTA & "\" & filePrefix & numStr & " - MELI.xlsx"
     
-    ' 8. Controlando si existe el archivo Stock.XLS para las descripciones
-    tempPath = RUTA & "\..\Stock.XLS"
-    If fso.FileExists(tempPath) Then
-        Debug.Print "Stock.XLS OK"
-    Else
-        MsgBox ("El archivo Stock.XLS debe estar en la carpeta " & vbNewLine & RUTA)
+    ' 8. Controles de archivos de datos
+    If Not fso.FileExists(RUTA & "\..\Stock.XLS") Then
+        MsgBox "El archivo Stock.XLS debe estar en la carpeta " & vbNewLine & RUTA, vbCritical, "Error"
         Exit Sub
     End If
         
-    ' 9. Controlando si existe el archivo Equivalencia2.XLS para las variantes color/talle
-    tempPath = RUTA & "\..\Equivalencia2.XLS"
-    If fso.FileExists(tempPath) Then
-        Debug.Print "Equivalencia2.XLS OK"
-    Else
-        MsgBox ("El archivo Equivalencia2.XLS debe estar en la carpeta " & vbNewLine & RUTA)
+    If Not fso.FileExists(RUTA & "\..\Equivalencia2.XLS") Then
+        MsgBox "El archivo Equivalencia2.XLS debe estar en la carpeta " & vbNewLine & RUTA, vbCritical, "Error"
+        wbTemp.Close SaveChanges:=False
         Exit Sub
     End If
     
-    ' 10. Completado de información del cliente, código, descripción, color y talle
-    'Call CompletaInfo(wbTemp)
-    Call CompletaInfo
-
-    ' 11. Guardar el libro temporal en la carpeta RUTA con el nombre definitivo y cerrarlo
+    ' 9. Completado de información pasando el libro
+    Call CompletaInfo(wbTemp)
+    
+    ' 10. Formato a Ventas
+    'Call FormatoTabla(wbTemp, wbTemp.Worksheets("Ventas"), True)
+    
+    ' 11. Crear pestaña para Depósito
+    'Call Deposito(wbTemp, wbTemp.Worksheets("Deposito"))
+    
+    ' 12. Formato a Depósito
+    'Call FormatoTabla(wbTemp, wbTemp.Worksheets("Deposito"), False)
+    
+    ' 13. Generar TXT de importación
+    Call TxtImportacion(wbTemp)
+    
+    ' 14. Guardar y cerrar la copia procesada
     wbTemp.SaveAs fileName:=finalPath, FileFormat:=51
+    
+    MsgBox "Proceso completado con éxito:" & vbCrLf & finalPath, vbInformation, "Éxito"
 End Sub
 
-
-Sub CompletaInfo()
-'Sub CompletaInfo(Planilla As Workbook)
-    Dim Planilla As Workbook
-    Set Planilla = ActiveWorkbook
-    ' COMPLETA DATOS: descripción, color/leyenda
-    ' en base a equivalencias.
-    
-    ' Abre un archivo de rótulos para realizar las búsquedas
-    Dim Rotulos As Workbook
-    Set Rotulos = AbrirArchivoRotulos()
-
-    Dim i As Integer
+Sub CompletaInfo(ByRef Planilla As Workbook)
+    Dim i As Long
     Dim rutaArchivo As String
     Dim rutaEquivalencia As String
+
     rutaArchivo = "'" & RUTA & "\..\[Stock.XLS]Sheet1'!"
     rutaEquivalencia = "'" & RUTA & "\..\[Equivalencia2.XLS]Sheet1'!"
-    Debug.Print UltimaTotal
     
+    'Application.ScreenUpdating = False
     With Planilla.Worksheets(1)
-    
         For i = 2 To UltimaTotal
-        
-            ' Limpia de enlaces innecesarios
-            .Cells(i, 1).ClearHyperlinks
-        
-            ' Convierte a texto el SKU
-            .Cells(i, 3).Value = "'" & .Cells(i, 3).Value
-            
-            ' Esconde los últimos caracteres del SKU
             With .Cells(i, 3)
+                .Value = "'" & .Value
                 .HorizontalAlignment = xlLeft
                 .Font.color = vbWhite
                 .Characters(Start:=1, Length:=7).Font.ColorIndex = xlAutomatic
             End With
             
-            
-            ' Salta fila con código vacío
-            If .Cells(i, 3) = "" Then
+            If .Cells(i, 3).Value = "" Then
                 GoTo Siguiente
-            
-            ' Sólo se valida si es equivalencia
             ElseIf Len(.Cells(i, 3).Value) > 7 Then
+                
                 ' Color
-                'Cells(i, 5).Formula = "=IFERROR(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 4, FALSE), """")"
-                .Cells(i, 5).Activate
                 .Cells(i, 5).Formula = "=IF(ISNA(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 4, FALSE)), ""Sin equivalencia"", IF(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 4, FALSE)="""", """", VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 4, FALSE)))"
                 .Cells(i, 5).HorizontalAlignment = xlCenter
                 
                 ' Leyenda
-                .Cells(i, 6).Activate
-                '.Cells(i, 6).Formula = "=IFERROR(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 5, FALSE), """")"
-                .Cells(i, 6).Formula = "=IF(ISNA(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 5, FALSE)), ""Sin equivalencia"", IF(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 5, FALSE)="""", """", VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 5, FALSE)))"
-                .Cells(i, 6).HorizontalAlignment = xlCenter
+                '.Cells(i, 6).Formula = "=IF(ISNA(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 5, FALSE)), ""Sin equivalencia"", IF(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 5, FALSE)="""", """", VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 5, FALSE)))"
+                '.Cells(i, 6).HorizontalAlignment = xlCenter
                 
                 ' Talle
-                .Cells(i, 7).Activate
-                '.Cells(i, 7).Formula = "=IFERROR(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 6, FALSE), """")"
-                .Cells(i, 7).Formula = "=IF(ISNA(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 6, FALSE)), ""Sin equivalencia"", IF(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 6, FALSE)="""", """", VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 6, FALSE)))"
-                .Cells(i, 7).HorizontalAlignment = xlCenter
+                .Cells(i, 6).Formula = "=IF(ISNA(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 6, FALSE)), ""Sin equivalencia"", IF(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 6, FALSE)="""", """", VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 6, FALSE)))"
+                .Cells(i, 6).HorizontalAlignment = xlCenter
             End If
             
-            ' Descripción: sólo toma los 7 primeros caracteres
-            .Cells(i, 4).Activate
+            ' Descripción
             .Cells(i, 4).Formula = "=IFERROR(VLOOKUP(LEFT(C" & i & ", 7), " & rutaArchivo & "$A$2:$C$10000, 2, FALSE), """")"
-            
-            ' Busca el usuario del cliente
-            Call BuscarCliente(.Cells(i, 1).Value, Rotulos)
-            .Cells(i, 2).Value = IdCliente
             
 Siguiente:
         Next i
     End With
     
+    'Application.ScreenUpdating = True
 End Sub
 
-Public Function AbrirArchivoRotulos() As Workbook
-    Dim rutaArchivo As Variant
-    Dim wb As Workbook
-    
-    ' Abrir cuadro de diálogo para seleccionar el archivo Excel
-    rutaArchivo = Application.GetOpenFilename( _
-        FileFilter:="Archivos de Excel (*.xls; *.xlsx; *.xlsm), *.xls; *.xlsx; *.xlsm", _
-        Title:="Selecciona el archivo de Rótulos")
-        
-    ' Si el usuario cancela, la función devuelve Nothing
-    If rutaArchivo = False Then
-        MsgBox "No se seleccionó ningún archivo.", vbExclamation, "Proceso cancelado"
-        Set AbrirArchivoRotulos = Nothing
-        Exit Function
-    End If
-    
-    ' Abrir el libro y asignarlo como resultado de la función
-    On Error Resume Next
-    Set wb = Workbooks.Open(fileName:=rutaArchivo, ReadOnly:=True)
-    On Error GoTo 0
-    
-    If wb Is Nothing Then
-        MsgBox "No se pudo abrir el archivo seleccionado.", vbCritical, "Error"
-        Set AbrirArchivoRotulos = Nothing
-    Else
-        ' Retorna el objeto Workbook abierto
-        Set AbrirArchivoRotulos = wb
-    End If
-End Function
 
-Public Function BuscarCliente(ByVal NumVenta As String, ByRef LibroRotulos As Workbook) As String
-    Dim ws As Worksheet
-    Dim coincidenciaEnHoja As Range
-    Dim ultimaCoincidencia As Range
-    Dim celdaEvaluar As Range
-    Dim textoCelda As String
-    Dim maxFilas As Long
-    
-    ' Validar entrada
-    If LibroRotulos Is Nothing Or Trim(NumVenta) = "" Then
-        IdCliente = ""
-        BuscarCliente = ""
-        Exit Function
-    End If
-    
-    Set ultimaCoincidencia = Nothing
-    
-    ' 1. Buscar en TODAS las celdas de cada hoja
-    For Each ws In LibroRotulos.Worksheets
-        ' ws.Cells abarca la totalidad de la hoja
-        Set coincidenciaEnHoja = ws.Cells.Find( _
-            What:=NumVenta, _
-            After:=ws.Cells(1, 1), _
-            LookIn:=xlValues, _
-            LookAt:=xlPart, _
-            SearchDirection:=xlPrevious)
-        
-        If Not coincidenciaEnHoja Is Nothing Then
-            Set ultimaCoincidencia = coincidenciaEnHoja
-        End If
-    Next ws
-    
-    ' 2. Bajar filas en la misma columna donde se encontró, buscando el patrón (...)
-    If Not ultimaCoincidencia Is Nothing Then
-        Set celdaEvaluar = ultimaCoincidencia
-        maxFilas = 0
-        
-        Do While maxFilas < 100
-            Set celdaEvaluar = celdaEvaluar.Offset(1, 0) ' Baja 1 fila en la columna de la coincidencia
-            textoCelda = Trim(CStr(celdaEvaluar.Value))
-            
-            If Len(textoCelda) >= 2 Then
-                If Left(textoCelda, 1) = "(" And Right(textoCelda, 1) = ")" Then
-                    ' Purgar paréntesis
-                    IdCliente = Mid(textoCelda, 2, Len(textoCelda) - 2)
-                    BuscarCliente = IdCliente
-                    Exit Function
-                End If
-            End If
-            
-            maxFilas = maxFilas + 1
-        Loop
-        
-        IdCliente = "No encontrado ===="
-    Else
-        IdCliente = "Nada ===="
-    End If
-    
-    BuscarCliente = IdCliente
-    
-    ' Cerrar el archivo
-    
-End Function
 
-Sub LimpiezaDatos()
-    ' LIMPIA LOS DATOS, ELIMINA COLUMNAS Y TITULA CORRECTAMENTE
-    
-    Dim Libro As Workbook
-    Set Libro = ActiveWorkbook
+Sub LimpiezaDatos(ByRef Libro As Workbook)
     With Libro.Worksheets(1)
-        ' Limpiando de formatos y dejando una base
-        .Cells.ClearFormats
-        .Cells.Font.Name = "Consolas"
-        .Cells.Font.Size = 14
         .Name = "Ventas"
+
         
-        ' Elimina filas innecesarias
-        .Range("A1:A5").EntireRow.Delete
-        
-        ' Elimina Columnas innecesarias
-        .Range("AW1:BN1").EntireColumn.Delete
-        .Range("AF1:AU1").EntireColumn.Delete
-        .Range("X1:AE1").EntireColumn.Delete
-        .Range("H1:V1").EntireColumn.Delete
-        .Range("B1:F1").EntireColumn.Delete
-        
-        ' Agrega columnas necesarias
-        .Range("B:G").Insert Shift:=xlToRight
-        
-        ' Títulos de Columnas necesarias
-        .Range("A1").Value = "Nº Venta"
-        .Range("B1").Value = "Cliente"
-        .Range("D1").Value = "Descripción"
-        .Range("E1").Value = "Color"
-        .Range("F1").Value = "Leyenda Color"
-        .Range("G1").Value = "Talle"
-        .Range("H1").Value = "Cant."
-        
-        ' Mueve los sku
-        .Columns("I:I").Cut Destination:=Columns("C:C")
-        .Range("I1:I1").EntireColumn.Delete
-        .Range("C1").Value = "Código"
-        
-        ' Agrega una columna para detalles
-        .Columns("I:I").Insert Shift:=xlToLeft
-        .Range("I1").Value = "Detalle"
-        .Range("J1").Value = "Nº Seguimiento"
-        
-        ' Limpia los sku de sufijos -CL y -PR
         .Cells.Replace What:="-CL", Replacement:="", LookAt:=xlPart, _
         searchorder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
@@ -376,9 +217,222 @@ Sub LimpiezaDatos()
         searchorder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
         
-        ' Crea el valor de la última fila de la planilla total en su conjunto
-        UltimaTotal = .Cells(Rows.Count, 1).End(xlUp).Row
-        Debug.Print UltimaTotal
+        UltimaTotal = .Cells(.Rows.Count, 1).End(xlUp).Row
     End With
 End Sub
 
+Sub Deposito(Archivo As Workbook, Hoja As Worksheet)
+
+End Sub
+'Sub FormatoTabla(Archivo As Workbook, Hoja As Worksheet, Orientacion As Boolean)
+Sub FormatoTabla()
+' Orientacion => True: Portrait (Vertical)
+' Orientacion => False: Landscape (Horizontal)
+
+' Sólo para testing
+Dim Orientacion As Boolean
+Dim Archivo As Workbook
+Dim Hoja As Worksheet
+Dim UltimaFila As Long
+Dim i As Byte
+
+Orientacion = True
+Set Archivo = ActiveWorkbook
+Set Hoja = Archivo.Worksheets("Ventas")
+    
+    
+If Orientacion = True Then ' => VENTAS
+    With Hoja
+        ' Ultima Fila
+        UltimaFila = .Cells(.Rows.Count, 1).End(xlUp).Row
+        
+        ' Bordes tabla
+        Range(.Cells(1, 1), .Cells(UltimaFila, 9)).Select
+        With Selection
+            .Cells.Font.Name = "Consolas"
+            .Cells.Font.Size = 14
+            .Borders(xlInsideVertical).LineStyle = xlContinuous
+            .Borders(xlInsideVertical).ColorIndex = 0
+            .Borders(xlInsideVertical).TintAndShade = 0
+            .Borders(xlInsideVertical).Weight = xlThin
+            .Borders(xlEdgeBottom).LineStyle = xlContinuous
+            .Borders(xlEdgeLeft).LineStyle = xlContinuous
+            .Borders(xlEdgeRight).LineStyle = xlContinuous
+        End With
+        Range(.Cells(1, 1), .Cells(1, 10)).Select
+        With Selection
+            .Borders.LineStyle = xlContinuous
+            .EntireRow.HorizontalAlignment = xlCenter
+            .Font.Bold = True
+        End With
+        
+        ' Columna Nº Venta
+        .Columns(1).ColumnWidth = 25
+        
+        ' Columna Cliente
+        .Columns(2).ColumnWidth = 38
+        .Columns(2).EntireColumn.WrapText = True
+        
+        ' Columna Producto
+        .Columns(4).ColumnWidth = 55
+        
+        ' Columna Color
+        .Columns(5).EntireColumn.HorizontalAlignment = xlCenter
+        .Columns(5).EntireColumn.WrapText = True
+        
+        ' Columna Talle
+        .Columns(6).ColumnWidth = 7
+        .Columns(6).EntireColumn.HorizontalAlignment = xlCenter
+        
+        ' Columna Cantidad
+        .Columns(7).ColumnWidth = 7
+        
+        ' Columna Detalle
+        .Columns(8).ColumnWidth = 15
+        .Columns(8).EntireColumn.WrapText = True
+        
+        ' Seguimiento
+        .Columns(9).AutoFit
+        
+        ' Separador de ventas
+        For i = 2 To UltimaFila
+            If .Cells(i, 1).Value <> "" Then
+                Range(.Cells(i, 1), .Cells(i, 10)).Borders(xlEdgeTop).LineStyle = xlContinuous
+            End If
+        Next i
+        
+        ' Totales
+        .Cells(UltimaFila + 1, 6).Value = "TOTALES:"
+        .Cells(UltimaFila + 1, 7).Formula = "=SUM(G2:G" & UltimaFila & ")"
+        .Cells(UltimaFila + 1, 6).HorizontalAlignment = xlRight
+        .Cells(UltimaFila + 1, 7).WrapText = False
+        
+        With Range(.Cells(UltimaFila + 1, 6), .Cells(UltimaFila + 1, 7))
+            .Font.Name = "Arial"
+            .Font.Bold = True
+            .Font.Size = 20
+        End With
+        
+        ' Cantidad de rótulos
+        .Cells(UltimaFila + 1, 2).Value = "ROTULOS: "
+        .Cells(UltimaFila + 1, 3).Formula = "=COUNTA(A2:A" & UltimaFila & ")"
+        With Range(.Cells(UltimaFila + 1, 2), .Cells(UltimaFila + 1, 3))
+            .Font.Name = "Arial"
+            .Font.Bold = True
+            .Font.Size = 20
+        End With
+        .Cells(UltimaFila + 1, 2).HorizontalAlignment = xlRight
+        .Cells(UltimaFila + 1, 3).HorizontalAlignment = xlLeft
+        
+        ' Los encabezados
+        With .Rows(1)
+            .RowHeight = 25
+            .HorizontalAlignment = xlCenter
+            .Font.Bold = True
+            .Interior.color = RGB(250, 250, 250)
+        End With
+    End With
+    
+    ' Formato impresión
+    With Hoja.PageSetup
+        .Orientation = xlLandscape
+        .PaperSize = xlPaperA4
+        .LeftMargin = Application.CentimetersToPoints(0.64)
+        .RightMargin = Application.CentimetersToPoints(0.64)
+        .TopMargin = Application.CentimetersToPoints(2.5)
+        .BottomMargin = Application.CentimetersToPoints(1.91)
+        .HeaderMargin = Application.CentimetersToPoints(0.76)
+        .FooterMargin = Application.CentimetersToPoints(0.76)
+        .CenterHorizontally = True
+        .CenterVertically = False
+        .PrintArea = Hoja.Range("A1:H" & (UltimaFila + 1)).Address
+        .Zoom = False
+        .FitToPagesTall = 1
+        .FitToPagesWide = 1
+        .CenterHeader = "&B&20&F"
+    End With
+    
+
+Else '=> DEPOSITO
+    
+    With Archivo.Worksheets("Ventas")
+        ' Ultima Fila la toma de Ventas
+        UltimaFila = .Cells(.Rows.Count, 1).End(xlUp).Row
+        
+        ' Obtiene información de ventas
+        Range(.Cells(1, 3), .Cells(UltimaFila, 8)).Copy
+
+    End With
+    
+    ' Asigna el objeto Deposito
+    Set Hoja = Archivo.Worksheets("Deposito")
+    
+    With Hoja
+        
+        .Activate
+        .Cells.Clear
+        .Cells.Select
+        .Cells.ClearFormats
+        .Cells.Font.Size = 12
+        .Cells.Font.Name = "Arial"
+        .Cells.RowHeight = 17
+        .Cells(1, 1).Value = "Código"
+        .Cells(1, 2).Value = "Descripción"
+        .Cells(1, 3).Value = "Color"
+        .Cells(1, 4).Value = "Talle"
+        .Cells(1, 5).Value = "Cant"
+        .Cells(1, 6).Value = "Ubicación"
+        Range("A1").Paste
+        
+    End With
+End If
+
+End Sub
+Sub TxtImportacion(Archivo)
+
+End Sub
+
+Sub ConstructorPlanilla()
+    Dim FilaFinal As Long
+    Dim FilaInicial As Long
+    Dim FilasRestantes As Long
+    Dim NumPlanilla As Byte
+    Dim PlanillaOriginal As Workbook
+    Set PlanillaOriginal = ActiveWorkbook
+    With PlanillaOriginal.Worksheets(1)
+        NumPlanilla = 1
+        FilaInicial = 1
+        FilaFinal = 20
+        UltimaTotal = .Cells(.Rows.Count, 1).End(xlUp).Row
+        Debug.Print "Ultima fila total: " & UltimaTotal
+        FilasRestantes = UltimaTotal - FilaInicial
+        
+        Do While UltimaTotal > FilaInicial + 20
+            .Cells(FilaFinal, 1).Activate
+            If UltimaTotal >= (FilaFinal - FilaInicial + 1) Then
+                Do While .Cells(FilaFinal, 1).Value = ""
+                    FilaFinal = FilaFinal - 1
+                    .Cells(FilaFinal, 1).Activate
+                Loop
+                FilaFinal = FilaFinal - 1
+                .Cells(FilaFinal, 1).Activate
+            End If
+            
+            FilasRestantes = UltimaTotal - FilaFinal
+            Debug.Print "Fila inicial de la planilla Nº " & NumPlanilla & ": " & .Cells(FilaInicial, 1).Row
+            Debug.Print "Fila final de la planilla Nº " & NumPlanilla & ": " & .Cells(FilaFinal, 1).Row
+            Debug.Print "Cayó en un carrito. Tiene que ser otra anterior..."
+            Debug.Print "Filas restantes: " & FilasRestantes
+            
+            ' Se determina la ultima fila en la planilla que se procesa
+            FilaFinal = ActiveCell.Row
+            Debug.Print "Fila final de la planilla Nº " & NumPlanilla & ": " & FilaFinal
+            
+            ' Incrementamos la planilla
+            FilaInicial = FilaFinal + 1
+            NumPlanilla = NumPlanilla + 1
+            FilasRestantes = FilasRestantes - FilaFinal
+            FilaFinal = FilaFinal + 20
+        Loop
+    End With
+End Sub
