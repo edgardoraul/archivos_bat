@@ -88,13 +88,6 @@ Public Sub GuardarCopiaConSecuencial()
     
     ' 4. Limpieza de datos pasando el libro como parámetro
     Call LimpiezaDatos(wbTemp)
-    
-    ' 4.1 Particionar la planilla
-    ' Como máximo se hará una planilla con 20 renglones, no más.
-    ' Pero si justo cae en medio de un carrito de compras, pues pasa a la
-    ' planilla siguiente.
-    Call ConstructorPlantillas
-    
 
     ' 5. Determinar fecha
     todayStr = Format(Date, "yyyy-mm-dd")
@@ -140,19 +133,16 @@ Public Sub GuardarCopiaConSecuencial()
     Call CompletaInfo(wbTemp)
     
     ' 10. Formato a Ventas
-    'Call FormatoTabla(wbTemp, wbTemp.Worksheets("Ventas"), True)
+    Call FormatoTabla(wbTemp, wbTemp.Worksheets("Ventas"), True)
     
-    ' 11. Crear pestaña para Depósito
-    'Call Deposito(wbTemp, wbTemp.Worksheets("Deposito"))
+    ' 11. Guardar y cerrar la copia procesada
+    wbTemp.SaveAs fileName:=finalPath, FileFormat:=51
     
-    ' 12. Formato a Depósito
-    'Call FormatoTabla(wbTemp, wbTemp.Worksheets("Deposito"), False)
+    ' 12. Crear pestaña para Depósito
+    Call DepositoMeli
     
     ' 13. Generar TXT de importación
-    Call TxtImportacion(wbTemp)
-    
-    ' 14. Guardar y cerrar la copia procesada
-    wbTemp.SaveAs fileName:=finalPath, FileFormat:=51
+    Call TxtImportacion
     
     MsgBox "Proceso completado con éxito:" & vbCrLf & finalPath, vbInformation, "Éxito"
 End Sub
@@ -164,6 +154,7 @@ Sub CompletaInfo(ByRef Planilla As Workbook)
 
     rutaArchivo = "'" & RUTA & "\..\[Stock.XLS]Sheet1'!"
     rutaEquivalencia = "'" & RUTA & "\..\[Equivalencia2.XLS]Sheet1'!"
+
     
     'Application.ScreenUpdating = False
     With Planilla.Worksheets(1)
@@ -180,15 +171,14 @@ Sub CompletaInfo(ByRef Planilla As Workbook)
             ElseIf Len(.Cells(i, 3).Value) > 7 Then
                 
                 ' Color
-                .Cells(i, 5).Formula = "=IF(ISNA(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 4, FALSE)), ""Sin equivalencia"", IF(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 4, FALSE)="""", """", VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 4, FALSE)))"
-                .Cells(i, 5).HorizontalAlignment = xlCenter
-                
-                ' Leyenda
-                '.Cells(i, 6).Formula = "=IF(ISNA(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 5, FALSE)), ""Sin equivalencia"", IF(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 5, FALSE)="""", """", VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 5, FALSE)))"
-                '.Cells(i, 6).HorizontalAlignment = xlCenter
+               .Cells(i, 5).Formula = "=IF(ISNA(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 4, FALSE)), """", " & _
+                       "IF(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 4, FALSE)="""", """", " & _
+                       "VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 4, FALSE) & "". "" & VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 5, FALSE)))"
                 
                 ' Talle
-                .Cells(i, 6).Formula = "=IF(ISNA(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 6, FALSE)), ""Sin equivalencia"", IF(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 6, FALSE)="""", """", VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 6, FALSE)))"
+                .Cells(i, 6).Formula = "=IF(ISNA(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 6, FALSE)), """", " & _
+                       "IF(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 6, FALSE)="""", """", " & _
+                       "VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 6, FALSE)))"
                 .Cells(i, 6).HorizontalAlignment = xlCenter
             End If
             
@@ -207,8 +197,7 @@ End Sub
 Sub LimpiezaDatos(ByRef Libro As Workbook)
     With Libro.Worksheets(1)
         .Name = "Ventas"
-
-        
+ 
         .Cells.Replace What:="-CL", Replacement:="", LookAt:=xlPart, _
         searchorder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
@@ -224,15 +213,15 @@ End Sub
 Sub Deposito(Archivo As Workbook, Hoja As Worksheet)
 
 End Sub
-'Sub FormatoTabla(Archivo As Workbook, Hoja As Worksheet, Orientacion As Boolean)
-Sub FormatoTabla()
+Sub FormatoTabla(Archivo As Workbook, Hoja As Worksheet, Orientacion As Boolean)
+'Sub FormatoTabla()
 ' Orientacion => True: Portrait (Vertical)
 ' Orientacion => False: Landscape (Horizontal)
 
 ' Sólo para testing
-Dim Orientacion As Boolean
-Dim Archivo As Workbook
-Dim Hoja As Worksheet
+'Dim Orientacion As Boolean
+'Dim Archivo As Workbook
+'Dim Hoja As Worksheet
 Dim UltimaFila As Long
 Dim i As Byte
 
@@ -249,7 +238,7 @@ If Orientacion = True Then ' => VENTAS
         ' Bordes tabla
         Range(.Cells(1, 1), .Cells(UltimaFila, 9)).Select
         With Selection
-            .Cells.Font.Name = "Consolas"
+            '.Cells.Font.Name = "Consolas"
             .Cells.Font.Size = 14
             .Borders(xlInsideVertical).LineStyle = xlContinuous
             .Borders(xlInsideVertical).ColorIndex = 0
@@ -351,44 +340,92 @@ If Orientacion = True Then ' => VENTAS
         .FitToPagesWide = 1
         .CenterHeader = "&B&20&F"
     End With
-    
+End If
 
-Else '=> DEPOSITO
+End Sub
+
+Sub DepositoMeli()
+    Dim Archivo As Workbook
+    Dim Hoja As Worksheet
+    Dim UltimaFila As Long
+    Dim i As Byte
+    Dim rutaEquivalencia As String
+    
+    Set Archivo = ActiveWorkbook
+    rutaEquivalencia = Archivo.Path
+    rutaEquivalencia = rutaEquivalencia & "\..\Stock.XLS"
+
     
     With Archivo.Worksheets("Ventas")
         ' Ultima Fila la toma de Ventas
         UltimaFila = .Cells(.Rows.Count, 1).End(xlUp).Row
-        
-        ' Obtiene información de ventas
-        Range(.Cells(1, 3), .Cells(UltimaFila, 8)).Copy
-
     End With
     
-    ' Asigna el objeto Deposito
-    Set Hoja = Archivo.Worksheets("Deposito")
+    ' Asigna el objeto Deposito =======
     
+    ' Desactivar alertas para eliminar la hoja sin confirmación previa
+    Application.DisplayAlerts = False
+    
+    ' Comprobar si la hoja ya existe y eliminarla
+    On Error Resume Next
+    Set Hoja = Archivo.Worksheets("Depósito")
+    On Error GoTo 0
+    
+    If Not Hoja Is Nothing Then
+        Hoja.Delete
+    End If
+    
+    ' Restaurar alertas
+    Application.DisplayAlerts = True
+    
+    ' Agregar la nueva hoja al final del libro
+    Set Hoja = Archivo.Worksheets.Add(After:=Archivo.Worksheets(Archivo.Worksheets.Count))
+    Hoja.Name = "Depósito"
+    
+    ' TITULARES
     With Hoja
-        
-        .Activate
-        .Cells.Clear
-        .Cells.Select
-        .Cells.ClearFormats
-        .Cells.Font.Size = 12
-        .Cells.Font.Name = "Arial"
-        .Cells.RowHeight = 17
         .Cells(1, 1).Value = "Código"
-        .Cells(1, 2).Value = "Descripción"
+        .Cells(1, 2).Value = "Producto"
         .Cells(1, 3).Value = "Color"
         .Cells(1, 4).Value = "Talle"
-        .Cells(1, 5).Value = "Cant"
+        .Cells(1, 5).Value = "Cantidad"
         .Cells(1, 6).Value = "Ubicación"
-        Range("A1").Paste
-        
     End With
-End If
-
+    
+    ' Copia y pega información
+    With Archivo.Worksheets("Ventas")
+        For i = 2 To UltimaFila
+            ' Código
+            Hoja.Cells(i, 1).Value = Left(.Cells(i, 3).Value, 7)
+            
+            ' Producto
+            Hoja.Cells(i, 2).Value = .Cells(i, 4).Value
+            
+            ' Color
+            Hoja.Cells(i, 3).Value = .Cells(i, 5).Value
+            
+            ' Talle
+            Hoja.Cells(i, 4).Value = .Cells(i, 6).Value
+            
+            ' Cantidad
+            Hoja.Cells(i, 5).Value = .Cells(i, 7).Value
+            
+            ' Desubicación
+            'Hoja.Cells(i, 6).Formula = "=IF(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 4, FALSE)="""", """", ")"
+            
+            Hoja.Cells(i, 6).Formula = "=IFERROR(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$C$10000, 3, FALSE), """")"
+        Next i
+    End With
+    
+    ' Ordenación y totales
+    With Hoja
+        ' Ordenar en base a la ubicación
+        ' Totales
+    End With
+    
 End Sub
-Sub TxtImportacion(Archivo)
+
+Sub TxtImportacion()
 
 End Sub
 
