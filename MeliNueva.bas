@@ -10,6 +10,7 @@ Public Provincias As Variant
 
 
 Sub MeliNueva()
+Attribute MeliNueva.VB_ProcData.VB_Invoke_Func = "ñ\n14"
 ' GENERACION DE PLANILLAS DE MELI AÑO 2027
     Call GuardarCopiaConSecuencial
 End Sub
@@ -93,22 +94,23 @@ Public Sub GuardarCopiaConSecuencial()
     todayStr = Format(Date, "yyyy-mm-dd")
     filePrefix = todayStr & ". "
 
-    ' 6. Analizar archivos correlativos
+    ' 6. Analizar archivos correlativos (Independiente de la fecha)
     maxNum = 0
     Set folderObj = fso.GetFolder(RUTA)
 
     For Each fileObj In folderObj.Files
         fileName = fileObj.Name
-        If Left(fileName, Len(filePrefix)) = filePrefix Then
-            posDot = InStrRev(fileName, ".")
-            If posDot > 0 Then fileName = Left(fileName, posDot - 1)
-            
-            If Mid(fileName, Len(filePrefix) + 6, 8) = " - MELI" Then
-                numStr = Mid(fileName, Len(filePrefix) + 1, 5)
-                If IsNumeric(numStr) Then
-                    currentNum = CLng(numStr)
-                    If currentNum > maxNum Then maxNum = currentNum
-                End If
+        
+        ' Verificar que contenga la estructura " - MELI" al final antes de la extensión
+        posDot = InStrRev(fileName, ".")
+        If posDot > 0 Then fileName = Left(fileName, posDot - 1)
+        
+        ' Si el archivo termina en " - MELI", extrae los 5 dígitos numéricos justo anteriores
+        If Right(fileName, 7) = " - MELI" Then
+            numStr = Mid(fileName, Len(fileName) - 11, 5) ' Extrae el bloque de 5 dígitos
+            If IsNumeric(numStr) Then
+                currentNum = CLng(numStr)
+                If currentNum > maxNum Then maxNum = currentNum
             End If
         End If
     Next fileObj
