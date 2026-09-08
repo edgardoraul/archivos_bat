@@ -140,11 +140,6 @@ Public Sub GuardarCopiaConSecuencial()
     
     ' 12. Crear pestaña para Depósito
     Call DepositoMeli
-    
-    ' 13. Generar TXT de importación
-    Call TxtImportacion
-    
-    MsgBox "Proceso completado con éxito:" & vbCrLf & finalPath, vbInformation, "Éxito"
 End Sub
 
 Sub CompletaInfo(ByRef Planilla As Workbook)
@@ -215,20 +210,15 @@ Sub Deposito(Archivo As Workbook, Hoja As Worksheet)
 End Sub
 Sub FormatoTabla(Archivo As Workbook, Hoja As Worksheet, Orientacion As Boolean)
 'Sub FormatoTabla()
-' Orientacion => True: Portrait (Vertical)
-' Orientacion => False: Landscape (Horizontal)
+' Orientacion => False: Portrait (Vertical)
+' Orientacion => True: Landscape (Horizontal)
 
 ' Sólo para testing
 'Dim Orientacion As Boolean
 'Dim Archivo As Workbook
 'Dim Hoja As Worksheet
 Dim UltimaFila As Long
-Dim i As Byte
-
-Orientacion = True
-Set Archivo = ActiveWorkbook
-Set Hoja = Archivo.Worksheets("Ventas")
-    
+Dim i As Integer
     
 If Orientacion = True Then ' => VENTAS
     With Hoja
@@ -238,7 +228,6 @@ If Orientacion = True Then ' => VENTAS
         ' Bordes tabla
         Range(.Cells(1, 1), .Cells(UltimaFila, 9)).Select
         With Selection
-            '.Cells.Font.Name = "Consolas"
             .Cells.Font.Size = 14
             .Borders(xlInsideVertical).LineStyle = xlContinuous
             .Borders(xlInsideVertical).ColorIndex = 0
@@ -248,11 +237,12 @@ If Orientacion = True Then ' => VENTAS
             .Borders(xlEdgeLeft).LineStyle = xlContinuous
             .Borders(xlEdgeRight).LineStyle = xlContinuous
         End With
-        Range(.Cells(1, 1), .Cells(1, 10)).Select
+        Range(.Cells(1, 1), .Cells(1, 9)).Select
         With Selection
             .Borders.LineStyle = xlContinuous
             .EntireRow.HorizontalAlignment = xlCenter
             .Font.Bold = True
+            .Interior.color = RGB(250, 250, 250)
         End With
         
         ' Columna Nº Venta
@@ -266,6 +256,7 @@ If Orientacion = True Then ' => VENTAS
         .Columns(4).ColumnWidth = 55
         
         ' Columna Color
+        .Columns(5).ColumnWidth = 15
         .Columns(5).EntireColumn.HorizontalAlignment = xlCenter
         .Columns(5).EntireColumn.WrapText = True
         
@@ -286,7 +277,7 @@ If Orientacion = True Then ' => VENTAS
         ' Separador de ventas
         For i = 2 To UltimaFila
             If .Cells(i, 1).Value <> "" Then
-                Range(.Cells(i, 1), .Cells(i, 10)).Borders(xlEdgeTop).LineStyle = xlContinuous
+                Range(.Cells(i, 1), .Cells(i, 9)).Borders(xlEdgeTop).LineStyle = xlContinuous
             End If
         Next i
         
@@ -297,7 +288,6 @@ If Orientacion = True Then ' => VENTAS
         .Cells(UltimaFila + 1, 7).WrapText = False
         
         With Range(.Cells(UltimaFila + 1, 6), .Cells(UltimaFila + 1, 7))
-            .Font.Name = "Arial"
             .Font.Bold = True
             .Font.Size = 20
         End With
@@ -306,7 +296,6 @@ If Orientacion = True Then ' => VENTAS
         .Cells(UltimaFila + 1, 2).Value = "ROTULOS: "
         .Cells(UltimaFila + 1, 3).Formula = "=COUNTA(A2:A" & UltimaFila & ")"
         With Range(.Cells(UltimaFila + 1, 2), .Cells(UltimaFila + 1, 3))
-            .Font.Name = "Arial"
             .Font.Bold = True
             .Font.Size = 20
         End With
@@ -317,8 +306,6 @@ If Orientacion = True Then ' => VENTAS
         With .Rows(1)
             .RowHeight = 25
             .HorizontalAlignment = xlCenter
-            .Font.Bold = True
-            .Interior.color = RGB(250, 250, 250)
         End With
     End With
     
@@ -340,6 +327,86 @@ If Orientacion = True Then ' => VENTAS
         .FitToPagesWide = 1
         .CenterHeader = "&B&20&F"
     End With
+    
+ElseIf Orientacion = False Then ' => DEPOSITO
+    With Hoja
+        ' Ultima Fila
+        UltimaFila = .Cells(.Rows.Count, 1).End(xlUp).Row
+        
+        ' Bordes tabla
+        Range(.Cells(1, 1), .Cells(UltimaFila, 6)).Select
+        With Selection
+            .Cells.Font.Size = 14
+            .Borders.LineStyle = xlContinuous
+            .Borders.ColorIndex = 0
+            .Borders.TintAndShade = 0
+            .Borders.Weight = xlThin
+            .Borders.LineStyle = xlContinuous
+            .Borders.LineStyle = xlContinuous
+            .Borders.LineStyle = xlContinuous
+        End With
+        Range(.Cells(1, 1), .Cells(1, 6)).Select
+        With Selection
+            .Borders.LineStyle = xlContinuous
+            .EntireRow.HorizontalAlignment = xlCenter
+            .Font.Bold = True
+            .Interior.color = RGB(250, 250, 250)
+        End With
+        
+        ' Columna Color
+        .Columns(3).ColumnWidth = 15
+        .Columns(3).EntireColumn.HorizontalAlignment = xlCenter
+        .Columns(3).EntireColumn.WrapText = True
+        
+        ' Ancho desubicación
+        .Columns(6).ColumnWidth = 22
+        .Columns(6).EntireColumn.WrapText = True
+        
+        ' Agranda la letra y redimensiona las columnas
+        With .Range("A1").CurrentRegion
+            .Font.Size = 14
+            .Columns.AutoFit
+        End With
+        
+        ' Totales
+        .Cells(UltimaFila + 1, 4).Value = "TOTALES:"
+        .Cells(UltimaFila + 1, 5).Formula = "=SUM(E2:E" & UltimaFila & ")"
+        .Cells(UltimaFila + 1, 4).HorizontalAlignment = xlRight
+        .Cells(UltimaFila + 1, 5).WrapText = False
+        
+        With Range(.Cells(UltimaFila + 1, 4), .Cells(UltimaFila + 1, 5))
+            .Font.Bold = True
+            .Font.Size = 20
+        End With
+        
+        ' Los encabezados
+        With .Rows(1)
+            .RowHeight = 25
+            .HorizontalAlignment = xlCenter
+        End With
+        
+    End With
+    
+    ' Formato impresión
+    With Hoja.PageSetup
+        .Orientation = xlPortrait
+        .PaperSize = xlPaperA4
+        .LeftMargin = Application.CentimetersToPoints(0.64)
+        .RightMargin = Application.CentimetersToPoints(0.64)
+        .TopMargin = Application.CentimetersToPoints(4)
+        .BottomMargin = Application.CentimetersToPoints(1.91)
+        .HeaderMargin = Application.CentimetersToPoints(0.76)
+        .FooterMargin = Application.CentimetersToPoints(0.76)
+        .CenterHorizontally = True
+        .CenterVertically = False
+        .PrintArea = Hoja.Range("A1:F" & (UltimaFila + 1)).Address
+        .Zoom = False
+        .FitToPagesTall = 1
+        .FitToPagesWide = 1
+        .CenterHeader = "&B&20&F" & vbNewLine & "SOLO PARA USO EN DEPOSITO"
+    End With
+Else
+    ' Muchísimo
 End If
 
 End Sub
@@ -348,13 +415,19 @@ Sub DepositoMeli()
     Dim Archivo As Workbook
     Dim Hoja As Worksheet
     Dim UltimaFila As Long
-    Dim i As Byte
+    Dim i As Integer
     Dim rutaEquivalencia As String
-    
+    Dim server As String
+    Dim carpetaDestino As String
+    Dim nombreArchivo As String
+        
     Set Archivo = ActiveWorkbook
     rutaEquivalencia = Archivo.Path
-    rutaEquivalencia = rutaEquivalencia & "\..\Stock.XLS"
-
+    rutaEquivalencia = "'" & rutaEquivalencia & "\..\[Stock.XLS]Sheet1'!"
+    nombreArchivo = Len(ActiveWorkbook.Name)
+    server = "\\SER-DF\D\A Remitar TXT"
+    carpetaDestino = "\MELI1\"
+    Debug.Print carpetaDestino & vbNewLine & server & vbNewLine & nombreArchivo
     
     With Archivo.Worksheets("Ventas")
         ' Ultima Fila la toma de Ventas
@@ -364,7 +437,7 @@ Sub DepositoMeli()
     ' Asigna el objeto Deposito =======
     
     ' Desactivar alertas para eliminar la hoja sin confirmación previa
-    Application.DisplayAlerts = False
+    'Application.DisplayAlerts = False
     
     ' Comprobar si la hoja ya existe y eliminarla
     On Error Resume Next
@@ -376,7 +449,7 @@ Sub DepositoMeli()
     End If
     
     ' Restaurar alertas
-    Application.DisplayAlerts = True
+    'Application.DisplayAlerts = True
     
     ' Agregar la nueva hoja al final del libro
     Set Hoja = Archivo.Worksheets.Add(After:=Archivo.Worksheets(Archivo.Worksheets.Count))
@@ -388,7 +461,7 @@ Sub DepositoMeli()
         .Cells(1, 2).Value = "Producto"
         .Cells(1, 3).Value = "Color"
         .Cells(1, 4).Value = "Talle"
-        .Cells(1, 5).Value = "Cantidad"
+        .Cells(1, 5).Value = "Cant."
         .Cells(1, 6).Value = "Ubicación"
     End With
     
@@ -396,7 +469,7 @@ Sub DepositoMeli()
     With Archivo.Worksheets("Ventas")
         For i = 2 To UltimaFila
             ' Código
-            Hoja.Cells(i, 1).Value = Left(.Cells(i, 3).Value, 7)
+            Hoja.Cells(i, 1).Value = "'" & Left(.Cells(i, 3).Value, 7)
             
             ' Producto
             Hoja.Cells(i, 2).Value = .Cells(i, 4).Value
@@ -411,23 +484,111 @@ Sub DepositoMeli()
             Hoja.Cells(i, 5).Value = .Cells(i, 7).Value
             
             ' Desubicación
-            'Hoja.Cells(i, 6).Formula = "=IF(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$F$10000, 4, FALSE)="""", """", ")"
+            Hoja.Cells(i, 6).Formula = "=IFERROR(VLOOKUP(A" & i & ", " & rutaEquivalencia & "$A$2:$C$10000, 3, FALSE), """")"
             
-            Hoja.Cells(i, 6).Formula = "=IFERROR(VLOOKUP(C" & i & ", " & rutaEquivalencia & "$A$2:$C$10000, 3, FALSE), """")"
         Next i
     End With
     
-    ' Ordenación y totales
-    With Hoja
-        ' Ordenar en base a la ubicación
-        ' Totales
+    ' Ordenando alfabéticamente la última columna de ubicación
+    With Hoja.Range("A1:F1")
+        .AutoFilter
+        .Rows("1").RowHeight = 27
+        .Font.Bold = True
+        .HorizontalAlignment = xlCenter
+        .VerticalAlignment = xlCenter
+    End With
+    Worksheets("Depósito").Range("A1").CurrentRegion.Sort Key1:=Range("F1"), Order1:=xlAscending, Header:=xlGuess
+    With Selection
+        .AutoFilter
     End With
     
+    ' Centra los datos
+    With Hoja.Range(Cells(1, 3), Cells(UltimaFila, 5))
+        .HorizontalAlignment = xlCenter
+    End With
+    
+    ' Coloreando celdas
+    For i = 2 To UltimaFila
+        Call PintaFila(Hoja.Name, i, 1, 6)
+    Next i
+    
+    ' Dar formato
+    Call FormatoTabla(Archivo, Hoja, False)
+    
+    ' Crear el txt
+    Call generarTxt(i, UltimaFila, "", 1, nombreArchivo, carpetaDestino, UltimaFila, 0, server)
+    
 End Sub
+Function PintaFila(Hojilla As String, fila As Integer, DesdeColumna As Integer, HastaColumna As Integer)
+    ' Pinta filas impares
+    If fila Mod 2 <> 0 Then
+        Worksheets(Hojilla).Range(Cells(fila, DesdeColumna), Cells(fila, HastaColumna)).Interior.color = RGB(240, 240, 240)
+    End If
+End Function
 
-Sub TxtImportacion()
+Function generarTxt(fila, UltimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+Dim rutaArchivo As String
+Dim i As Integer
+Dim tope As Byte
+fila = 0
+Dim Archivo As Workbook
+Dim CantLetras As Byte
 
-End Sub
+
+Set Archivo = ActiveWorkbook
+
+' Generación del txt
+For i = 1 To cantArchivos
+tope = i * limite
+    If i = cantArchivos Then
+        tope = UltimaFila
+    End If
+    
+    With Archivo.Worksheets("Depósito")
+        For fila = (limite * (i - 1)) + 1 To tope - 1
+        
+        CantLetras = InStr(1, .Cells(fila + 1, 3).Value, ".")
+        
+        If CantLetras <= 0 Then
+            CantLetras = 1
+        End If
+            
+            ' 1º. Cantidad
+            ' 2º. Código
+            ' 3º. Color
+            ' 4º. Talle
+            textoArchivo = textoArchivo _
+                & .Cells(fila + 1, 5).Value _
+                & "+" & .Cells(fila + 1, 1).Value _
+                & "!" & Left(.Cells(fila + 1, 3).Value, CantLetras - 1) _
+                & "!" & .Cells(fila + 1, 4).Value _
+                & vbNewLine
+                'Debug.Print "Archivo N°: " & i, "Fila N° :" & fila
+        Next fila
+    End With
+    
+    ' Si es mayor a uno, se van nombrando incrementalmente
+    If cantArchivos > 1 Then
+        nombreArchivo = Left(ActiveWorkbook.Name, Len(ActiveWorkbook.Name) - 5) & " - " & i & ".txt"
+    Else
+        nombreArchivo = Left(ActiveWorkbook.Name, Len(ActiveWorkbook.Name) - 5) & ".txt"
+    End If
+    
+    rutaArchivo = server & carpetaDestino & nombreArchivo
+    Debug.Print textoArchivo
+    
+   
+    ' Lo comenté porque generaba un error. No debería.
+    Open rutaArchivo For Output As #1
+    Print #1, textoArchivo
+    Close #1
+    
+    MsgBox "Datos exportados con éxito a " & rutaArchivo, vbInformation, "Cargar detalle desde txt"
+    
+    textoArchivo = ""
+Next i
+
+End Function
 
 Sub ConstructorPlanilla()
     Dim FilaFinal As Long
