@@ -193,6 +193,9 @@ End Sub
 
 Sub LimpiezaDatos(ByRef Libro As Workbook)
     With Libro.Worksheets(1)
+        .Activate
+        .Range("A1").Activate
+        
         .Name = "Ventas"
  
         .Cells.Replace What:="-CL", Replacement:="", LookAt:=xlPart, _
@@ -207,23 +210,19 @@ Sub LimpiezaDatos(ByRef Libro As Workbook)
     End With
 End Sub
 
-Sub Deposito(Archivo As Workbook, Hoja As Worksheet)
-
-End Sub
 Sub FormatoTabla(Archivo As Workbook, Hoja As Worksheet, Orientacion As Boolean)
 'Sub FormatoTabla()
 ' Orientacion => False: Portrait (Vertical)
 ' Orientacion => True: Landscape (Horizontal)
 
-' Sólo para testing
-'Dim Orientacion As Boolean
-'Dim Archivo As Workbook
-'Dim Hoja As Worksheet
 Dim UltimaFila As Long
 Dim i As Integer
     
 If Orientacion = True Then ' => VENTAS
     With Hoja
+        .Activate
+        .Range("A1").Activate
+        
         ' Ultima Fila
         UltimaFila = .Cells(.Rows.Count, 1).End(xlUp).Row
         
@@ -332,6 +331,9 @@ If Orientacion = True Then ' => VENTAS
     
 ElseIf Orientacion = False Then ' => DEPOSITO
     With Hoja
+        .Activate
+        .Range("A1").Activate
+        
         ' Ultima Fila
         UltimaFila = .Cells(.Rows.Count, 1).End(xlUp).Row
         
@@ -439,7 +441,7 @@ Sub DepositoMeli()
     ' Asigna el objeto Deposito =======
     
     ' Desactivar alertas para eliminar la hoja sin confirmación previa
-    'Application.DisplayAlerts = False
+    Application.DisplayAlerts = False
     
     ' Comprobar si la hoja ya existe y eliminarla
     On Error Resume Next
@@ -451,7 +453,7 @@ Sub DepositoMeli()
     End If
     
     ' Restaurar alertas
-    'Application.DisplayAlerts = True
+    Application.DisplayAlerts = True
     
     ' Agregar la nueva hoja al final del libro
     Set Hoja = Archivo.Worksheets.Add(After:=Archivo.Worksheets(Archivo.Worksheets.Count))
@@ -529,67 +531,92 @@ Function PintaFila(Hojilla As String, fila As Integer, DesdeColumna As Integer, 
 End Function
 
 Function generarTxt(fila, UltimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
-Dim rutaArchivo As String
-Dim i As Integer
-Dim tope As Byte
-fila = 0
-Dim Archivo As Workbook
-Dim CantLetras As Byte
-
-
-Set Archivo = ActiveWorkbook
-
-' Generación del txt
-For i = 1 To cantArchivos
-tope = i * limite
-    If i = cantArchivos Then
-        tope = UltimaFila
-    End If
+    Dim rutaArchivo As String
+    Dim rutaCarpeta As String
+    Dim i As Integer
+    Dim tope As Long ' Cambiado a Long para evitar desbordamientos
+    Dim Archivo As Workbook
+    Dim CantLetras As Integer ' Cambiado a Integer para evitar desbordamiento si el texto es largo
+    Dim fso As Object
     
-    With Archivo.Worksheets("Depósito")
-        For fila = (limite * (i - 1)) + 1 To tope - 1
-        
-        CantLetras = InStr(1, .Cells(fila + 1, 3).Value, ".")
-        
-        If CantLetras <= 0 Then
-            CantLetras = 1
+    fila = 0
+    Set Archivo = ActiveWorkbook
+
+    ' Instanciar FileSystemObject para verificar la red/carpeta
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    ' Definir y validar la ruta del directorio
+    rutaCarpeta = server & carpetaDestino
+    
+    ' Asegurar que la ruta termine en barra diagonal '\'
+    If Right(rutaCarpeta, 1) <> "\" Then rutaCarpeta = rutaCarpeta & "\"
+
+    ' Verificar si la carpeta compartida o servidor está disponible
+    If Not fso.FolderExists(rutaCarpeta) Then
+        MsgBox "Atención: La carpeta de red no está disponible o accesible:" & vbCrLf & _
+               rutaCarpeta & vbCrLf & vbCrLf & _
+               "Se omitirá la generación del archivo .txt y la macro continuará.", _
+               vbExclamation, "Servidor / Red No Disponible"
+        Exit Function
+    End If
+
+    ' Generación del txt
+    For i = 1 To cantArchivos
+        tope = i * limite
+        If i = cantArchivos Then
+            tope = UltimaFila
         End If
+        
+        With Archivo.Worksheets("Depósito")
+            For fila = (limite * (i - 1)) + 1 To tope - 1
             
-            ' 1º. Cantidad
-            ' 2º. Código
-            ' 3º. Color
-            ' 4º. Talle
-            textoArchivo = textoArchivo _
-                & .Cells(fila + 1, 5).Value _
-                & "+" & .Cells(fila + 1, 1).Value _
-                & "!" & Left(.Cells(fila + 1, 3).Value, CantLetras - 1) _
-                & "!" & .Cells(fila + 1, 4).Value _
-                & vbNewLine
-                'Debug.Print "Archivo N°: " & i, "Fila N° :" & fila
-        Next fila
-    End With
-    
-    ' Si es mayor a uno, se van nombrando incrementalmente
-    If cantArchivos > 1 Then
-        nombreArchivo = Left(ActiveWorkbook.Name, Len(ActiveWorkbook.Name) - 5) & " - " & i & ".txt"
-    Else
-        nombreArchivo = Left(ActiveWorkbook.Name, Len(ActiveWorkbook.Name) - 5) & ".txt"
-    End If
-    
-    rutaArchivo = server & carpetaDestino & nombreArchivo
-    Debug.Print textoArchivo
-    
-   
-    ' Lo comenté porque generaba un error. No debería.
-    Open rutaArchivo For Output As #1
-    Print #1, textoArchivo
-    Close #1
-    
-    MsgBox "Datos exportados con éxito a " & rutaArchivo, vbInformation, "Cargar detalle desde txt"
-    
-    textoArchivo = ""
-Next i
-
+                CantLetras = InStr(1, .Cells(fila + 1, 3).Value, ".")
+                
+                If CantLetras <= 0 Then
+                    ' Si no encuentra punto, toma la longitud total del texto
+                    CantLetras = Len(.Cells(fila + 1, 3).Value) + 1
+                End If
+                
+                ' 1º. Cantidad (+) 2º. Código (!) 3º. Color (!) 4º. Talle
+                textoArchivo = textoArchivo _
+                    & .Cells(fila + 1, 5).Value _
+                    & "+" & .Cells(fila + 1, 1).Value _
+                    & "!" & Left(.Cells(fila + 1, 3).Value, CantLetras - 1) _
+                    & "!" & .Cells(fila + 1, 4).Value _
+                    & vbNewLine
+            Next fila
+        End With
+        
+        ' Asignación incremental de nombre
+        If cantArchivos > 1 Then
+            nombreArchivo = Left(ActiveWorkbook.Name, Len(ActiveWorkbook.Name) - 5) & " - " & i & ".txt"
+        Else
+            nombreArchivo = Left(ActiveWorkbook.Name, Len(ActiveWorkbook.Name) - 5) & ".txt"
+        End If
+        
+        rutaArchivo = rutaCarpeta & nombreArchivo
+        
+        ' Captura de errores durante la apertura/escritura del archivo
+        On Error Resume Next
+        
+        Open rutaArchivo For Output As #1
+        Print #1, textoArchivo
+        Close #1
+        
+        ' Verificar si hubo algún error de escritura/permisos al guardar
+        If Err.Number <> 0 Then
+            MsgBox "Ocurrió un error al intentar guardar el archivo en la red:" & vbCrLf & _
+                   rutaArchivo & vbCrLf & _
+                   "Detalle del error: " & Err.Description, vbExclamation, "Error de Exportación"
+            Err.Clear
+        Else
+            MsgBox "Datos exportados con éxito a " & rutaArchivo, vbInformation, "Cargar detalle desde txt"
+        End If
+        
+        On Error GoTo 0
+        
+        textoArchivo = ""
+    Next i
 End Function
 
 Sub ConstructorPlanilla()
