@@ -125,8 +125,8 @@ Public Sub GuardarCopiaConSecuencial()
         Exit Sub
     End If
         
-    If Not fso.FileExists(RUTA & "\..\Equivalencia2.XLS") Then
-        MsgBox "El archivo Equivalencia2.XLS debe estar en la carpeta " & vbNewLine & RUTA, vbCritical, "Error"
+    If Not fso.FileExists(RUTA & "\..\Equivalencia.XLS") Then
+        MsgBox "El archivo Equivalencia.XLS debe estar en la carpeta " & vbNewLine & RUTA, vbCritical, "Error"
         wbTemp.Close SaveChanges:=False
         Exit Sub
     End If
@@ -150,7 +150,7 @@ Sub CompletaInfo(ByRef Planilla As Workbook)
     Dim rutaEquivalencia As String
 
     rutaArchivo = "'" & RUTA & "\..\[Stock.XLS]Sheet1'!"
-    rutaEquivalencia = "'" & RUTA & "\..\[Equivalencia2.XLS]Sheet1'!"
+    rutaEquivalencia = "'" & RUTA & "\..\[Equivalencia.XLS]Sheet1'!"
 
     
     'Application.ScreenUpdating = False
@@ -370,6 +370,11 @@ ElseIf Orientacion = False Then ' => DEPOSITO
         With .Range("A1").CurrentRegion
             .Font.Size = 14
             .Columns.AutoFit
+        End With
+        
+        ' Aumenta el alto de las filas
+        With .Range("A1").CurrentRegion
+            .Rows.RowHeight = 20
         End With
         
         ' Totales
