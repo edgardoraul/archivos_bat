@@ -9,8 +9,8 @@ Public IdCliente As String
 Public Provincias As Variant
 
 
-Sub MeliNueva()
-Attribute MeliNueva.VB_ProcData.VB_Invoke_Func = "ñ\n14"
+Sub AA_MELI_Nueva()
+Attribute AA_MELI_Nueva.VB_ProcData.VB_Invoke_Func = "ñ\n14"
 ' GENERACION DE PLANILLAS DE MELI AÑO 2027
     Call GuardarCopiaConSecuencial
 End Sub
@@ -141,7 +141,7 @@ Public Sub GuardarCopiaConSecuencial()
     wbTemp.SaveAs fileName:=finalPath, FileFormat:=51
     
     ' 12. Crear pestaña para Depósito
-    Call DepositoMeli
+    Call AB_DepositoMeli
 End Sub
 
 Sub CompletaInfo(ByRef Planilla As Workbook)
@@ -420,7 +420,7 @@ End If
 
 End Sub
 
-Sub DepositoMeli()
+Sub AB_DepositoMeli()
     Dim Archivo As Workbook
     Dim Hoja As Worksheet
     Dim UltimaFila As Long

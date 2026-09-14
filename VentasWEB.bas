@@ -7,7 +7,7 @@ Function PintarFila(Hojilla As String, fila As Integer, DesdeColumna As Integer,
     End If
 End Function
 
-Function correo(numVenta, nombre, ultima, i, packar, planilla)
+Function correo(NumVenta, nombre, ultima, i, packar, Planilla)
     ' GENERA UN LISTADO DE VENTAS Y N° GUIAS PARA EL CORREO
     ' Acumulador negativo para evitar filas en blanco
     
@@ -17,17 +17,17 @@ Function correo(numVenta, nombre, ultima, i, packar, planilla)
     Dim tanda As Byte
     
     ' Borrando el contenido viejo
-    packar.Sheets(1).Range("A9:C39").ClearContents
+    packar.Worksheets(1).Range("A9:C39").ClearContents
     
     ' Completando la información
     For i = 2 To ultima
         ' Asignando el valor a cada N° vta.
-        numVenta = planilla.Worksheets(1).Cells(i, 1).Value
-        nombre = planilla.Worksheets(1).Cells(i, 2).Value
-        Debug.Print numVenta & "-" & nombre
+        NumVenta = Planilla.Worksheets(1).Cells(i, 1).Value
+        nombre = Planilla.Worksheets(1).Cells(i, 2).Value
+        Debug.Print NumVenta & "-" & nombre
         
         ' Controlando espacios vacíos
-        If numVenta = "" Or planilla.Worksheets(1).Cells(i, 9).Value = "Retira en Local" Or planilla.Worksheets(1).Cells(i, 9).Value = "Rerda S.A. - Sastrería Militar" Then
+        If NumVenta = "" Or Planilla.Worksheets(1).Cells(i, 9).Value = "Retira en Local" Or Planilla.Worksheets(1).Cells(i, 9).Value = "Rerda S.A. - Sastrería Militar" Then
             vacia = vacia + 1
         End If
         'Rerda S.A. - Sastrería Militar
@@ -36,8 +36,8 @@ Function correo(numVenta, nombre, ultima, i, packar, planilla)
         ' Recorremos la planilla del Correo
         ' Controlamos que el número de venta esté completo
         ' y además que NO SEA un retiro en Local
-        If numVenta <> "" And planilla.Worksheets(1).Cells(i, 9).Value <> "Retira en Local" And planilla.Worksheets(1).Cells(i, 9).Value <> "Rerda S.A. - Sastrería Militar" And planilla.Worksheets(1).Cells(i, 9).Value <> "Local Rerda" Then
-            packar.Sheets(1).Cells(i + 7 - vacia, 1).Value = numVenta
+        If NumVenta <> "" And Planilla.Worksheets(1).Cells(i, 9).Value <> "Retira en Local" And Planilla.Worksheets(1).Cells(i, 9).Value <> "Rerda S.A. - Sastrería Militar" And Planilla.Worksheets(1).Cells(i, 9).Value <> "Local Rerda" Then
+            packar.Sheets(1).Cells(i + 7 - vacia, 1).Value = NumVenta
             packar.Sheets(1).Cells(i + 7 - vacia, 2).Value = nombre
         End If
     Next i
@@ -45,7 +45,7 @@ Function correo(numVenta, nombre, ultima, i, packar, planilla)
     
 End Function
 
-Function generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
+Function generarRoutuloRetiro(nombre, telefono, dni, fecha, NumVenta, RUTA)
     ' GENERA PESTAÑAS CON ROTULOS PARA RETIRO EN LOCAL
     ' Enmarcando
     ActiveSheet.Range("A1:H21").Select
@@ -79,7 +79,7 @@ Function generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
     ActiveSheet.Range("A2:A2").RowHeight = 30
     
      ' Insertando la imagen
-    ActiveSheet.Pictures.Insert(ruta & "..\logo.png").Select
+    ActiveSheet.Pictures.Insert(RUTA & "..\logo.png").Select
     
     ' Centrando el logo
     With Selection
@@ -167,7 +167,7 @@ Function generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
     
     Range("g14").Select
     With Selection
-        .Value = numVenta
+        .Value = NumVenta
         .HorizontalAlignment = xlLeft
         .Font.Bold = True
         .Font.Size = 15
@@ -324,7 +324,7 @@ End With
 
 End Function
 
-Sub GuardarArchivo(fecha, ruta, nombreArchivo)
+Sub GuardarArchivo(fecha, RUTA, nombreArchivo)
 ' VALIDANDO NOMBRE DE ARCHIVO A GENERAR Y GUARDAR
 
 ' Variables a utilizar
@@ -332,11 +332,11 @@ Dim nombre As String
 Dim cuenta As String
 
 ' Asignando algunos valores
-ruta = ruta & "WEB\"
+RUTA = RUTA & "WEB\"
 
 
 'Controlando si la compu EDGAR está prendida y conectada a red.
-If Dir(ruta, vbDirectory) = "" Then
+If Dir(RUTA, vbDirectory) = "" Then
     MsgBox ("No hay acceso la compu EDGAR. Debes prender esa compu y que se conecte a la red.")
     Exit Sub
 End If
@@ -348,23 +348,23 @@ Dim denominacion As String
     
 ' Preparación de variables
 u = 1
-archivos = Dir(ruta)
+archivos = Dir(RUTA)
     
 ' Recorrido de la carpeta
-ActiveWorkbook.Sheets.Add(after:=ActiveWorkbook.ActiveSheet).Name = "Listado"
-Sheets("Listado").Visible = False
-Sheets(1).Name = "ventas"
-Sheets("ventas").Select
+ActiveWorkbook.Worksheets.Add(After:=ActiveWorkbook.ActiveSheet).Name = "Listado"
+Worksheets("Listado").Visible = False
+Worksheets(1).Name = "ventas"
+Worksheets("ventas").Activate
 
 Do While Len(archivos) > 0
-    Sheets("Listado").Cells(u, 1).Value = archivos
+    Worksheets("Listado").Cells(u, 1).Value = archivos
     archivos = Dir()
     u = u + 1
 Loop
-nombre = ruta & Sheets("Listado").Cells(u - 1, 1).Value
+nombre = RUTA & Worksheets("Listado").Cells(u - 1, 1).Value
 
 ' Controlando que no se esté duplicando el mismo archivo con otro nombre
-If ActiveWorkbook.Name = Sheets("Listado").Cells(u - 1, 1).Value Then
+If ActiveWorkbook.Name = Worksheets("Listado").Cells(u - 1, 1).Value Then
     MsgBox ("Ya creaste este archivo antes. Generá uno nuevo.")
     ActiveWorkbook.Close SaveChanges:=False
     Exit Sub
@@ -376,7 +376,7 @@ Dim parteNumero As String
 Dim nombreNumero As Integer
 Dim e As Integer
 e = 1
-parteNumero = Mid(Sheets("Listado").Cells(u - 1, 1).Value, 11, 7)
+parteNumero = Mid(Worksheets("Listado").Cells(u - 1, 1).Value, 11, 7)
 nombreNumero = CInt(parteNumero) + 1
 parteNumero = CStr(nombreNumero)
     
@@ -386,12 +386,12 @@ Do While Len(parteNumero) < 6
     e = e + 1
 Loop
 nombreArchivo = "Ventas Web " & parteNumero & ". " & fecha & ".xlsx"
-nombre = ruta & nombreArchivo
+nombre = RUTA & nombreArchivo
 
-Sheets("ventas").Range("A1").Select
+Worksheets("ventas").Range("A1").Select
 'ActiveWorkbook.SaveAs fileName:=nombre, FileFormat:=xlOpenXMLStrictWorkbook, ConflictResolution:=xlUserResolution, AddToMru:=True, Local:=True
-ActiveWorkbook.SaveAs Filename:=nombre, FileFormat:=xlOpenXMLWorkbook
-Sheets(1).Name = "ventas"
+ActiveWorkbook.SaveAs fileName:=nombre, FileFormat:=xlOpenXMLWorkbook
+Worksheets(1).Name = "ventas"
 ActiveWorkbook.Save
 Application.ThisWorkbook.Save
 
@@ -399,7 +399,7 @@ Application.ThisWorkbook.Save
 End Sub
 
 
-Sub ventasWeb()
+Sub BB_ventasWeb()
 
 ' Controlar que no se haya hecho formato antes
 If ActiveSheet.Range("I1").Value = "Detalle" Then
@@ -412,14 +412,14 @@ End If
 Dim nombre As String
 Dim telefono As String
 Dim dni As String
-Dim numVenta As String
-Dim planilla As Object
+Dim NumVenta As String
+Dim Planilla As Object
 Dim packar As Object
 Dim ultima As Integer
 Dim fecha As String
 Dim i As Integer
 Dim Rotulos As Integer
-Dim ruta As String
+Dim RUTA As String
 Dim img As String
 Dim nombreArchivo As String
 
@@ -429,13 +429,13 @@ Set ws = CreateObject("WScript.network")
 
 ' Asignando algunos valores de acuerdo en qué equipo de la red esté
 If ws.ComputerName = "EDGAR" Then
-    ruta = "D:\Web\Listados de Ventas Online\"
+    RUTA = "D:\Web\Listados de Ventas Online\"
     Debug.Print "Estoy en la computadora: " & ws.ComputerName
 Else
-    ruta = "\\EDGAR\Web\Listados de Ventas Online\"
+    RUTA = "\\EDGAR\Web\Listados de Ventas Online\"
     Debug.Print "Estoy en una computadora de la red, llamada: " & ws.ComputerName
 End If
-Debug.Print "Se guardan los archivos en: " & ruta
+Debug.Print "Se guardan los archivos en: " & RUTA
 
 Rotulos = 0
 fecha = Day(Date) & "-" & Month(Date) & "-" & Year(Date)
@@ -443,7 +443,7 @@ fecha = Day(Date) & "-" & Month(Date) & "-" & Year(Date)
 
 ' Guardando el archivo con nombre específico
 ActiveSheet.Name = "ventas"
-Call GuardarArchivo(fecha, ruta, nombreArchivo)
+Call GuardarArchivo(fecha, RUTA, nombreArchivo)
 Range("A1").Activate
 ultima = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).Row
 
@@ -507,27 +507,27 @@ Range("I1:I1").Value = "Detalles"
 
 ' Limpiando el contenido de "(sin color)" y "(sin talle)"
 ' Con comas y doble paréntesis
-Cells.Replace what:="((Sin Color)), ", Replacement:="", LookAt:=xlPart, searchorder:= _
+Cells.Replace What:="((Sin Color)), ", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
-Cells.Replace what:="((Sin Talle)), ", Replacement:="", LookAt:=xlPart, searchorder:= _
+Cells.Replace What:="((Sin Talle)), ", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 
 ' Doble paréntesis
-Cells.Replace what:="((Sin Color))", Replacement:="", LookAt:=xlPart, searchorder:= _
+Cells.Replace What:="((Sin Color))", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
-Cells.Replace what:="((Sin Talle))", Replacement:="", LookAt:=xlPart, searchorder:= _
+Cells.Replace What:="((Sin Talle))", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 
 ' Con comas
-Cells.Replace what:="(Sin Color), ", Replacement:="", LookAt:=xlPart, searchorder:= _
+Cells.Replace What:="(Sin Color), ", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
-Cells.Replace what:="(Sin Talle), ", Replacement:="", LookAt:=xlPart, searchorder:= _
+Cells.Replace What:="(Sin Talle), ", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 
 ' Simples
-Cells.Replace what:="(Sin Color)", Replacement:="", LookAt:=xlPart, searchorder:= _
+Cells.Replace What:="(Sin Color)", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
-Cells.Replace what:="(Sin Talle)", Replacement:="", LookAt:=xlPart, searchorder:= _
+Cells.Replace What:="(Sin Talle)", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 
 
@@ -538,7 +538,7 @@ Selection.TextToColumns Destination:=Range("C1"), DataType:=xlDelimited, _
         Semicolon:=False, Comma:=False, Space:=False, Other:=True, OtherChar _
         :="(", FieldInfo:=Array(Array(1, 1), Array(2, 1)), TrailingMinusNumbers:=True
 Range("A2").Activate
-Cells.Replace what:=")", Replacement:="", LookAt:=xlPart, searchorder:= _
+Cells.Replace What:=")", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 Range("D1").Value = "Código"
 Range("E1").Value = "Variante"
@@ -573,29 +573,29 @@ For i = 2 To ultima
         nombre = Cells(i, 2).Value
         telefono = Cells(i, 8).Value
         dni = Cells(i, 7).Value
-        numVenta = Cells(i, 1).Value
+        NumVenta = Cells(i, 1).Value
         
         ' Contador de rótulos a imprimir
         Rotulos = Rotulos + 1
         
         ' Se agrega una pestaña para el respectivo rótulo
-        ActiveWorkbook.Sheets.Add(after:=ActiveWorkbook.Worksheets(1)).Name = "Venta N° " & Cells(i, 1).Value
+        ActiveWorkbook.Sheets.Add(After:=ActiveWorkbook.Worksheets(1)).Name = "Venta N° " & Cells(i, 1).Value
         
         ' Se genera el rótulo respectivo
-        Call generarRoutuloRetiro(nombre, telefono, dni, fecha, numVenta, ruta)
+        Call generarRoutuloRetiro(nombre, telefono, dni, fecha, NumVenta, RUTA)
         
     End If
     Worksheets(1).Activate
 Next i
 
 'Posicionando al principio
-Worksheets.Add(after:=Worksheets(1)).Name = "Depósito"
-Worksheets.Add(after:=Worksheets("Depósito")).Name = "Exportar TXT"
+Worksheets.Add(After:=Worksheets(1)).Name = "Depósito"
+Worksheets.Add(After:=Worksheets("Depósito")).Name = "Exportar TXT"
 Worksheets(1).Activate
 Range("A1").Activate
 
 ' Definiendo este archivo
-Set planilla = ActiveWorkbook
+Set Planilla = ActiveWorkbook
 
 ' DANDO FORMATO DE IMPRESION
 Call formatPrint(ultima, i)
@@ -609,28 +609,28 @@ If Rotulos > 0 Then
 
 
 ' Generando una planilla sólo para dpto. DEPOSITO
-Call deposito
+Call Deposito
 
 
 ' Abrir el archivo
-ruta = ruta & "..\"
-Workbooks.Open ruta & "ENCOMIENDAS_WEB.xlsx"
+RUTA = RUTA & "..\"
+Workbooks.Open RUTA & "ENCOMIENDAS_WEB.xlsx"
 Set packar = ActiveWorkbook
 
 ' Generando una planilla de informe para el Correo Argentino
-Call correo(numVenta, nombre, ultima, i, packar, planilla)
+Call correo(NumVenta, nombre, ultima, i, packar, Planilla)
 
 
 ' Posicionando al principio
-planilla.Worksheets("ventas").Activate
+Planilla.Worksheets("ventas").Activate
 ActiveWorkbook.Save
 End Sub
 
-Sub deposito()
-Attribute deposito.VB_Description = "Genera planilla de depósito para la Web."
-Attribute deposito.VB_ProcData.VB_Invoke_Func = "S\n14"
+Sub BC_Deposito()
+Attribute BC_Deposito.VB_Description = "Genera planilla de depósito para la Web."
+Attribute BC_Deposito.VB_ProcData.VB_Invoke_Func = "S\n14"
 ' GENERA UNA PLANILLA SÓLO PARA USO EXCLUSIVO DEL DEPOSITO
-Dim ruta As String
+Dim RUTA As String
 Dim nombreArchivo As String
 Dim ultima As Byte
 Dim i As Integer
@@ -639,7 +639,7 @@ Dim web As Boolean
 enrutacion = ActiveWorkbook.Path & "\..\"
 Debug.Print enrutacion
 
-ruta = "'" & enrutacion & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
+RUTA = "'" & enrutacion & "[Stock.XLS]Sheet1'!$A$2:$G$10000"
 ultima = Worksheets(1).Cells(Rows.Count, 2).End(xlUp).Row - 1
 web = False
 
@@ -668,7 +668,7 @@ For i = 2 To ultima
         .Cells(i, 1).Value = "'" & Worksheets("ventas").Cells(i, 3).Value
  
         ' Descripción
-        .Cells(i, 2).Value = "=VLOOKUP(A" & i & "," & ruta & ",2,FALSE)"
+        .Cells(i, 2).Value = "=VLOOKUP(A" & i & "," & RUTA & ",2,FALSE)"
 
         ' Variante
         .Cells(i, 3).Value = Worksheets("ventas").Cells(i, 5).Value
@@ -678,14 +678,14 @@ For i = 2 To ultima
         .Cells(i, 4).Value = Worksheets("ventas").Cells(i, 6).Value
         
         ' La ubicación
-        .Cells(i, 5).Formula = "=VLOOKUP(A" & i & "," & ruta & ",3,FALSE)"
+        .Cells(i, 5).Formula = "=VLOOKUP(A" & i & "," & RUTA & ",3,FALSE)"
     
     End With
     
     ' Descripción en "ventas"
     With Worksheets("ventas")
         .Cells(i, 3).Value = "'" & Worksheets("ventas").Cells(i, 3).Value
-        .Cells(i, 4).Value = "=VLOOKUP(C" & i & "," & ruta & ",2,FALSE)"
+        .Cells(i, 4).Value = "=VLOOKUP(C" & i & "," & RUTA & ",2,FALSE)"
     End With
 Next i
 
@@ -770,7 +770,7 @@ Function CrearHoja(nombreHoja As String) As Boolean
     existe = (Worksheets(nombreHoja).Name <> "")
      
     If Not existe Then
-        Worksheets.Add(after:=Worksheets(Worksheets.Count)).Name = nombreHoja
+        Worksheets.Add(After:=Worksheets(Worksheets.Count)).Name = nombreHoja
     End If
      
     CrearHoja = existe
@@ -792,14 +792,14 @@ Dim nombreArchivo As String
 Dim limite As Byte
 Dim item As Variant
 Dim i As Integer
-Dim ultimaFila As Byte
+Dim UltimaFila As Byte
 Dim resto As Byte
 Dim cantArchivos As Byte
 Dim RangoVariante As Range
 
 
 Dim matrixCodColor As Object
-ultimaFila = Worksheets("Depósito").Cells(Rows.Count, 2).End(xlUp).Row
+UltimaFila = Worksheets("Depósito").Cells(Rows.Count, 2).End(xlUp).Row
 nombreArchivo = Len(ActiveWorkbook.Name)
 server = "\\SER-DF\D\A Remitar TXT"
 carpetaDestino = "\WEB\"
@@ -851,8 +851,8 @@ Worksheets("Exportar TXT").Cells.Clear
 ' Separación de talles y colores ==========
 ' Datos fuentes
 Worksheets("Depósito").Activate
-Worksheets("Depósito").Range(Cells(2, 3), Cells(ultimaFila, 3)).Select
-Set RangoVariante = Worksheets("Depósito").Range(Cells(2, 3), Cells(ultimaFila, 3))
+Worksheets("Depósito").Range(Cells(2, 3), Cells(UltimaFila, 3)).Select
+Set RangoVariante = Worksheets("Depósito").Range(Cells(2, 3), Cells(UltimaFila, 3))
 Selection.Copy
 Worksheets("Exportar TXT").Range("C1").PasteSpecial xlPasteValues
 Application.CutCopyMode = False
@@ -861,8 +861,8 @@ Worksheets("Exportar TXT").Activate
 ' Separar en columnas
 ' Comprobar si hay datos en el rango "Variante" antes de procesar
 If Application.WorksheetFunction.CountA(RangoVariante) > 0 Then
-    Worksheets("Exportar TXT").Range(Cells(1, 3), Cells(ultimaFila + 1, 3)).TextToColumns _
-        Destination:=Range(Cells(1, 3), Cells(ultimaFila + 1, 3)), _
+    Worksheets("Exportar TXT").Range(Cells(1, 3), Cells(UltimaFila + 1, 3)).TextToColumns _
+        Destination:=Range(Cells(1, 3), Cells(UltimaFila + 1, 3)), _
         DataType:=xlDelimited, _
         ConsecutiveDelimiter:=True, _
         Tab:=False, _
@@ -874,7 +874,7 @@ End If
 Worksheets("Exportar TXT").Range("A1").Activate
 
 ' Acomodar los datos del 1° el color y 2° el talle
-For fila = 1 To ultimaFila
+For fila = 1 To UltimaFila
     Worksheets("Exportar TXT").Cells(fila, 3).Select
     ' Recorre el diccionario buscando coincidencia
     For Each item In matrixCodColor
@@ -893,12 +893,12 @@ proximaFila:
 Next fila
 
 ' Borrar espacios en blanco
-Worksheets("Exportar TXT").Range(Cells(1, 4), Cells(ultimaFila + 1, 4)).Replace what:=" ", Replacement:="", LookAt:=xlPart, searchorder:= _
+Worksheets("Exportar TXT").Range(Cells(1, 4), Cells(UltimaFila + 1, 4)).Replace What:=" ", Replacement:="", LookAt:=xlPart, searchorder:= _
         xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
 
 
 ' Completa planilla para exportar
-For fila = 1 To ultimaFila - 1
+For fila = 1 To UltimaFila - 1
     
     ' 1º) Stock
     Worksheets("Exportar TXT").Cells(fila, 1).Value = "'" & Worksheets("Depósito").Cells(fila + 1, 4).Value
@@ -909,26 +909,26 @@ For fila = 1 To ultimaFila - 1
 Next fila
 
 ' Ajuste ultima Fila - HARDCODEO ESTO PARA PROBAR
-ultimaFila = ultimaFila - 1
+UltimaFila = UltimaFila - 1
 
 ' Si se pasa del tope (30 líneas), serán "n" archivos con 30 líneas y otro con el resto
 ' de items que quedaron fuera. Sería el resto de una división, el módulo.
-resto = ultimaFila Mod limite
+resto = UltimaFila Mod limite
 If resto = 0 Then
-    cantArchivos = Int(ultimaFila / limite)
+    cantArchivos = Int(UltimaFila / limite)
 Else
-    cantArchivos = Int(ultimaFila / limite) + 1
+    cantArchivos = Int(UltimaFila / limite) + 1
 End If
 
 Debug.Print "Archivos a importar: " & cantArchivos
 
 
 ' Generación del txt
-Call generarTxt(fila, ultimaFila, "", cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+Call generarTxt(fila, UltimaFila, "", cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
 
 End Sub
 
-Function generarTxt(fila, ultimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+Function generarTxt(fila, UltimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
 Dim rutaArchivo As String
 Dim i As Integer
 Dim tope As Byte
@@ -939,7 +939,7 @@ fila = 0
 For i = 1 To cantArchivos
 tope = i * limite
     If i = cantArchivos Then
-        tope = ultimaFila
+        tope = UltimaFila
     End If
 
     For fila = (limite * (i - 1)) + 1 To tope
