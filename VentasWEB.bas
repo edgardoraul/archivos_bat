@@ -609,7 +609,7 @@ If Rotulos > 0 Then
 
 
 ' Generando una planilla sólo para dpto. DEPOSITO
-Call Deposito
+Call BC_Deposito
 
 
 ' Abrir el archivo
