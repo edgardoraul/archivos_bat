@@ -206,7 +206,8 @@ Sub LimpiezaDatos(ByRef Libro As Workbook)
         searchorder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
         
-        UltimaTotal = .Cells(.Rows.Count, 1).End(xlUp).Row
+        UltimaTotal = .Cells(.Rows.Count, 3).End(xlUp).Row
+        Debug.Print UltimaTotal
     End With
 End Sub
 
@@ -215,7 +216,7 @@ Sub FormatoTabla(Archivo As Workbook, Hoja As Worksheet, Orientacion As Boolean)
 ' Orientacion => False: Portrait (Vertical)
 ' Orientacion => True: Landscape (Horizontal)
 
-Dim UltimaFila As Long
+Dim ultimaFila As Long
 Dim i As Integer
     
 If Orientacion = True Then ' => VENTAS
@@ -224,10 +225,10 @@ If Orientacion = True Then ' => VENTAS
         .Range("A1").Activate
         
         ' Ultima Fila
-        UltimaFila = .Cells(.Rows.Count, 1).End(xlUp).Row
+        ultimaFila = .Cells(.Rows.Count, 3).End(xlUp).Row
         
         ' Bordes tabla
-        Range(.Cells(1, 1), .Cells(UltimaFila, 9)).Select
+        Range(.Cells(1, 1), .Cells(ultimaFila, 9)).Select
         With Selection
             .Cells.Font.Size = 14
             .Borders(xlInsideVertical).LineStyle = xlContinuous
@@ -276,32 +277,32 @@ If Orientacion = True Then ' => VENTAS
         .Columns(9).AutoFit
         
         ' Separador de ventas
-        For i = 2 To UltimaFila
+        For i = 2 To ultimaFila
             If .Cells(i, 1).Value <> "" Then
                 Range(.Cells(i, 1), .Cells(i, 9)).Borders(xlEdgeTop).LineStyle = xlContinuous
             End If
         Next i
         
         ' Totales
-        .Cells(UltimaFila + 1, 6).Value = "TOTALES:"
-        .Cells(UltimaFila + 1, 7).Formula = "=SUM(G2:G" & UltimaFila & ")"
-        .Cells(UltimaFila + 1, 6).HorizontalAlignment = xlRight
-        .Cells(UltimaFila + 1, 7).WrapText = False
+        .Cells(ultimaFila + 1, 6).Value = "TOTALES:"
+        .Cells(ultimaFila + 1, 7).Formula = "=SUM(G2:G" & ultimaFila & ")"
+        .Cells(ultimaFila + 1, 6).HorizontalAlignment = xlRight
+        .Cells(ultimaFila + 1, 7).WrapText = False
         
-        With Range(.Cells(UltimaFila + 1, 6), .Cells(UltimaFila + 1, 7))
+        With Range(.Cells(ultimaFila + 1, 6), .Cells(ultimaFila + 1, 7))
             .Font.Bold = True
             .Font.Size = 20
         End With
         
         ' Cantidad de rótulos
-        .Cells(UltimaFila + 1, 2).Value = "ROTULOS: "
-        .Cells(UltimaFila + 1, 3).Formula = "=COUNTA(A2:A" & UltimaFila & ")"
-        With Range(.Cells(UltimaFila + 1, 2), .Cells(UltimaFila + 1, 3))
+        .Cells(ultimaFila + 1, 2).Value = "ROTULOS: "
+        .Cells(ultimaFila + 1, 3).Formula = "=COUNTA(A2:A" & ultimaFila & ")"
+        With Range(.Cells(ultimaFila + 1, 2), .Cells(ultimaFila + 1, 3))
             .Font.Bold = True
             .Font.Size = 20
         End With
-        .Cells(UltimaFila + 1, 2).HorizontalAlignment = xlRight
-        .Cells(UltimaFila + 1, 3).HorizontalAlignment = xlLeft
+        .Cells(ultimaFila + 1, 2).HorizontalAlignment = xlRight
+        .Cells(ultimaFila + 1, 3).HorizontalAlignment = xlLeft
         
         ' Los encabezados
         With .Rows(1)
@@ -322,7 +323,7 @@ If Orientacion = True Then ' => VENTAS
         .FooterMargin = Application.CentimetersToPoints(0.76)
         .CenterHorizontally = True
         .CenterVertically = False
-        .PrintArea = Hoja.Range("A1:H" & (UltimaFila + 1)).Address
+        .PrintArea = Hoja.Range("A1:H" & (ultimaFila + 1)).Address
         .Zoom = False
         .FitToPagesTall = 1
         .FitToPagesWide = 1
@@ -335,10 +336,10 @@ ElseIf Orientacion = False Then ' => DEPOSITO
         .Range("A1").Activate
         
         ' Ultima Fila
-        UltimaFila = .Cells(.Rows.Count, 1).End(xlUp).Row
+        ultimaFila = .Cells(.Rows.Count, 1).End(xlUp).Row
         
         ' Bordes tabla
-        Range(.Cells(1, 1), .Cells(UltimaFila, 6)).Select
+        Range(.Cells(1, 1), .Cells(ultimaFila, 6)).Select
         With Selection
             .Cells.Font.Size = 14
             .Borders.LineStyle = xlContinuous
@@ -378,12 +379,12 @@ ElseIf Orientacion = False Then ' => DEPOSITO
         End With
         
         ' Totales
-        .Cells(UltimaFila + 1, 4).Value = "TOTALES:"
-        .Cells(UltimaFila + 1, 5).Formula = "=SUM(E2:E" & UltimaFila & ")"
-        .Cells(UltimaFila + 1, 4).HorizontalAlignment = xlRight
-        .Cells(UltimaFila + 1, 5).WrapText = False
+        .Cells(ultimaFila + 1, 4).Value = "TOTALES:"
+        .Cells(ultimaFila + 1, 5).Formula = "=SUM(E2:E" & ultimaFila & ")"
+        .Cells(ultimaFila + 1, 4).HorizontalAlignment = xlRight
+        .Cells(ultimaFila + 1, 5).WrapText = False
         
-        With Range(.Cells(UltimaFila + 1, 4), .Cells(UltimaFila + 1, 5))
+        With Range(.Cells(ultimaFila + 1, 4), .Cells(ultimaFila + 1, 5))
             .Font.Bold = True
             .Font.Size = 20
         End With
@@ -408,7 +409,7 @@ ElseIf Orientacion = False Then ' => DEPOSITO
         .FooterMargin = Application.CentimetersToPoints(0.76)
         .CenterHorizontally = True
         .CenterVertically = False
-        .PrintArea = Hoja.Range("A1:F" & (UltimaFila + 1)).Address
+        .PrintArea = Hoja.Range("A1:F" & (ultimaFila + 1)).Address
         .Zoom = False
         .FitToPagesTall = 1
         .FitToPagesWide = 1
@@ -423,7 +424,7 @@ End Sub
 Sub AB_DepositoMeli()
     Dim Archivo As Workbook
     Dim Hoja As Worksheet
-    Dim UltimaFila As Long
+    Dim ultimaFila As Long
     Dim i As Integer
     Dim rutaEquivalencia As String
     Dim server As String
@@ -439,8 +440,9 @@ Sub AB_DepositoMeli()
     Debug.Print carpetaDestino & vbNewLine & server & vbNewLine & nombreArchivo
     
     With Archivo.Worksheets("Ventas")
-        ' Ultima Fila la toma de Ventas
-        UltimaFila = .Cells(.Rows.Count, 1).End(xlUp).Row
+        ' Ultima Fila: la toma de Ventas,
+        ' sin tener en cuenta la celda de los totales
+        ultimaFila = .Cells(.Rows.Count, 3).End(xlUp).Row - 1
     End With
     
     ' Asigna el objeto Deposito =======
@@ -476,7 +478,7 @@ Sub AB_DepositoMeli()
     
     ' Copia y pega información
     With Archivo.Worksheets("Ventas")
-        For i = 2 To UltimaFila
+        For i = 2 To ultimaFila
             ' Código
             Hoja.Cells(i, 1).Value = "'" & Left(.Cells(i, 3).Value, 7)
             
@@ -495,6 +497,10 @@ Sub AB_DepositoMeli()
             ' Desubicación
             Hoja.Cells(i, 6).Formula = "=IFERROR(VLOOKUP(A" & i & ", " & rutaEquivalencia & "$A$2:$C$10000, 3, FALSE), """")"
             
+            ' Otro depósito
+            If LCase(.Cells(i, 8).Value) = "planta baja" Or LCase(.Cells(i, 8).Value) = "mendoza" Then
+                Hoja.Cells(i, 6).Value = "12. Planta Baja"
+            End If
         Next i
     End With
     
@@ -512,12 +518,12 @@ Sub AB_DepositoMeli()
     End With
     
     ' Centra los datos
-    With Hoja.Range(Cells(1, 3), Cells(UltimaFila, 5))
+    With Hoja.Range(Cells(1, 3), Cells(ultimaFila, 5))
         .HorizontalAlignment = xlCenter
     End With
     
     ' Coloreando celdas
-    For i = 2 To UltimaFila
+    For i = 2 To ultimaFila
         Call PintaFila(Hoja.Name, i, 1, 6)
     Next i
     
@@ -525,7 +531,7 @@ Sub AB_DepositoMeli()
     Call FormatoTabla(Archivo, Hoja, False)
     
     ' Crear el txt
-    Call generarTxt(i, UltimaFila, "", 1, nombreArchivo, carpetaDestino, UltimaFila, 0, server)
+    Call generarTxt(i, ultimaFila, "", 1, nombreArchivo, carpetaDestino, ultimaFila, 0, server)
     
 End Sub
 Function PintaFila(Hojilla As String, fila As Integer, DesdeColumna As Integer, HastaColumna As Integer)
@@ -535,7 +541,7 @@ Function PintaFila(Hojilla As String, fila As Integer, DesdeColumna As Integer, 
     End If
 End Function
 
-Function generarTxt(fila, UltimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
+Function generarTxt(fila, ultimaFila, textoArchivo, cantArchivos, nombreArchivo, carpetaDestino, limite, resto, server)
     Dim rutaArchivo As String
     Dim rutaCarpeta As String
     Dim i As Integer
@@ -569,7 +575,7 @@ Function generarTxt(fila, UltimaFila, textoArchivo, cantArchivos, nombreArchivo,
     For i = 1 To cantArchivos
         tope = i * limite
         If i = cantArchivos Then
-            tope = UltimaFila
+            tope = ultimaFila
         End If
         
         With Archivo.Worksheets("Depósito")
@@ -635,7 +641,7 @@ Sub ConstructorPlanilla()
         NumPlanilla = 1
         FilaInicial = 1
         FilaFinal = 20
-        UltimaTotal = .Cells(.Rows.Count, 1).End(xlUp).Row
+        UltimaTotal = .Cells(.Rows.Count, 3).End(xlUp).Row
         Debug.Print "Ultima fila total: " & UltimaTotal
         FilasRestantes = UltimaTotal - FilaInicial
         
