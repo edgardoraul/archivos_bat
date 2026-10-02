@@ -8,6 +8,7 @@ Sub GenerarRotuloCD()
     Dim fd As FileDialog
     Dim folderPath As String, folderName As String, genrePart As String
     Dim fileName As String, cleanName As String, savePath As String
+    Dim cleanNameFormatted As String
     Dim colorVal As Long
     Dim ws As Worksheet
     Dim r As Long, i As Long, lastSongRow As Long, endRow As Long, dotPos As Long
@@ -33,22 +34,16 @@ Sub GenerarRotuloCD()
     ' Asignación de COLOR
     If InStr(genrePart, "DEEP HOUSE") > 0 Then
         colorVal = RGB(0, 176, 80)      ' Verde
-        
     ElseIf InStr(genrePart, "PROGRESSIVE HOUSE") > 0 Then
         colorVal = RGB(255, 127, 0)    ' Naranja
-        
     ElseIf InStr(genrePart, "PROGRESSIVE") > 0 Then
-        colorVal = RGB(20, 20, 255)      ' Azul
-        
+        colorVal = RGB(20, 20, 255)     ' Azul
     ElseIf InStr(genrePart, "TRANCE") > 0 Then
         colorVal = RGB(255, 20, 255)    ' Magenta
-        
     ElseIf InStr(genrePart, "ACID JAZZ") > 0 Then
         colorVal = RGB(0, 0, 0)        ' Negro
-        
     ElseIf InStr(genrePart, "HOUSE") > 0 Then
         colorVal = RGB(139, 69, 19)    ' Marrón
-        
     Else
         colorVal = RGB(128, 128, 128)  ' Gris
     End If
@@ -106,14 +101,25 @@ Sub GenerarRotuloCD()
                 cleanName = fileName
             End If
             
+            ' Aplicar indentación de 4 espacios para líneas que continúan
+            cleanNameFormatted = FormatearConIndentacion(cleanName, ptsBTarget)
+            
             With ws.Cells(r, 2)
-                .Value = cleanName
+                .Value = cleanNameFormatted
                 .WrapText = True
                 
-                If Len(cleanName) >= 3 Then
-                    .Characters(1, 3).Font.color = colorVal
+                ' Colorear y fijar tamaño 14 a los primeros caracteres (número de tema)
+                If Len(cleanNameFormatted) >= 3 Then
+                    With .Characters(1, 3).Font
+                        .color = colorVal
+                        .Size = 14
+                        .Bold = True
+                    End With
                 Else
-                    .Characters(1, Len(cleanName)).Font.color = colorVal
+                    With .Characters(1, Len(cleanNameFormatted)).Font
+                        .color = colorVal
+                        .Size = 14
+                    End With
                 End If
                 
                 With .Borders(xlEdgeBottom)
@@ -195,4 +201,46 @@ Sub GenerarRotuloCD()
 
     MsgBox "Rótulo generado correctamente en:" & vbCrLf & savePath, vbInformation, "Listo"
 End Sub
+
+' Función auxiliar para dividir el texto según el ancho e indentar las líneas siguientes
+Private Function FormatearConIndentacion(ByVal texto As String, ByVal anchoPuntos As Double) As String
+    Dim palabras() As String
+    Dim i As Long
+    Dim lineaActual As String, resultado As String
+    Dim maxCharsLinea1 As Long, maxCharsSiguientes As Long
+    Dim limite As Long
+    Dim esPrimeraLinea As Boolean
+    
+    ' Consolas 14pt tiene un ancho de ~8.4 puntos por carácter + margen interno de celda (~6 pt)
+    maxCharsLinea1 = Fix((anchoPuntos - 6) / 8.4)
+    If maxCharsLinea1 < 10 Then maxCharsLinea1 = 10
+    maxCharsSiguientes = maxCharsLinea1 - 4
+    If maxCharsSiguientes < 5 Then maxCharsSiguientes = 5
+    
+    palabras = Split(texto, " ")
+    esPrimeraLinea = True
+    limite = maxCharsLinea1
+    lineaActual = ""
+    
+    For i = LBound(palabras) To UBound(palabras)
+        If Len(lineaActual) = 0 Then
+            lineaActual = palabras(i)
+        ElseIf Len(lineaActual) + 1 + Len(palabras(i)) <= limite Then
+            lineaActual = lineaActual & " " & palabras(i)
+        Else
+            If resultado <> "" Then resultado = resultado & vbLf
+            resultado = resultado & IIf(esPrimeraLinea, lineaActual, "    " & lineaActual)
+            esPrimeraLinea = False
+            limite = maxCharsSiguientes
+            lineaActual = palabras(i)
+        End If
+    Next i
+    
+    If Len(lineaActual) > 0 Then
+        If resultado <> "" Then resultado = resultado & vbLf
+        resultado = resultado & IIf(esPrimeraLinea, lineaActual, "    " & lineaActual)
+    End If
+    
+    FormatearConIndentacion = resultado
+End Function
 
