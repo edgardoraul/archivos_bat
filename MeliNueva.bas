@@ -7,10 +7,141 @@ Public Const MIPCENRED As String = "\\EDGAR\Web\Listados de Ventas Online\MELY"
 Public UltimaTotal As Long
 Public IdCliente As String
 Public Provincias As Variant
+Public Respuesta As String
 
+Public Sub Workbook_Open()
+    Application.OnKey "^+K", "AA_MELI_Nueva"
+End Sub
+Sub BB_SEPARAR_SUCURSALES()
+    Dim i As Integer
+    Dim c As Integer
+    Dim ultimaFila As Long
+    Dim Codigo As String
+    Dim Color As String
+    Dim Talle As String
+    Dim Cantidad As Integer
+    
+    
+    ' Analiza si esta venta corresponde a otra sucursal
+    ' Obtener la base de la ruta donde están los archivos
+    Call EstablecerRuta
+
+    ' Determinar los dos archivos a utilizar: la planilla a analizar
+    ' y el listado con el stock de las sucursales.
+    Dim PlanillaActual As Workbook
+    Dim StockSucursales As Workbook
+    
+    Set PlanillaActual = ActiveWorkbook
+    RUTA = RUTA & "\..\"
+    With PlanillaActual.Worksheets(1)
+        ultimaFila = .Cells(.Rows.Count, 3).End(xlUp).Row - 1
+    End With
+    
+    
+    ' Abre el CSV
+    Set StockSucursales = Workbooks.Open(RUTA & "StockDeArticulos.csv", Local:=True)
+    
+    ' Guarda el archivo abierto como un libro de Excel moderno (.xlsx)
+    Application.DisplayAlerts = False
+    StockSucursales.SaveAs fileName:=RUTA & "StockDeArticulos.xlsx", FileFormat:=xlOpenXMLWorkbook
+    Application.DisplayAlerts = True
+    
+    ' Lógiga de búsqueda y análisis desde la planilla original
+    With PlanillaActual.Worksheets(1)
+        For i = 2 To ultimaFila
+            Codigo = Left(.Cells(i, 3).Value, 7)
+            Color = .Cells(i, 5).Value
+            If Color <> "" Then
+                Color = "'" & Trim(Split(Color, ".")(0))
+            End If
+            Talle = .Cells(i, 6).Value
+            Cantidad = .Cells(i, 7).Value
+            
+            Debug.Print Codigo, Color, Talle
+            Call BuscaStock(StockSucursales, Codigo, Color, Talle, Cantidad)
+            .Cells(i, 8).Value = Respuesta
+        Next i
+    End With
+    
+    ' Lo cerramos para guardar memoria
+    StockSucursales.Close SaveChanges:=False
+
+End Sub
+Function BuscaStock(Base As Workbook, Codigo As String, Color As String, Talle As String, Cantidad As Integer)
+    Dim wsStock As Worksheet
+    Dim colSKU As Integer, colColor As Integer, colTalle As Integer, colPieza As Integer
+    Dim rngEncontrado As Range
+    Dim primerCelda As String
+    Dim stockPieza As Integer
+    Dim iCol As Long, ultimaColumnaStock As Long
+    Dim mayorStock As Integer, stockActual As Integer
+    Dim depositoElegido As String
+    
+    Set wsStock = Base.Worksheets(1)
+    Base.Activate
+    wsStock.Activate
+    Respuesta = ""
+    
+    ' Identificar columnas por encabezado
+    With wsStock
+        colSKU = .Rows(1).Find(What:="SKU", LookAt:=xlWhole).Column
+        colColor = .Rows(1).Find(What:="COLOR", LookAt:=xlWhole).Column
+        colTalle = .Rows(1).Find(What:="TALLE", LookAt:=xlWhole).Column
+        colPieza = 5 ' Columna E (PIEZA)
+        
+        ultimaColumnaStock = .Cells(1, .Columns.Count).End(xlToLeft).Column
+        
+        ' Búsqueda rápida del SKU en su columna específica
+        Set rngEncontrado = .Columns(colSKU).Find(What:=Codigo, LookAt:=xlWhole, MatchCase:=False)
+        
+        If Not rngEncontrado Is Nothing Then
+            primerCelda = rngEncontrado.Address
+            Do
+                ' Verificar si en la misma fila coinciden Color y Talle
+                If .Cells(rngEncontrado.Row, colColor).Value = Color And _
+                   .Cells(rngEncontrado.Row, colTalle).Value = Talle Then
+                   
+                    ' Coincidencia triple encontrada
+                    stockPieza = Val(.Cells(rngEncontrado.Row, colPieza).Value)
+                    .Cells(rngEncontrado.Row, colPieza).Activate
+                    
+                    If stockPieza >= 2 Then
+                        Debug.Print "ok"
+                        Exit Function
+                    Else
+                        mayorStock = stockPieza
+                        depositoElegido = "PIEZA"
+                        For iCol = (colPieza + 1) To ultimaColumnaStock
+                            stockActual = Val(.Cells(rngEncontrado.Row, iCol).Value)
+                            If stockActual > mayorStock Then
+                                mayorStock = stockActual
+                                depositoElegido = .Cells(1, iCol).Value
+                            End If
+                        Next iCol
+                        MsgBox "Depósito: " & depositoElegido & " -> : " & mayorStock
+                        Debug.Print "Depósito: " & depositoElegido & " -> : " & mayorStock
+                        
+                        Respuesta = depositoElegido
+                        
+                        Exit Function
+                    End If
+                    
+                End If
+                
+                Set rngEncontrado = .Columns(colSKU).FindNext(rngEncontrado)
+            Loop While Not rngEncontrado Is Nothing And rngEncontrado.Address <> primerCelda
+        End If
+        
+        Debug.Print "Artículo no encontrado en stock."
+        
+        
+    End With
+    
+    
+    
+End Function
 
 Sub AA_MELI_Nueva()
-Attribute AA_MELI_Nueva.VB_ProcData.VB_Invoke_Func = "ñ\n14"
 ' GENERACION DE PLANILLAS DE MELI AÑO 2027
     Call GuardarCopiaConSecuencial
 End Sub
@@ -42,7 +173,7 @@ Public Sub EstablecerRuta()
     End If
 End Sub
 
-Public Sub GuardarCopiaConSecuencial()
+Sub GuardarCopiaConSecuencial()
     Dim fso As Object
     Dim folderObj As Object
     Dim fileObj As Object
@@ -159,7 +290,7 @@ Sub CompletaInfo(ByRef Planilla As Workbook)
             With .Cells(i, 3)
                 .Value = "'" & .Value
                 .HorizontalAlignment = xlLeft
-                .Font.color = vbWhite
+                .Font.Color = vbWhite
                 .Characters(Start:=1, Length:=7).Font.ColorIndex = xlAutomatic
             End With
             
@@ -244,7 +375,7 @@ If Orientacion = True Then ' => VENTAS
             .Borders.LineStyle = xlContinuous
             .EntireRow.HorizontalAlignment = xlCenter
             .Font.Bold = True
-            .Interior.color = RGB(250, 250, 250)
+            .Interior.Color = RGB(250, 250, 250)
         End With
         
         ' Columna Nº Venta
@@ -355,7 +486,7 @@ ElseIf Orientacion = False Then ' => DEPOSITO
             .Borders.LineStyle = xlContinuous
             .EntireRow.HorizontalAlignment = xlCenter
             .Font.Bold = True
-            .Interior.color = RGB(250, 250, 250)
+            .Interior.Color = RGB(250, 250, 250)
         End With
         
         ' Columna Color
@@ -497,10 +628,15 @@ Sub AB_DepositoMeli()
             ' Desubicación
             Hoja.Cells(i, 6).Formula = "=IFERROR(VLOOKUP(A" & i & ", " & rutaEquivalencia & "$A$2:$C$10000, 3, FALSE), """")"
             
-            ' Otro depósito
+            ' Otros depósitos
             If LCase(.Cells(i, 8).Value) = "planta baja" Or LCase(.Cells(i, 8).Value) = "mendoza" Then
                 Hoja.Cells(i, 6).Value = "12. Planta Baja"
+                .Cells(i, 8).Value = "Planta Baja"
+            ElseIf LCase(.Cells(i, 8).Value) = "tucuman" Or LCase(.Cells(i, 8).Value) = "neuquen" Or LCase(.Cells(i, 8).Value) = "rgallegos" Then
+                Hoja.Range(Cells(i, 1), Cells(i, 5)).ClearContents
+                Hoja.Cells(i, 6).Value = .Cells(i, 8).Value
             End If
+            
         Next i
     End With
     
@@ -537,7 +673,7 @@ End Sub
 Function PintaFila(Hojilla As String, fila As Integer, DesdeColumna As Integer, HastaColumna As Integer)
     ' Pinta filas impares
     If fila Mod 2 <> 0 Then
-        Worksheets(Hojilla).Range(Cells(fila, DesdeColumna), Cells(fila, HastaColumna)).Interior.color = RGB(240, 240, 240)
+        Worksheets(Hojilla).Range(Cells(fila, DesdeColumna), Cells(fila, HastaColumna)).Interior.Color = RGB(240, 240, 240)
     End If
 End Function
 
